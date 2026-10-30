@@ -29,10 +29,15 @@ def _carries_edible_food(ent: "EntityState") -> bool:
 
 
 def _threat_wakes_sleeper(ent: "EntityState", state: AuthoritativeState, wake_index: Optional[Dict[Any, List[int]]]) -> bool:
-    """2.154 / STRAT-294: on a decision-32 wake tick, True when an unengaged hostile is orthogonally adjacent to a sleeper or a perceived hostile acts on it
-    (``acting_threat_to``: an attack or pursuit aimed at it, or a hit on it within ``NEED_WAKE_CADENCE`` ticks, so a shooter at range wakes it too).
-    A pure read of this tick's state; ``NEED_WAKE_CADENCE`` >= ``ADJACENCY_WAKE_COOLDOWN`` keeps a hit from falling between two checks."""
-    if (state.tick + ent.id) % ADJACENCY_WAKE_COOLDOWN != 0:
+    """2.154 / STRAT-294: on a decision-32 wake tick, True when a threat wakes a holder of a CHOSEN SLEEP or REST.
+
+    Decision 32's condition (an unengaged hostile orthogonally adjacent) or a perceived hostile ACTING on it (``acting_threat_to``: an attack or pursuit aimed at it, or a
+    hit on it within ``NEED_WAKE_CADENCE`` ticks, so a shooter at range counts). A COLLAPSE (``COLLAPSE_FLAG``, decision 41) is not woken by any threat, adjacent or
+    acting: a wake just below the collapse line decides idle and the debt re-crosses the line within a tick or two, so a collapsed subject beside a hostile never
+    recovered (the s44 loop; designer re-ruling 2026-10-30). It stands until its own end or the hunger wake (2.115, unchanged). A pure read of this tick's state;
+    ``NEED_WAKE_CADENCE`` >= ``ADJACENCY_WAKE_COOLDOWN`` keeps a hit from falling between two checks."""
+    from src.engine.sleep_debt import COLLAPSE_FLAG
+    if ent.task.payload.get(COLLAPSE_FLAG) or (state.tick + ent.id) % ADJACENCY_WAKE_COOLDOWN != 0:
         return False
     from src.ai.goals.present_threat import acting_threat_to
     return MovementCandidateSelector.unengaged_adjacent_hostile(ent, state.entities, wake_index) or acting_threat_to(ent, state)

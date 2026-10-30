@@ -16,7 +16,7 @@ Designer rulings 2026-10-30 (seat f1cb479cf, 569103d44, ee2232bd2); owner go #71
 1. `src/engine/sleep_debt.py`: `REST_MIN_SLEEP_DEBT` (moved from `tactical_rest.py`, re-exported there), `chosen_rest_is_met(debt)` = debt strictly below the floor, `rest_ended_at_the_floor(entity)`.
 2. `src/engine/pipeline_phases/actions.py::_survival_action_ends`: a collapse (COLLAPSE_FLAG) keeps `is_rested_enough`; a chosen SLEEP/REST ends at `chosen_rest_is_met`.
 3. Floor-end brain wake (folded into 2.153, no new id): `scheduler._critical_item` counts `rest_ended_at_the_floor` as a wake; `fused_strategic_pass` adds such entities to the candidates and evaluates their intents off cadence, so `intelligence.py` completes the fatigue project on the tick after the rest ends.
-4. 2.154: `scheduler._threat_wakes_sleeper` in the `is_asleep` branch of `_is_need_woken`: on decision 32's cadence, an unengaged adjacent hostile or `acting_threat_to`; `wake_index` passed as a plain argument.
+4. 2.154: `scheduler._threat_wakes_sleeper` in the `is_asleep` branch of `_is_need_woken`: on decision 32's cadence, an unengaged adjacent hostile or `acting_threat_to`; `wake_index` passed as a plain argument. A COLLAPSE (COLLAPSE_FLAG) is NOT woken by any threat (designer re-ruling seat bc5ec3001, after the s44 collapse loop); the hunger wake (2.115) is unchanged.
 5. Docs: divergences 2.153 and 2.154, parity STRAT-293 and STRAT-294, mechanisms.yaml bindings and notes (planner's text), Bible 04 line-38 paragraph (designer's final text, committed only after the paired run clears the STOP checks).
 
 ## Decisions

@@ -4650,7 +4650,7 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.153.
   support_boundary: 'A collapse (decision 41) is unchanged. A held rest still holds no brain, so a threat or hunger wake is the only early end (2.154, 2.115). Measured counts: divergence 2.153.'
 - id: STRAT-294
-  text: 'TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT (N14, 2.154): a holder of SLEEP or REST, a collapse included, is woken for the brain on decision 32''s cadence when an unengaged hostile is orthogonally adjacent or a perceived hostile is acting on it (acting_threat_to). The wake is a re-decision only: at debt >= 98 the subject collapses again, otherwise it answers the threat; the fatigue project stays live. No new constant.'
+  text: 'TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT (N14, 2.154): a holder of a CHOSEN SLEEP or REST is woken for the brain on decision 32''s cadence when an unengaged hostile is orthogonally adjacent or a perceived hostile is acting on it (acting_threat_to). A collapse (COLLAPSE_FLAG, decision 41) is not woken by any threat, adjacent or acting; it stands until its own end or the hunger wake (2.115, unchanged). The wake is a re-decision only: the subject answers the threat; the fatigue project stays live. No new constant.'
   status: verified
   priority: P1
   legacy_evidence: null

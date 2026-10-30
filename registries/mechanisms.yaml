@@ -276,9 +276,10 @@ mechanisms:
         as its own mechanism, `sense_gated_detection`. The reasoning above for keeping it out of
         THIS entry's `implemented_by` still holds; only "NOT registered as its own mechanism" is
         superseded.
-        **Note, added 2026-10-30 (same ticket, divergence 2.154, Enforced):** decision 32's wake now also reaches a held SLEEP or REST, a
-        collapse included: on decision 32's cadence a sleeper is woken by an unengaged adjacent hostile or by `acting_threat_to` (a perceived
-        hostile acting on it). The wake is a re-decision only; the fatigue project stays live.
+        **Note, added 2026-10-30 (same ticket, divergence 2.154, Enforced):** decision 32's wake now also reaches a held CHOSEN SLEEP or REST
+        (chosen SLEEP or REST only; a collapse is not woken by a threat, decision 41): on decision 32's cadence a chosen sleeper is woken by an
+        unengaged adjacent hostile or by `acting_threat_to` (a perceived hostile acting on it). A collapse stands until its own end or the
+        hunger wake (2.115, unchanged). The wake is a re-decision only; the fatigue project stays live.
   - id: combat_engagement
     layer: entity
     systems: [combat]

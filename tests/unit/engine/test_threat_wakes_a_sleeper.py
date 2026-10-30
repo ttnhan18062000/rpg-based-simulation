@@ -2,8 +2,8 @@
 
 A held SLEEP or REST ran no brain, and only hunger woke it (2.115). F1 (2.153) makes a chosen rest last to the sleep floor, so a sleeper now stays down for
 hundreds of ticks and must wake to a threat. Decision 32's condition (an unengaged hostile orthogonally adjacent) or a perceived hostile ACTING on it
-(`acting_threat_to`: an attack or pursuit aimed at it, or a hit on it within the need-wake cadence, so a shooter at range counts) wakes it, collapse
-included, on decision 32's cadence. The wake is a re-decision only. No new constant.
+(`acting_threat_to`: an attack or pursuit aimed at it, or a hit on it within the need-wake cadence, so a shooter at range counts) wakes a CHOSEN sleep or rest
+on decision 32's cadence; a collapse (decision 41) is not woken by any threat (re-ruling 2026-10-30, the s44 loop), only by hunger (2.115). The wake is a re-decision only. No new constant.
 """
 from dataclasses import replace
 
@@ -60,12 +60,30 @@ def test_a_perceived_hostile_acting_on_it_from_range_wakes_it_too():
     assert _wake_ticks(shooter, range(1, 11))
 
 
-def test_a_collapse_is_woken_and_its_decision_is_the_collapse_again_at_the_line():
+def test_c1_a_collapse_beside_an_adjacent_hostile_is_not_woken():
     held = _sleeper("SLEEP", debt=COLLAPSE_LINE + 1.0, collapse=True)
-    assert _wake_ticks([held, _monster((11, 10))], range(1, 5))
-    state = AuthoritativeState(tick=2, seed=1, entities={held.id: held, 7: _monster((11, 10))})
-    again = TacticalDecisionSystem.evaluate_entity_intent(state, held)
-    assert again.task.payload_set["action"] == "SLEEP" and again.task.payload_set[COLLAPSE_FLAG]
+    assert _wake_ticks([held, _monster((11, 10))], range(1, 21)) == []
+
+
+def test_c2_a_collapse_being_hit_or_attacked_is_not_woken_by_a_threat_either():
+    held = _sleeper("SLEEP", debt=COLLAPSE_LINE + 1.0, collapse=True)
+    assert _wake_ticks([held, _monster((13, 10), attacking=SLEEPER_ID)], range(1, 21)) == []   # an attack aimed at it, from range
+    struck = replace(held, combat=replace(held.combat, last_hit_tick=3, last_attacker_id=7))
+    assert _wake_ticks([struck, _monster((11, 10), attacking=SLEEPER_ID)], range(4, 12)) == []  # a fresh hit, the attacker adjacent and acting
+    # the hunger wake (2.115) of a collapse is unchanged: hunger still wakes it
+    hungry = replace(held, biological=replace(held.biological, hunger=95.0))
+    assert _wake_ticks([hungry, _monster((11, 10), attacking=SLEEPER_ID)], range(1, 21))
+
+
+def test_c3_the_s44_shape_adjacent_hits_across_50_ticks_give_one_uninterrupted_collapse():
+    held = _sleeper("SLEEP", debt=COLLAPSE_LINE - 0.1, collapse=True)
+    struck = replace(held, combat=replace(held.combat, last_hit_tick=3, last_attacker_id=7))
+    assert _wake_ticks([struck, _monster((11, 10), attacking=SLEEPER_ID)], range(1, 51)) == []   # no wake, so no decision, no idle gap, no re-collapse
+
+
+def test_c4_a_chosen_sleep_beside_an_adjacent_hostile_is_woken_and_the_collapse_beside_it_is_not():
+    assert _wake_ticks([_sleeper("SLEEP", debt=70.0), _monster((11, 10))], range(1, 21))
+    assert _wake_ticks([_sleeper("SLEEP", debt=COLLAPSE_LINE + 1.0, collapse=True), _monster((11, 10))], range(1, 21)) == []
 
 
 def test_below_the_collapse_line_a_woken_sleeper_answers_the_threat_and_no_rest_is_reissued():
