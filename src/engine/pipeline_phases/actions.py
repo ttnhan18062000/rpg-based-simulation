@@ -14,7 +14,7 @@ from src.core.state import _readonly_mapping
 from src.engine.domain_logic import SimulationDomainLogic
 from src.engine.legality import LegalityServiceV2
 from src.engine.apply import ApplyPath
-from src.engine.sleep_debt import SLEEP_ACTIONS, is_rested_enough
+from src.engine.sleep_debt import COLLAPSE_FLAG, SLEEP_ACTIONS, chosen_rest_is_met, is_rested_enough
 from src.engine.work_shift import shift_done
 
 if TYPE_CHECKING:
@@ -47,12 +47,16 @@ _ENDS_HELD_REASONS_BY_ACTION = {"ATTACK": _ENDS_HELD_ATTACK_REASONS, "INTERACT":
 
 def _survival_action_ends(action: str, is_survival: bool, outcome: str, actor_update: Optional[EntityUpdate], held: tuple) -> bool:
     """A survival action that succeeded ends its task, except a shift of work, which is held until its last tick (work_shift.py), and a sleep (a collapse, a
-    rest in place, a rest at a bed), which is held until the debt is below the wake line (sleep_debt.py). ``held`` is (the task payload, the acting entity)."""
+    rest in place, a rest at a bed): a collapse is held until the debt is below the wake line, a CHOSEN rest or sleep until the sleep need is met, debt at or
+    below REST_MIN_SLEEP_DEBT (2.153 / STRAT-293; sleep_debt.py). ``held`` is (the task payload, the acting entity)."""
     if not (is_survival and outcome == "SUCCESS"):
         return False
     if action == "WORK":
         return shift_done(actor_update)
-    return is_rested_enough(held[1].biological.sleep_debt) if action in SLEEP_ACTIONS else True
+    if action not in SLEEP_ACTIONS:
+        return True
+    debt = held[1].biological.sleep_debt
+    return is_rested_enough(debt) if held[0].get(COLLAPSE_FLAG) else chosen_rest_is_met(debt)
 
 
 def _combat_loss_events(state: AuthoritativeState, actor_id: int, action_updates: dict) -> list:

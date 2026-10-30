@@ -82,14 +82,15 @@ def test_a_held_walk_stops_where_it_stands_when_the_debt_reaches_the_collapse_li
     assert MovementCandidateSelector.move_ends_here(_walking(SLEEP_DEBT.collapse_line - 1), {1: _walking(SLEEP_DEBT.collapse_line - 1)}) is False
 
 
-def test_a_sleep_is_held_until_the_debt_is_below_the_wake_line_and_it_falls_at_twice_the_accrual_rate():
+def test_a_collapse_is_held_until_the_debt_is_below_the_wake_line_and_it_falls_at_twice_the_accrual_rate():
     rate = 0.05
     assert debt_change_per_tick(rate, asleep=False) == rate and debt_change_per_tick(rate, asleep=True) == -SLEEP_DEBT.rest_factor * rate
     deep, nearly = _subject(SLEEP_DEBT.collapse_line), _subject(SLEEP_DEBT.wake_line - 1.0)
     for action in ("SLEEP", "REST"):
-        assert _survival_action_ends(action, True, "SUCCESS", None, ({"action": action}, deep)) is False  # still above the wake line
-        assert _survival_action_ends(action, True, "SUCCESS", None, ({"action": action}, nearly)) is True
-        assert _survival_action_ends(action, True, "FAILURE", None, ({"action": action}, nearly)) is False
+        collapse = {"action": action, COLLAPSE_FLAG: True}  # a collapse keeps the wake-line end (2.153 changes a CHOSEN rest only)
+        assert _survival_action_ends(action, True, "SUCCESS", None, (collapse, deep)) is False  # still above the wake line
+        assert _survival_action_ends(action, True, "SUCCESS", None, (collapse, nearly)) is True
+        assert _survival_action_ends(action, True, "FAILURE", None, (collapse, nearly)) is False
     sleeping = replace(deep, task=TaskComponent(work_kind="ENTITY_ACT", payload={"action": "SLEEP"}))
     assert is_asleep(sleeping) and not is_asleep(deep)
 

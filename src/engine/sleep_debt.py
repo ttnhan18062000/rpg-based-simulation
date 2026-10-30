@@ -41,6 +41,9 @@ class SleepDebtTable:
 SLEEP_DEBT = SleepDebtTable()
 COLLAPSE_LINE = SLEEP_DEBT.collapse_line
 COLLAPSE_FLAG = "collapse"  # marks a SLEEP task that began as a collapse (a key other than `reason`, which the outcome annotation drops)
+# The sleep debt below which a CHOSEN rest or sleep is met and ends, and a fatigue project completes (divergence 2.153, STRAT-293). Moved here from
+# ``tactical_rest`` (the one tuning place for sleep values); ``tactical_rest`` re-exports it. No new number: the value is unchanged.
+REST_MIN_SLEEP_DEBT = 20.0
 SLEEP_ACTIONS = frozenset({"SLEEP", "REST"})  # the actions that put a subject to sleep; each is held until the debt is below the wake line
 
 
@@ -57,6 +60,15 @@ def must_collapse(sleep_debt: float) -> bool:
 def is_rested_enough(sleep_debt: float) -> bool:
     """True once the debt is below the wake line (debt 60)."""
     return sleep_debt < SLEEP_DEBT.wake_line
+
+
+def chosen_rest_is_met(sleep_debt: float) -> bool:
+    """True once a CHOSEN rest or sleep (not a collapse) has met the sleep need: debt below ``REST_MIN_SLEEP_DEBT`` (2.153 / STRAT-293). Strictly below, because the fatigue project completes
+    (``intelligence.py`` ``< 20.0``) and the goal exits (``scorers.py`` ``< 20.0``) only strictly below the floor: ending at exactly 20.0 would leave both open.
+
+    The wake line (``is_rested_enough``) stays the scheduler's wake trigger, the goal's "tired" read and a collapse's end; a chosen rest ran only
+    to it before, so a REST begun at the line ended after one tick and the fatigue project (which completes at the floor) never did."""
+    return sleep_debt < REST_MIN_SLEEP_DEBT
 
 
 def recovery_scale(sleep_debt: float) -> float:

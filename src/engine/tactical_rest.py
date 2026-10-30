@@ -23,6 +23,7 @@ from src.engine.biological_needs import need_rates
 from src.engine.domain.core_actions import EAT_AT_CORPSE_REACH as CARCASS_NEAR
 from src.engine.need_pull import ESCALATION_FULL, SLEEP_LINE, arrival_fraction
 from src.engine.service_reach import service_tile
+from src.engine.sleep_debt import REST_MIN_SLEEP_DEBT  # noqa: F401  (re-exported; defined in sleep_debt, 2.153)
 from src.engine.tactical_threat import present_threat_terms
 
 if TYPE_CHECKING:
@@ -31,8 +32,8 @@ if TYPE_CHECKING:
 # The buildings whose service a REST uses (`town_resolution.SERVICE_KINDS["REST"]`): a bed.
 BED_KINDS = frozenset({"inn", "home"})
 
-# A fatigue project's goal only exists above this sleep debt (SleepScorer's own early exit), and a project completes below it.
-REST_MIN_SLEEP_DEBT = 20.0
+# A fatigue project's goal only exists above this sleep debt (SleepScorer's own early exit), and a project completes below it. Defined in
+# ``sleep_debt`` (a chosen rest now lasts down to it, 2.153); re-exported here so existing imports keep working.
 
 
 def _fatigue_target(state: AuthoritativeState, entity: EntityState) -> Tuple[bool, Optional[Tuple[float, float]]]:

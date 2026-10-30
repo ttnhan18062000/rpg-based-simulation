@@ -28,6 +28,16 @@ def _carries_edible_food(ent: "EntityState") -> bool:
     return any(slot.quantity > 0 and food_hunger_recovery(slot.item_id) > 0.0 and can_eat_item(ent, slot.item_id) for slot in ent.inventory.items)
 
 
+def _threat_wakes_sleeper(ent: "EntityState", state: AuthoritativeState, wake_index: Optional[Dict[Any, List[int]]]) -> bool:
+    """2.154 / STRAT-294: on a decision-32 wake tick, True when an unengaged hostile is orthogonally adjacent to a sleeper or a perceived hostile acts on it
+    (``acting_threat_to``: an attack or pursuit aimed at it, or a hit on it within ``NEED_WAKE_CADENCE`` ticks, so a shooter at range wakes it too).
+    A pure read of this tick's state; ``NEED_WAKE_CADENCE`` >= ``ADJACENCY_WAKE_COOLDOWN`` keeps a hit from falling between two checks."""
+    if (state.tick + ent.id) % ADJACENCY_WAKE_COOLDOWN != 0:
+        return False
+    from src.ai.goals.present_threat import acting_threat_to
+    return MovementCandidateSelector.unengaged_adjacent_hostile(ent, state.entities, wake_index) or acting_threat_to(ent, state)
+
+
 class DeterministicScheduler:
     """
     Authoritative orchestrator for deterministic work selection.
@@ -68,7 +78,7 @@ class DeterministicScheduler:
         return work_sequence, 0
 
     @staticmethod
-    def _is_need_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str) -> bool:
+    def _is_need_woken(ent: "EntityState", state: AuthoritativeState, work_kind: str, wake_index: Optional[Dict[Any, List[int]]] = None) -> bool:
         """SURV-07 / decision 32 for a need: an entity holding a move while a biological need is pressing is woken for the brain on
         the strategic cadence (staggered by id), so the hunger or sleep goal it already ranks first can displace the held move.
         Waking is only a re-decision: a present threat to life (the only thing that outranks a pressing need, SURV-07) is seen again by
@@ -77,7 +87,9 @@ class DeterministicScheduler:
         if work_kind == "ENTITY_ACT" and is_asleep(ent):
             # A sleeper's debt is high by nature, so only hunger wakes it (decision 41 x SURV-07, owner ruling 2026-10-11). Waking is a re-decision: while
             # the debt is at the collapse line the decision is the collapse again (it holds), below it the hunger goal decides: eat if a way is open, else sleep.
-            return hunger_is_pressing(ent.biological.hunger) and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
+            # A present threat wakes a sleeper too (2.154 / STRAT-294, decision 32's condition: an unengaged hostile adjacent, or a perceived hostile ACTING on it);
+            # a collapse included. Still only a re-decision: at the collapse line the decision is the collapse again, else the threat is answered.
+            return (hunger_is_pressing(ent.biological.hunger) and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)) or _threat_wakes_sleeper(ent, state, wake_index)
         if work_kind == "ENTITY_ACT" and ent.task.payload.get("action") == "INTERACT":
             # A gatherer on a node that still has charges holds its INTERACT with no brain, so a grazer on a regrowing patch is never released to eat
             # (TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT). Hunger wakes it on the same cadence only when it carries food its
@@ -126,7 +138,7 @@ class DeterministicScheduler:
         # Milestone 3: Staggered Entity Execution
         # Gating non-critical work items based on strategic cadence.
         is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
-        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind)
+        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind, wake_index)
         is_brain = woken or work_kind == "ENTITY_BRAIN" or is_idle_act
 
         # Readiness gate: thinking (brain) is free; only actual actions/movement
