@@ -75,9 +75,11 @@ Use a stable key everywhere: the ID string or the enum `.value`, never `str(obj)
 3. A tie test: an entity with two ready skills of equal power picks the same skill under two `PYTHONHASHSEED` values, run in subprocesses.
    - Positive control: show it can differ on main, or explain why the fixture forces the tie.
 4. A cross-process test: a fixed short run gives an identical final canonical state hash at two `PYTHONHASHSEED` values.
-5. The paired run at seed 0 has been run, with worlds, seeds and ticks recorded.
-   - The state-hash change is expected and noted.
-   - Deaths show no drift, or the result is a STOP reported to rpg-planner.
+5. SEED-0 ACCEPTANCE (rpg-planner ruling 4, 2026-10-30, owner choice (a), #715 6522922438; replaces ruling 3 Q5's seed-0 hash clause): NO OUTCOME DRIFT, B against main (merge-base de5a223ca) at PYTHONHASHSEED=0 on 3 worlds x seeds 42-46 at the standard paired length (5000 ticks). The seed-0 final hash MAY differ: that is the accepted cost of the (urgency desc, concern id) tie-break at the concern cap. Per world compare deaths by cause, the alive set at the final tick and every behaviour counter.
+   - PASS: every compared value equal, or, summed over the 5 seeds of a world, differing by no more than max(1, 5% of main's value).
+   - STOP to rpg-planner: any value outside that tolerance, or any seed whose first difference from main is NOT traced (as in the crowded_frontier s42 diagnostic) to a concern-cap trim where tied concerns kept different ids. Report the first differing tick and entity. That attribution is required for EVERY seed whose hash moves.
+   - Cross-seed AC unchanged and met: crowded_frontier s42 1000t, final hash identical at PYTHONHASHSEED 0-3 on B (`08afbabc…`).
+   - Divergence 2.144 Measured records the hash move, the diagnostic (first difference tick 116, entity 24; 151 of 4349 trims differ; identical outcomes at 1000t) and the paired results, class Stabilized, plus the lexicographic-id note word for word (ruling 4).
 6. The divergence entry, Bible and parity updates are made per rpg-planner's ruling. `parity_ledger_writer.py` was used for ledger edits.
 7. The ticket states that cached paired-run arms from before this fix stay valid only for branches still based before it.
 8. If any event in codebase M7's goldens changes, it is reported to rpg-planner as a finding. M7 does not re-pin silently.

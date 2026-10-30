@@ -79,3 +79,17 @@ Q3: YES on the wording "deterministic tie-break: power, then skill id", with no 
 Q4: ALL the hygiene sorts (about 12 lines), each with a one-line comment saying why (determinism, hash-neutral).
 Q5: YES. B's acceptance is cross-seed: in a crowded world where the concern cap binds, the final hash is IDENTICAL across PYTHONHASHSEED 0,1,2,3 after the fix (show it differing before, if it does). The seed-0 final hash also equals main's on the usual 3 worlds x s42-46. If the seed-0 hash moves, STOP to rpg-planner.
 No need to wait for #789.
+
+## Ruling 4 (2026-10-30): seed-0 acceptance after the Q5 STOP (owner choice (a), #715 6522922438)
+
+Context: B STOPPED under ruling 3 Q5. In crowded_frontier s42 1000t at PYTHONHASHSEED=0, B's final hash 08afbabc… ≠ base de5a223ca 7031f948…. The diagnostic traced it only to the capacity_enforcement concern trim (first difference tick 116, entity 24; 151 of 4349 trims differ), with identical outcomes at 1000t. The owner chose option (a), #715 comment 6522922438. rpg-planner's AC wording, relayed via lead-planner-u24 and lead-planner, is below word for word.
+
+"SEED-0 ACCEPTANCE (replaces Q5's seed-0 hash clause; owner choice (a), #715). The seed-0 final hash MAY differ from main's. That move is the accepted direct cost of Q1's (urgency desc, concern id) tie-break at the concern cap. Acceptance is NO OUTCOME DRIFT. Run B against main at PYTHONHASHSEED=0 on 3 worlds × s42-46 at the standard paired length. For each world, compare: deaths by cause, the set of entities alive at the final tick, and every behaviour counter in the run summary.
+- PASS: every compared value is equal, or, summed over the 5 seeds of a world, differs from main by no more than max(1, 5% of main's value).
+- STOP to rpg-planner: any value outside that tolerance; or any seed whose first difference from main is NOT traced, as in the crowded_frontier s42 diagnostic, to a concern-cap trim where tied concerns kept different ids. Report the first differing tick and entity for that seed. That attribution is required for EVERY seed whose hash moves, whatever the size of its outcome drift.
+- The cross-seed AC is unchanged: in a crowded world where the cap binds, the final hash is IDENTICAL across PYTHONHASHSEED 0-3.
+- Record the hash move, this diagnostic (first difference t116, entity 24; 151 of 4349 trims differ; identical outcomes at 1000t) and the paired results in divergence 2.144, Measured, class Stabilized."
+
+Note for 2.144 on the lexicographic ids, also word for word:
+
+"Concern ids compare as strings, so 'danger_hostile_13' sorts before 'danger_hostile_2'. The key exists for determinism only. It carries no meaning about which concern matters more, so any total order would do, and the owner did not choose a numeric key. If a later rule needs ids to rank by meaning, that is its own ticket and its own divergence." No code change.
