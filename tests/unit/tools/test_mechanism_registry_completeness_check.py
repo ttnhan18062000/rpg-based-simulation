@@ -286,7 +286,10 @@ def test_wider_scope_numbers_pinned():
     # 343 -> 344 on 2026-10-28 (TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN): +src/simulation_quality/wiring.py (build_quality_wiring, the SimQ feed and hub
     # construction moved out of Kernel.__init__; one function, no mechanism-shaped class; unbound, see below).
     # 344 -> 345 on 2026-10-29 (TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY): +src/engine/service_admission.py (bound under town_services).
-    assert wider["scope_files"] == 345
+    # 344 -> 345 on 2026-10-29 (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED): +src/ai/goals/live_record_route.py (pure functions and one small
+    # frozen dataclass that route a winning goal to its live record, moved out of `evaluate_strategic_intent`; bound under `goal_hierarchy`, see below).
+    # 345 -> 346 on 2026-10-30 (merge of #785 into #788, from the check's own output): both sides added one file above (service_admission.py, live_record_route.py); unbound_files stays 247 (both bound).
+    assert wider["scope_files"] == 346
     # 233 -> 227 on 2026-10-05: the world-building split names six more files (worldmodules/normalizer,
     # worldassembly/resolve_io, worldbuilding/repository and validator, worldgeneration/generator and scorer).
     # Then +1 for the unbound entity_target_objective.py module (TCK-20261002-COMBAT-OBJECTIVE-TARGETS-...).
@@ -331,6 +334,10 @@ def test_wider_scope_numbers_pinned():
     # 250 -> 249 on 2026-10-26: `src/world/regional_sovereignty.py` is now named by `regional_levy_and_conquest_debuffs`.
     # 249 -> 250 on 2026-10-28 (F4): +src/core/stable_hash.py is an unbound helper (a determinism utility used by military_conflict.py and
     # perception/filter.py, no mechanism of its own); candidates and wired are unchanged.
+    # (unbound-files side, 2026-10-29, TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED): +src/ai/goals/live_record_route.py (pure functions and one
+    # small frozen dataclass that route a winning goal to its live record, moved out of `evaluate_strategic_intent` so the code-health ceilings hold). It is bound by
+    # rpg-planner under `goal_hierarchy` (route_live_record, orphan_switch_candidate, supersede_on_win; entry semantics unchanged), so it adds no unbound file; `unbound_files` is 247 (wiring.py's +1 above, the other new file); candidates and
+    # wired are unchanged. Taken by running the check.
     # 250 -> 249 on 2026-10-28 (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS): skills.py was unbound.
     # 249 -> 248 on 2026-10-28 (TCK-20261020-HUNGER-AND-RETREAT-ON-ONE-ESCALATION-SCALE, #593 6420327798): src/ai/goals/present_threat.py
     # is bound under `tactical_decision` (acting_threat_to, step B's act test, 2.138).

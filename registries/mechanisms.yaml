@@ -1569,6 +1569,9 @@ mechanisms:
       - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
       - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
       - src/ai/goals/escalation.py::escalated_need_wins
+      - src/ai/goals/live_record_route.py::route_live_record
+      - src/ai/goals/live_record_route.py::orphan_switch_candidate
+      - src/ai/goals/live_record_route.py::supersede_on_win
     verified:
       instrument: scenario
       verdict: observed
