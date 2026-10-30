@@ -2823,6 +2823,7 @@ mechanisms:
       - src/systems/economy_systems/market.py::MarketSystem
       - src/systems/economy_systems/reputation_discount.py::apply_reputation_discount
       - src/engine/building_services.py::service_delta
+      - src/engine/service_admission.py::admits
       - src/engine/building_arrival.py::building_arrival_update
       - src/engine/shop_sale.py::plan_sale
       - src/engine/work_shift.py::work_update

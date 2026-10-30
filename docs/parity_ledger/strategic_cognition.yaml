@@ -4617,6 +4617,16 @@
   test_path: tests/unit/ai/test_retreat_escalates_on_the_need_scale.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
   support_boundary: 'Measured against step B tip 3533fde71 (build 358f4cb7f; landed src equivalent, divergence 2.139 Measured): no death-count drift in the 3 worlds; frontier_living_world extinction STOP (scout, wild_creature) accepted as known, owner decision #715 6458811768 (memo row 91). A chosen retreat is a stored target that takes no step (no strategic flight; held for after M1). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
+- id: STRAT-290
+  text: 'A way is open to a subject iff the inn would deliver the service now (SURV-06, SURV-07 row 27, AGENCY-03): one admission function (`admits`) is read by the building service and by ways_in_reach, EatScorer, the bed test and the starvation record; the payment law is one constant. The V3 record carries each opening step in reach and whether it was taken: an untried step is a FAIL, no open way and no step is poverty.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/service_admission.py (admits, SERVICE_PAYMENT_LAW), src/engine/building_services.py (service_delta), src/ai/goals/ways.py, src/ai/goals/scorers.py, src/observability/starvation_record.py (StarvationVerdict, opening_steps_in_reach); docs/guidelines/intentional_divergences.md section 2.150'
+  proof_type: regression
+  test_path: tests/unit/engine/test_service_admission.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.150.
+  support_boundary: 'Main runs the CLAMP law, so no answer changes; the ATOMIC law is exercised by tests only until the free-meal removal. keeps_coin is not in admission (pinned gap).'
 
 - id: STRAT-289
   text: 'TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: a winning goal continues, resumes or supersedes the entity''s LIVE project of its kind, chosen as the current project of the kind, else the newest live record (ACTIVE before SUSPENDED); a COMPLETED or ABANDONED record and storage order take no part. A matching target (target_entity_id when either side has one, else target_id) continues the current project, resumes a suspended one or makes an active non-current one current, creating nothing. A different target is superseded (ABANDONED, ended_by SUPERSEDED_BY_TARGET) only when evaluate_project_switch returns an update, cap-neutral; a losing candidate changes nothing. No live record goes through the capacity gate.'
