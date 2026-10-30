@@ -137,3 +137,31 @@ def test_capacity_trim_drops_the_higher_id_on_an_urgency_tie():
     data = {"z_old": _concern("z_old", 0.1), "a_new": _concern("a_new", 0.1), "m": _concern("m", 0.9)}
     ordered = dict(sorted(data.items(), key=lambda kv: kv[0], reverse=True))
     assert CapacityService.trim_dict(ordered, 2, lambda c: c.urgency) == ["z_old"]
+
+
+def _capacity_run(phase_cls, first: str, second: str) -> list[str]:
+    """Run the capacity phase on an entity at the concern cap, with a urgency tie at the boundary stored in the given order."""
+    from dataclasses import replace
+
+    from src.core.builder import V2EntityBuilder
+    from src.core.state import AuthoritativeState
+    from src.core.updates import EntityUpdate, StateUpdate, StrategicUpdate
+
+    entity = V2EntityBuilder(7).kind("hero").location(0.0, 0.0).build()
+    cap = entity.strategic.profile.max_concerns
+    stored = {f"f{i:02d}": _concern(f"f{i:02d}", 0.9) for i in range(cap - 2)}
+    stored[first] = _concern(first, 0.1)
+    stored[second] = _concern(second, 0.1)
+    entity = replace(entity, strategic=replace(entity.strategic, concerns=stored))
+    state = AuthoritativeState(seed=1, tick=1, entities={7: entity})
+    update = StateUpdate(entity_updates={7: EntityUpdate(entity_id=7, strategic=StrategicUpdate(concerns_add_or_update=[_concern("n_new", 0.9)]))})
+    out = phase_cls.enforce(state, update)
+    return list(out.entity_updates[7].strategic.concerns_remove)
+
+
+@pytest.mark.parametrize("first, second", [("a_old", "z_new"), ("z_old", "a_new")])
+def test_capacity_phase_drops_the_higher_id_of_an_urgency_tie_whatever_the_insertion_order(first, second):
+    from src.engine.pipeline_phases.capacity_enforcement import CapacityEnforcementPhase
+
+    removed = _capacity_run(CapacityEnforcementPhase, first, second)
+    assert removed == [max(first, second)], removed
