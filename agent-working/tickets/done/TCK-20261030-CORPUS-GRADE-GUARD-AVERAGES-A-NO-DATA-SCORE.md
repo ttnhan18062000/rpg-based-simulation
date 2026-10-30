@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE
-phase: open
+phase: done
 date: 2026-10-30
 tags: [simulation-quality, regression]
 ---
@@ -15,7 +15,7 @@ tags: [simulation-quality, regression]
 The urban_political seed123 500t COGNITION grade guard averages a None score when its anchor is no-data, and crashes with a TypeError. Average only when the score tolerance applies.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -80,6 +80,17 @@ rpg-planner-ubuntu checked the other score-mean sites in the same file. The only
 - Ownership: `test_corpus_diversity.py` is rpg-domain (rpg-planner, 2026-10-30).
 
 ## Implementation Notes
+- New helper `_mean_score(target, scores, n_trials)` returns the mean only when `_score_applies(target)`, else `None`. All 12 mean sites use it: the 500t COGNITION guard (`:687`) and 11 per-pillar guards (`:873, 984, 1102, 1192, 1297, 1385, 1496, 1587, 1698, 1788, 1884`). The ticket text said 7 per-pillar sites; the file has 11. Each per-pillar site now reads `mean_score = _mean_score(...)` then `if mean_score is not None and not _within_score_tolerance(...)`; the 500t site asserts `mean_score is None or _within_score_tolerance(...)`. Anchors, tolerances, bands and messages are unchanged.
+- AC6: a live/anchor applicability mismatch cannot reach the mean because every one of the 12 sites asserts `not band_failures` (from `_snap_failure` -> `compare_pillar`) before it takes the mean (checked by line: the band assertion precedes the mean by 5 lines at `:682/:687` and 7 lines at each of the other 11). `_snap_failure` fails both directions: scored anchor with a no-data live pillar ("lost its data") and no-data anchor with a scored live pillar ("gained data"), plus a changed `min_events`. Existing case `test_snap_failure_four_way_on_hub_snapshots` covers both; the new `test_a_status_mismatch_between_live_and_anchor_still_fails_before_any_mean_is_taken` states each direction on its own and that only both-no-data passes.
+- No `slow_known_reds.yaml` entry (ruling b).
+
 ## Test Summary
+- `pytest tests/unit/worldassembly/test_corpus_diversity.py -m "not slow"`: 65 passed, 32 deselected.
+- New tests: `test_mean_score_is_computed_only_where_the_score_tolerance_applies` (includes the positive control: the old shape `sum([None]) / 1` raises TypeError) and the two-direction mismatch test above.
+- `test_urban_political_seed123_500t_cognition_grade_stability` (slow, one 500t audit_mode run, `urban_political` seed 123): passed once (49 s, 2026-10-30 about 15:54 +07). The run dir it wrote (`data/runs/urban_political_123_500_1122998_c86444a1`) was cleaned by run id.
+
 ## Files Changed
+- `tests/unit/worldassembly/test_corpus_diversity.py`
+
 ## Completion Summary
+The guard crashed with a TypeError whenever its anchor was no-data, whatever the simulation did. The mean is now taken only where the score tolerance applies, at all 12 sites, with no change to any anchor, tolerance or band. A status mismatch in either direction still fails earlier, and both directions have a unit case. The slow guard passes on current main with the fix (live COGNITION no-data with the same `min_events` as its anchor).
