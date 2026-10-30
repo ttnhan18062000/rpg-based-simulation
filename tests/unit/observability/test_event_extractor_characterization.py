@@ -13,7 +13,7 @@ Two sources of calls:
 - two seeded real-Kernel runs under ``audit_mode`` (extractor_characterization/kernel_scenario.py).
 
 Hash seed: set-listing events used to follow the process hash seed; the emit-order fix (#790) sorts them. Recordings still pin seed 0 and
-``test_recording_is_identical_under_a_second_hash_seed`` proves a second seed gives the same bytes.
+the ``*_under_a_second_hash_seed`` tests prove a second seed gives the same rows as the pinned seed-0 fixtures.
 
 Modes: ``OFF`` returns ``[]``. LIGHT and LONG_RUN are treated alike and any other mode differently, in the four mode checks inside the
 rollback branches; ``all_off_light`` vs ``all_off_normal`` pin both sides.
@@ -109,11 +109,15 @@ def test_kernel_scenario_matches_pinned_fixture(world, seed, ticks):
     assert not problems, f"{len(problems)} pinned extract() outputs moved; first: {problems[:5]}"
 
 
-def test_recording_is_identical_under_a_second_hash_seed():
-    """Emit order no longer follows the process hash seed (emit-order fix), so the digests recorded at seed 0 and at another seed must be byte-identical."""
-    assert corpus.run_corpus() == corpus.run_corpus(corpus.ALT_HASH_SEED)
-    for world, seed, ticks in corpus.KERNEL_SCENARIOS:
-        assert corpus.run_kernel_scenario(world, seed, ticks) == corpus.run_kernel_scenario(world, seed, ticks, corpus.ALT_HASH_SEED), world
+def test_corpus_recording_is_identical_under_a_second_hash_seed():
+    """Emit order no longer follows the process hash seed (emit-order fix), so a recording at another seed must equal the one pinned at seed 0, row for row."""
+    assert corpus.run_corpus(corpus.ALT_HASH_SEED) == corpus.load_rows(corpus.CORPUS_FIXTURE)
+
+
+@pytest.mark.parametrize("world,seed,ticks", corpus.KERNEL_SCENARIOS, ids=[s[0] for s in corpus.KERNEL_SCENARIOS])
+def test_kernel_recording_is_identical_under_a_second_hash_seed(world, seed, ticks):
+    expected = [r for r in corpus.load_rows(corpus.KERNEL_FIXTURE) if r["test"] == f"{world}:{seed}"]
+    assert corpus.run_kernel_scenario(world, seed, ticks, corpus.ALT_HASH_SEED) == expected
 
 
 # -- emitting blocks that neither the unit corpus nor the kernel scenarios reach (found by the coverage run in this ticket's test_plan.md) --

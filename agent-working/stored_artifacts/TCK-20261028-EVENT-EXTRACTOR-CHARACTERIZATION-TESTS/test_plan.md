@@ -9,7 +9,7 @@ tags: [observability, testing]
 ---
 
 # Test plan
-Passing on origin/main de5a223ca (after rpg hotfix (A), #790) with `src/` untouched (`git diff origin/main -- src/` empty). Goldens recorded on top of (A): 371 corpus rows, 400 kernel rows. Two-seed check: corpus and both kernel scenarios recorded at `PYTHONHASHSEED=0` and `12345` are identical (`test_recording_is_identical_under_a_second_hash_seed`). New module: 10 tests, about 82 s in total, each test well under the 60 s budget except the two-seed test (about 50 s of subprocess work); not marked slow.
+Passing on origin/main de5a223ca (after rpg hotfix (A), #790) with `src/` untouched (`git diff origin/main -- src/` empty). Goldens recorded on top of (A): 371 corpus rows, 400 kernel rows. Two-seed check: corpus and both kernel scenarios recorded at `PYTHONHASHSEED=0` and `12345` are identical (the three `*_recording_is_identical_under_a_second_hash_seed` tests). New module: 12 tests, about 70 s in total, each under 15 s (the first version of the two-seed check was one test of about 67 s, which hit the 60 s per-test resource budget under load; it is now three tests that compare a second-seed recording with the pinned fixtures); not marked slow.
 
 AC5 wide run (before (A), on 33da13604): `tests/unit/observability`, the 19 other files that import EventExtractor, `tests/architecture`: 1425 passed, 83 skipped, plus failures in `tests/unit/worldassembly/test_corpus_diversity.py` (score-anchor drift / resource time limit under load) and one `tests/architecture` thread-leak error that follow from machine load, not from this ticket (`src/` untouched). Reported to codebase-planner.
 

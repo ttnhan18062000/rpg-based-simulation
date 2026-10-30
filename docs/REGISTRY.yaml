@@ -7961,6 +7961,21 @@
   - observability
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
+  title: Split EventExtractor.extract into one function per event domain in src/observability/extraction/,
+    with the emitted event stream byte-identical
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - codebase/baselines/code_health_exceptions.jsonl
+  - codebase/structure/package_registry.jsonl
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
   ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
   title: The kernel resolves the run id but never passes it to EventRecorder, so every
@@ -8097,21 +8112,6 @@
   - src/engine/candidate_selector.py (movement_target)
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/codebase-m7-event-extractor/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN.md
-  ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
-  title: Split EventExtractor.extract into one function per event domain in src/observability/extraction/,
-    with the emitted event stream byte-identical
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-28'
-  related_code_areas:
-  - src/observability/event_extractor.py
-  - codebase/baselines/code_health_exceptions.jsonl
-  - codebase/structure/package_registry.jsonl
-  artifact_files: []
-  tags:
-  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED.md
   ticket_id: TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED

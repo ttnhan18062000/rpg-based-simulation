@@ -99,7 +99,7 @@ This ticket pins what `extract()` emits today, so that ticket 2 can prove it cha
 Test-only. A pytest plugin wraps `EventExtractor.extract`, evaluates each call under 8 configs and writes count plus SHA-256 prefix over canonical lines. Details: staging artifacts `plan.md`, `investigation.md`, `test_plan.md`. Findings (not fixed): under default flags `extract()` emits almost nothing; the rollback flags are where output lives.
 
 ## Test Summary
-`tests/unit/observability/test_event_extractor_characterization.py`: 10 passed (about 82 s). Coverage of `event_extractor.py` 98 % branch; both unreached emitting sites have direct tests. 5 probes each fail the tests. Two-seed check passes. `git diff origin/main -- src` empty.
+`tests/unit/observability/test_event_extractor_characterization.py`: 12 passed (about 70 s; each test under 15 s). Coverage of `event_extractor.py` 98 % branch; both unreached emitting sites have direct tests. 5 probes each fail the tests. Two-seed check passes. `git diff origin/main -- src` empty.
 
 ## Files Changed
 `tests/unit/observability/test_event_extractor_characterization.py`, `tests/unit/observability/extractor_characterization/{__init__,recorder_plugin,kernel_scenario,corpus}.py`, `tests/fixtures/event_extractor_characterization/{unit_corpus,kernel_runs}.jsonl`.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
-phase: open
+phase: done
 date: 2026-10-28
 tags: [observability]
 ---
@@ -15,7 +15,7 @@ tags: [observability]
 Split EventExtractor.extract into one function per event domain in src/observability/extraction/, with the emitted event stream byte-identical
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,13 +91,24 @@ This ticket splits the method by event domain. It is a pure move: nothing that i
 - `codebase/structure/package_registry.jsonl` (the observability entry)
 
 ## Assumptions / Open Questions
+- Resolved: a subpackage under `src/observability/` needs no registry entry; `tests/codebase` (519 passed) and `lint-imports` (17 kept, 0 broken) agree. The package registry's `do_not_imitate` entry for `event_extractor.py` was removed, since no function is over the limit now.
+- The phase18 allowlist (pinned by `tests/architecture`) lets only `event_extractor.py` import `src.domains`, and it was not widened. The world-event loop and `commitment_abandoned` therefore stay in `event_extractor.py`; `quests.py` reaches the latter through `ctx.abandonment_events`.
 - A subpackage under `src/observability/` needs no new package-registry entry, because the registry is per top-level package. Confirm this with `tests/codebase/test_package_registry.py` and the import-linter layers contract.
 - If keeping block order needs a per-entity sequence that interleaves domains, keep that interleaving. Order is behavior.
 
 ## Implementation Notes
+See staging artifacts `plan.md`, `investigation.md`, `test_plan.md`. Function bodies are the original text of each block, moved by line range with three mechanical renames. 14 modules plus `context.py` and `entity.py` in `src/observability/extraction/`; the longest function is 58 lines. The `threat_evolved` silent `except ... pass` now logs at debug level so that the new module adds no e3-silent-except row. Three tests that read the extractor's source text, and about 36 parity-ledger `v2_evidence` paths (via `parity_ledger_writer.py`), were re-pointed to the new modules.
 
 ## Test Summary
+- Ticket 1's goldens unchanged (`git diff origin/main -- tests/fixtures` shows only ticket 1's own new files, none modified after commit); characterization tests: 12 passed. Event lines before/after on the corpus (1,360,042 bytes) are byte-identical; so are both kernel-scenario digests.
+- AC5: `tests/unit/observability` + 15 other files that import EventExtractor + `tests/architecture`: 1543 passed, 83 skipped. Determinism and replay suites: 46 passed. `tests/codebase`: 519 passed.
+- `tests/unit/worldassembly/test_corpus_diversity.py` (score-anchor drift under 3 ids) fails identically on a clean `git archive` of origin/main de5a223ca, so it is not caused by this change.
+- Guard-test probes (6): all behave as required (see test_plan.md).
+- Code health OK (13 event_extractor rows removed), mypy 0 new (16 rows removed), pyrefly nothing new (10 rows removed), parity schema 0 rose / 0 new.
 
 ## Files Changed
+New: `src/observability/extraction/{__init__,context,entity,lifecycle,vitals,combat,progression,economy,strategy,leads,social,contracts,quests,capability,resources,world,faction}.py`, `tests/helpers/event_extractor_source.py`.
+Edited: `src/observability/event_extractor.py` (now the facade), the three source-text guard tests, `docs/guides/observability.md`, nine `docs/parity_ledger/*.yaml` shards (v2_evidence only), `codebase/baselines/{code_health_exceptions.jsonl,mypy_baseline.txt,pyrefly_baseline.json}`, `codebase/structure/package_registry.jsonl`.
 
 ## Completion Summary
+`EventExtractor.extract` is split into per-domain functions under `src/observability/extraction/`; every emitted event is unchanged.

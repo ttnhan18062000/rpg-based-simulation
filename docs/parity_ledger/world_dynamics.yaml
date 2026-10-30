@@ -1495,11 +1495,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 ecology_cycle_completed\
+  v2_evidence: "src/observability/extraction/resources.py \u2014 ecology_cycle_completed\
     \ block; tick % 200 == 0 guard iterating current_state.regions. As of the push-shaper\
     \ migrations, this event is also derived by the live-default apply-layer WorldDynamicsShaper\
-    \ (src/observability/event_shapers.py); event_extractor.py's block above is now\
-    \ the flag-gated (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
+    \ (src/observability/event_shapers.py); src/observability/extraction/resources.py's\
+    \ block above is now the flag-gated (_push_shapers_phase2_active) rollback path,\
+    \ not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestEcologyCycleCompleted
   divergence_note: null
@@ -1530,24 +1531,28 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 spawn_cadence_fired block\
-    \ (tick%50, kind exclusion tuple now (None, \"world_boss\", \"ancient_sentinel\"\
-    , \"goblin_raider\", \"dragonkin\")); _BOSS_KINDS frozenset (governs boss_spawned\
-    \ / narrative_milestone boss-variant / raid_party_spawned) now frozenset((\"world_boss\"\
-    , \"ancient_sentinel\", \"dragonkin\")) -- both updated by TCK-20260904-LAIR-ENTITY-ANCHOR;\
-    \ node_recharged block inside resource_node_regenerated guard (remaining_charges\
-    \ 0\u2192>0 only); threat_evolved block with threshold crossing logic in world_updates\
-    \ loop with try/except for MagicMock safety. As of the push-shaper migrations,\
-    \ spawn_cadence_fired and threat_evolved are also derived by the live-default\
-    \ apply-layer WorldDynamicsShaper (src/observability/event_shapers.py); node_recharged,\
-    \ despite sitting in this same entry alongside its two siblings, is derived by\
-    \ the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
-    \ not WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated\
-    \ (_push_shapers_phase2_active) rollback path for all three (plus boss_spawned/narrative_milestone/raid_party_spawned),\
-    \ not the sole terminus. Both event_extractor.py and event_shapers.py's WorldDynamicsShaper\
-    \ import BOSS_ENTITY_KINDS and SPAWN_CADENCE_EXCLUDED_KINDS from src/observability/entity_kind_constants.py\
-    \ (TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT), pinned by tests/unit/observability/test_entity_kind_constants.py\
-    \ and test_event_shapers_world_dynamics.py dragonkin tests."
+  v2_evidence: "src/observability/extraction/resources.py \u2014 spawn_cadence_fired\
+    \ block (tick%50, kind exclusion tuple now (None, \"world_boss\", \"ancient_sentinel\"\
+    , \"goblin_raider\", \"dragonkin\")); src/observability/extraction/world.py \u2014\
+    \ _BOSS_KINDS frozenset (governs boss_spawned / narrative_milestone boss-variant\
+    \ / raid_party_spawned) now frozenset((\"world_boss\", \"ancient_sentinel\", \"\
+    dragonkin\")) -- both updated by TCK-20260904-LAIR-ENTITY-ANCHOR; src/observability/extraction/resources.py\
+    \ \u2014 node_recharged block inside resource_node_regenerated guard (remaining_charges\
+    \ 0\u2192>0 only); src/observability/extraction/world.py \u2014 threat_evolved\
+    \ block with threshold crossing logic in world_updates loop with try/except for\
+    \ MagicMock safety. As of the push-shaper migrations, spawn_cadence_fired and\
+    \ threat_evolved are also derived by the live-default apply-layer WorldDynamicsShaper\
+    \ (src/observability/event_shapers.py); node_recharged, despite sitting in this\
+    \ same entry alongside its two siblings, is derived by the separate DeferredInstrumentationShaper\
+    \ (src/observability/event_shapers.py), not WorldDynamicsShaper. the extraction/\
+    \ blocks above are now the flag-gated (_push_shapers_phase2_active) rollback path\
+    \ for all three (plus boss_spawned/narrative_milestone/raid_party_spawned), not\
+    \ the sole terminus. src/observability/extraction/world.py (BOSS_ENTITY_KINDS),\
+    \ src/observability/extraction/resources.py (SPAWN_CADENCE_EXCLUDED_KINDS) and\
+    \ event_shapers.py's WorldDynamicsShaper import BOSS_ENTITY_KINDS and SPAWN_CADENCE_EXCLUDED_KINDS\
+    \ from src/observability/entity_kind_constants.py (TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT),\
+    \ pinned by tests/unit/observability/test_entity_kind_constants.py and test_event_shapers_world_dynamics.py\
+    \ dragonkin tests."
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;

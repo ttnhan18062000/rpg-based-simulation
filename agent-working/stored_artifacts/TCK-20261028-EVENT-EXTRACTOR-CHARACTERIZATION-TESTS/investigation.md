@@ -18,6 +18,6 @@ tags: [observability, testing]
 
 ## Hash-seed order: how the fixtures stay byte-identical
 - Before (A), the corpus showed a different digest between two recordings in separate processes (same count, different order) for events that list a set. The recorder does not sort, because emission order is behavior. The goldens were held until (A) (#790) merged, then re-recorded on top of it.
-- `corpus.py` still runs both recorders in a subprocess with `PYTHONHASHSEED=0`. `test_recording_is_identical_under_a_second_hash_seed` records the corpus and both kernel scenarios again at `PYTHONHASHSEED=12345` and asserts the rows equal the seed-0 rows.
+- `corpus.py` still runs both recorders in a subprocess with `PYTHONHASHSEED=0`. three tests (`test_corpus_recording_is_identical_under_a_second_hash_seed` and `test_kernel_recording_is_identical_under_a_second_hash_seed[<world>]`) record the corpus and each kernel scenario again at `PYTHONHASHSEED=12345` and assert the rows equal the pinned seed-0 fixtures.
 - The corpus now includes main's `test_event_extractor_equipment_multislot.py` (3 new rows: 4 slots equipped, equip/swap/unequip across 3 slots, durability in 4 slots). The 368 earlier rows did not move under (A); only the kernel scenarios' digests changed.
 - Consequence for ticket 2: the "fixtures unchanged" proof holds for a verbatim code move; a move that rebuilds a set differently could change order and would show as a digest change.

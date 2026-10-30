@@ -2984,11 +2984,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 lead_certainty_updated\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 lead_certainty_updated\
     \ block; _CERTAINTY_FLOAT = {PRECISE:1.0, APPROXIMATE:0.5, VAGUE:0.25, EXHAUSTED:0.0}\
     \ As of the push-shaper migrations (see STRAT-247), this event is also derived\
     \ by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestLeadCertaintyUpdated
@@ -3004,11 +3004,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 belief_stale block; _BELIEF_STALE_TICKS\
-    \ = 50; _emitted_stale_leads class-level dict reset in reset_run_state(). config/simulation_quality/detection_params.yaml\
-    \ \u2014 belief_stale_threshold: 50 As of the push-shaper migrations (see STRAT-247),\
-    \ this event is also derived by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 belief_stale block; _BELIEF_STALE_TICKS\
+    \ = 50; _emitted_stale_leads class-level dict reset in reset_run_state() (src/observability/event_extractor.py).\
+    \ config/simulation_quality/detection_params.yaml \u2014 belief_stale_threshold:\
+    \ 50 As of the push-shaper migrations (see STRAT-247), this event is also derived\
+    \ by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestBeliefStale
@@ -3025,11 +3026,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 decision_diverged_by_belief\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 decision_diverged_by_belief\
     \ and decision_divergence_detected blocks; _NON_SURVIVAL_PROJECT_KINDS frozenset\
     \ constant. As of the push-shaper migrations (see STRAT-247), both events are\
     \ also derived by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergedByBelief;
@@ -3157,7 +3158,7 @@
     ) into the existing, unmodified ResourceTransactionResolver.resolve() \"CRAFTING\"\
     /\"SHOP_BUY\" branches (src/core/conservation.py:133,155) \u2014 the same authoritative\
     \ mutation path src/engine/blacksmith.py and src/town/shop.py already use \u2014\
-    \ deliberately not CraftingSystem.craft() directly, which would bypass intent_results/event_extractor.py's\
+    \ deliberately not CraftingSystem.craft() directly, which would bypass intent_results/src/observability/extraction/economy.py's\
     \ item_crafted derivation. AdventureDecisionPhase.apply also now calls ServiceOpportunityProvider.get_opportunities\
     \ (src/domains/adventure/phase.py), previously never wired in, so craft_item/buy_item/repair_gear/ask_information/rest_inn\
     \ opportunities are generated at all.\nTCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION.\
