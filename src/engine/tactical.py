@@ -139,6 +139,14 @@ def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntitySta
     return None
 
 
+def pick_highest_power_skill(available_skills):
+    """Choice Bias (COMB-264/265): the highest-power skill; deterministic tie-break: power, then skill id.
+
+    ``learned_skills`` is a set, so without the id key an equal-power tie would follow PYTHONHASHSEED.
+    """
+    return min(available_skills, key=lambda skill: (-skill.power, skill.id))
+
+
 class TacticalDecisionSystem:
     """
     Authoritative logic for bounded local tactical decisions.
@@ -717,10 +725,7 @@ class TacticalDecisionSystem:
                             available_skills.append(skill)
                 
                 if available_skills:
-                    # Choice Bias: Pick highest power; deterministic tie-break: power, then skill id
-                    # (learned_skills is a set, so equal-power order would follow PYTHONHASHSEED).
-                    available_skills.sort(key=lambda s: (-s.power, s.id))
-                    chosen_skill_id = available_skills[0].id
+                    chosen_skill_id = pick_highest_power_skill(available_skills).id
 
             # Logic ID: COMB-267 (Exhaustion affects tactical choice)
             # If stamina is low and no free skills, might favor basic attack or rest

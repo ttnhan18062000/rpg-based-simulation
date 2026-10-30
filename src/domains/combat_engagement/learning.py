@@ -42,7 +42,8 @@ class CombatLearning:
             base_power = memory.estimated_power
             uncertainty = memory.uncertainty
             confidence = memory.confidence
-            known_skills = list(set(list(memory.known_skill_ids) + list(observed_skills)))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            known_skills = sorted(set(list(memory.known_skill_ids) + list(observed_skills)))
             outcomes = list(memory.outcomes) + [outcome]
 
         # 2. Adjust estimated power based on outcome

@@ -150,7 +150,8 @@ class ApplyPlanBuilder:
                            if r_upd.owner_faction_id_set is not None else reg.owner_faction_id)
                     knd = r_upd.kind_set if r_upd.kind_set is not None else reg.kind
                     wth = r_upd.weather_set if r_upd.weather_set is not None else reg.weather
-                    mods = list(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))
+                    # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+                    mods = sorted(set([m for m in reg.active_modifiers if m not in r_upd.modifiers_remove] + r_upd.modifiers_add))
                     prc = r_upd.price_modifiers_set if r_upd.price_modifiers_set is not None else reg.price_modifiers
                     pop_cohorts = r_upd.population_cohorts_set if r_upd.population_cohorts_set is not None else reg.population_cohorts
                     # TCK-20260902-REPRODUCTION-POPULATION-PRESSURE-CLOSURE: coarse individual-

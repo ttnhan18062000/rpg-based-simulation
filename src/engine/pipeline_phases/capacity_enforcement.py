@@ -154,12 +154,18 @@ class CapacityEnforcementPhase:
                 continue
 
             # Update the strategic update with removals
-            new_leads_remove = list(set(strat_upd.leads_remove) | set(lead_removals))
-            new_concerns_remove = list(set(strat_upd.concerns_remove) | set(concern_removals))
-            new_projects_remove = list(set(strat_upd.projects_remove) | set(project_removals))
-            new_hypotheses_remove = list(set(strat_upd.hypotheses_remove) | set(hypo_removals))
-            new_zones_remove = list(set(strat_upd.candidate_zones_remove) | set(zone_removals))
-            new_committed_intentions_remove = list(set(strat_upd.committed_intentions_remove) | set(ci_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_leads_remove = sorted(set(strat_upd.leads_remove) | set(lead_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_concerns_remove = sorted(set(strat_upd.concerns_remove) | set(concern_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_projects_remove = sorted(set(strat_upd.projects_remove) | set(project_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_hypotheses_remove = sorted(set(strat_upd.hypotheses_remove) | set(hypo_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_zones_remove = sorted(set(strat_upd.candidate_zones_remove) | set(zone_removals))
+            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
+            new_committed_intentions_remove = sorted(set(strat_upd.committed_intentions_remove) | set(ci_removals))
 
             refined_entity_updates[e_id] = replace(
                 ent_upd,
