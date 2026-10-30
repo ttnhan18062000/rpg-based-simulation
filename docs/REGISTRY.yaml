@@ -7890,6 +7890,21 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE.md
+  ticket_id: TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE
+  title: The urban_political seed123 500t COGNITION grade guard averages a None score
+    when its anchor is no-data, and crashes with a TypeError. Average only when the
+    score tolerance applies.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - regression
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
   title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
@@ -7941,6 +7956,77 @@
   - agent-working/stored_artifacts/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY/plan.md
   - agent-working/stored_artifacts/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY/test_plan.md
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED.md
+  ticket_id: TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED
+  title: Within one tick, the emit order of progression and equipment events follows
+    the process hash seed. Sort at the emit loops.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - src/observability/event_shapers.py
+  - tests/unit/observability/
+  artifact_files: []
+  tags:
+  - determinism
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS.md
+  ticket_id: TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS
+  title: Four observability integration tests write to fixed, cwd-relative directories
+    under tests/. One errored on teardown in CI. Move them to tmp_path.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - tests/integration/observability/test_phase23_behavior_timeline_episode_artifacts.py
+  - tests/integration/observability/test_phase24_behavior_metric_artifacts.py
+  - tests/integration/observability/test_phase25_postrun_behavior_analysis.py
+  - tests/integration/observability/test_phase26_behavior_scorecard_artifacts.py
+  - tests/integration/observability/test_event_recorder_live_publish.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS
+  title: Characterization tests that pin the event stream of EventExtractor.extract
+    before src/observability/event_extractor.py is split
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - src/observability/event_recorder.py
+  - src/observability/event_shapers.py
+  - src/domains/optimization/feature_flags.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/test_plan.md
+  tags:
+  - observability
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
+  title: Split EventExtractor.extract into one function per event domain in src/observability/extraction/,
+    with the emitted event stream byte-identical
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - codebase/baselines/code_health_exceptions.jsonl
+  - codebase/structure/package_registry.jsonl
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/test_plan.md
+  tags:
+  - observability
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
   ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
@@ -8077,6 +8163,24 @@
     retreat_destination)
   - src/engine/candidate_selector.py (movement_target)
   artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED.md
+  ticket_id: TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED
+  title: Strategic winner lookup takes the first project of the kind in dict order
+    (often a dead record), so the live SUSPENDED sibling is never resumed, a duplicate
+    is created over the cap and the trim evicts the entity's own suspended project
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/strategic_systems/intelligence.py (~1610-1612, ~1773)
+  - src/core/strategic.py (is_live_project, has_project_capacity, live_projects_in_the_trim)
+  - src/engine/pipeline_phases/capacity_enforcement.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/test_plan.md
   tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md

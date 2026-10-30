@@ -342,17 +342,17 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py's two faction-event loops, guarded\
-    \ via the same `_push_shapers_active` flag read as COMB-295/TOWN-190 (the second\
-    \ loop narrowly, preserving world_emergence_event/narrative_milestone unconditionally).\
-    \ Verified via real kernel run (`dungeon_crawl_seed42_500t`, default flag state):\
-    \ `diplomatic_transition: 29` events, all attributed to `event_shapers`, matching\
-    \ the exact count from TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's shadow-mode\
-    \ validation and this session's much earlier raw-event investigation of the same\
-    \ world/seed. `world_emergence_event`/ `narrative_milestone` presence not disrupted\
-    \ (confirmed by the code path being untouched, not re-verified via a fresh count\
-    \ in this entry \u2014 no reason to expect a change since the guard is structurally\
-    \ scoped to exclude them).\n"
+  v2_evidence: "src/observability/extraction/faction.py's faction-update loop and\
+    \ src/observability/event_extractor.py's world-event loop, guarded via the same\
+    \ `_push_shapers_active` flag read as COMB-295/TOWN-190 (the second loop narrowly,\
+    \ preserving world_emergence_event/narrative_milestone unconditionally). Verified\
+    \ via real kernel run (`dungeon_crawl_seed42_500t`, default flag state): `diplomatic_transition:\
+    \ 29` events, all attributed to `event_shapers`, matching the exact count from\
+    \ TCK-20260806-PUSH-SHADOW-VALIDATION-PERF's shadow-mode validation and this session's\
+    \ much earlier raw-event investigation of the same world/seed. `world_emergence_event`/\
+    \ `narrative_milestone` presence not disrupted (confirmed by the code path being\
+    \ untouched, not re-verified via a fresh count in this entry \u2014 no reason\
+    \ to expect a change since the guard is structurally scoped to exclude them).\n"
   proof_type: regression
   test_path: tests/unit/observability/test_event_shapers_economy_faction.py
   divergence_note: null
