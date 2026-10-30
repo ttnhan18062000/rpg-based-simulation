@@ -7905,6 +7905,20 @@
   - simulation-quality
   - regression
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261030-STALEMATE-BREAK-OVERWRITES-A-PROJECT-MOVE-EVERY-TICK.md
+  ticket_id: TCK-20261030-STALEMATE-BREAK-OVERWRITES-A-PROJECT-MOVE-EVERY-TICK
+  title: The stalemate breaker replaces a project's move with a one-tile wander every
+    tick on a move that reports no failure ("LEGAL", path length 0), so the subject
+    oscillates between two tiles and never reaches its target
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - the stalemate breaker and its stall/oscillation counters, navigation last_failure_reason,
+    the tactical move path
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
   title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
@@ -9364,6 +9378,17 @@
   tags:
   - architecture
   - delivery
+- type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
+  ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
+  title: A crowded service door blocks a starving subject 2 tiles away indefinitely
+    (occupancy_violation, falls back to REST)
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-21'
+  related_code_areas: []
+  artifact_files: []
+  tags: []
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT.md
   ticket_id: TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT
