@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.core.movement_modes import MovementMode
+from src.core.strategic import GoalKind, ProjectStatus
 from src.core.updates import EntityUpdate, NavigationUpdate, TaskUpdate
 from src.engine.need_pull import ESCALATION_ONSET, SLEEP_LINE
 
@@ -69,6 +70,20 @@ def chosen_rest_is_met(sleep_debt: float) -> bool:
     The wake line (``is_rested_enough``) stays the scheduler's wake trigger, the goal's "tired" read and a collapse's end; a chosen rest ran only
     to it before, so a REST begun at the line ended after one tick and the fatigue project (which completes at the floor) never did."""
     return sleep_debt < REST_MIN_SLEEP_DEBT
+
+
+def rest_ended_at_the_floor(entity: Any) -> bool:
+    """2.153 / STRAT-293: True for a subject whose chosen rest has just ended at the sleep floor, so its brain closes the need before debt accrues again.
+
+    An idle subject (no held task) whose current project is a live, ACTIVE fatigue project and whose sleep debt is strictly below ``REST_MIN_SLEEP_DEBT``:
+    exactly the state a chosen SLEEP/REST leaves when it ends (``chosen_rest_is_met``). The scheduler wakes its brain and the strategic pass runs for it on that
+    tick (off its cadence), so ``intelligence.py`` sees the debt under the floor and completes the project; without it the next cadence tick, up to ten ticks
+    later, sees the debt back at the floor and rests in place again. Woken: nothing else. No new constant. A pure read."""
+    if entity.task.payload or entity.biological.sleep_debt >= REST_MIN_SLEEP_DEBT:
+        return False
+    strat = entity.strategic
+    project = strat.projects.get(strat.current_project_id) if strat.current_project_id else None
+    return project is not None and project.kind == GoalKind.FATIGUE and project.status == ProjectStatus.ACTIVE
 
 
 def recovery_scale(sleep_debt: float) -> float:

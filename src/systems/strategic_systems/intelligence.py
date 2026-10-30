@@ -356,6 +356,11 @@ class StrategicIntelligenceSystem:
             budget=policy.strategic_budget, 
             sweep_interval=policy.background_sweep_interval
         )
+        # 2.153 / STRAT-293: a subject whose chosen rest has just ended at the sleep floor is evaluated this tick, off the queue and off its cadence, so the
+        # fatigue project completes before the debt accrues back to the floor (the rest holds no brain, so nothing else would run it in time).
+        from src.engine.sleep_debt import rest_ended_at_the_floor
+        floor_ended = tuple(e_id for e_id, ent in state.entities.items() if rest_ended_at_the_floor(ent))
+        candidate_ids = candidate_ids + tuple(e_id for e_id in sorted(floor_ended) if e_id not in candidate_ids)
         for e_id in candidate_ids:
             entity = state.entities[e_id]
             # Early exit: Skip inactive/dead entities entirely
@@ -371,7 +376,7 @@ class StrategicIntelligenceSystem:
                 pending_inventory = InventoryService.apply_update(entity.inventory, ent_upd.inventory)
             
             eval_concerns = should_run(state.tick, e_id, cadence.concern_evaluation)
-            eval_intents = should_run(state.tick, e_id, cadence.strategic_intelligence)
+            eval_intents = e_id in floor_ended or should_run(state.tick, e_id, cadence.strategic_intelligence)
             
             if not eval_concerns and not eval_intents and strat_up is None and not entity.strategic.blockers and not entity.strategic.leads:
                 nav_changed = False
@@ -603,7 +608,7 @@ class StrategicIntelligenceSystem:
                 strat_up = replace(strat_up, concerns_add_or_update=concerns_to_add)
 
             # --- 3. Strategic Intents ---
-            if should_run(state.tick, e_id, cadence.strategic_intelligence):
+            if eval_intents:
                 temp_entity = entity
                 active_blockers = {**entity.strategic.blockers}
                 for b in strat_up.blockers_add_or_update:

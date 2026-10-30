@@ -9,7 +9,7 @@ from src.engine.cadence import SystemCadence, should_run
 from src.core.items import food_hunger_recovery
 from src.engine.appraisal import can_eat_item
 from src.engine.need_pull import hunger_is_pressing, need_is_pressing
-from src.engine.sleep_debt import is_asleep
+from src.engine.sleep_debt import is_asleep, rest_ended_at_the_floor
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
@@ -138,7 +138,7 @@ class DeterministicScheduler:
         # Milestone 3: Staggered Entity Execution
         # Gating non-critical work items based on strategic cadence.
         is_idle_act = (work_kind == "ENTITY_ACT" and not ent.task.payload)
-        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind, wake_index)
+        woken = self._is_woken(ent, state, work_kind, wake_index) or self._is_need_woken(ent, state, work_kind, wake_index) or rest_ended_at_the_floor(ent)
         is_brain = woken or work_kind == "ENTITY_BRAIN" or is_idle_act
 
         # Readiness gate: thinking (brain) is free; only actual actions/movement
