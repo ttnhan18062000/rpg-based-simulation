@@ -30,7 +30,7 @@ P1
 E6b (plan section 27a) is approved as a test by #715 6529263880. It comes first among the authority work because OD-3's M1 is subject to it. The owner creates the repo and the machine account; no agent does either. No production settings are touched.
 
 ## Scope
-1. Owner's steps, as their own ask through lead-planner, before anything else starts: (a) create the machine account, the one free machine account Phase 1 will also use; (b) create the throwaway public repo; (c) add the account as a collaborator on that repo only, with a token that cannot reach this repo. The account stays out of this repo until the Phase 1 ask. Handing the token to the test run is agreed with the owner in that ask, and its value appears nowhere.
+1. Owner's steps, as their own ask through lead-planner, before anything else starts: (a) create the machine account, the one free machine account Phase 1 will also use; (b) create the throwaway public repo; (c) add the account as a collaborator on that repo only, with a token that cannot write this repo's contents. This repo is public, so a classic `public_repo` token can still comment, open issues and PRs here, and fork it. The account stays out of this repo until the Phase 1 ask. The token value appears nowhere; see Token handling below.
 2. Primary rows, which M1 rests on: a non-admin collaborator is refused merge and push to main under the `update` rule; the owner's bypass merge works, including with red checks; `--match-head-commit` refuses a late push, and how a browser merge behaves.
    Then the rest of the section 27a list: author self-approval (mainly M2's concern); `POST /git/refs` on an existing ref and under a race; a same-named job in a PR against a failing check; a deleted-and-replaced gate job; bypass actor types on a personal repo; skipped matrix legs; tag ruleset against the machine user; classic PAT without `workflow` scope on workflow files; automatic head-branch deletion and stacked PR retargeting.
 3. Record each result as confirmed, refuted or not tested, with its evidence, in a committed artifact. Report to agent-working-designer whether M1 holds.
@@ -44,7 +44,8 @@ E6b (plan section 27a) is approved as a test by #715 6529263880. It comes first 
 ## Acceptance Criteria
 1. Every question in the E6b list has a result, or a stated reason it was not tested.
 2. The artifact has no credential value or host credential detail.
-3. The M1 verdict is stated from the primary rows, and the plan's E6b-dependent claims are listed as held or changed.
+3. The end-of-run checks are recorded: the token-shape scan with its positive control, and the machine login's activity on rpg-based-simulation (expected none).
+4. The M1 verdict is stated from the primary rows, and the plan's E6b-dependent claims are listed as held or changed.
 
 ## Related Tickets
 - TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
@@ -65,7 +66,10 @@ E6b (plan section 27a) is approved as a test by #715 6529263880. It comes first 
 - No credential or ruleset change is authorised by the epic; each gets its own owner ask, by ticket.
 - Undecided, and not to be written as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
 - Owner ruling, given in the designer's terminal, lead-planner logging it on #715: the owner creates the account and the repo.
-- OPEN: how the test run gets the account's token without its value entering a transcript or shard; part of the owner's ask.
+- Token handling (designer, 2026-10-31). The owner's steps put two tokens in `~/.config/e6b/{no-workflow,workflow}.token`, mode 600, with a 7-day expiry. The run passes them only as `GH_TOKEN="$(cat <path>)" gh ...`, so monitoring rows capture the path and not the value. Rules: never `cat`, echo or print a token any other way; no `set -x`; no `gh auth login` or `gh auth token`; no verbose or debug flags; no captured raw headers. At the end, grep the session's shards for GitHub token shapes, with a positive control. The owner then revokes both tokens and deletes the repo and the directory.
+- Token limit (designer, via lead-planner's review): use the tokens for throwaway-repo calls only. The end-of-run check lists the machine login's activity on rpg-based-simulation, which should be none; any activity is reported to the owner.
+- Identity check (planner, a trap in the rows above): plain `git push` does not read `GH_TOKEN` and would use the host's own credentials, so a refused-or-allowed result would be about the owner, not the machine account. Make machine-account pushes through the REST API with the token, or through a credential setup that the designer agrees keeps these rules. Every row records its acting login, from `GH_TOKEN="$(cat <path>)" gh api user --jq .login` in the same step. A row with an unproven identity counts as not tested.
+- Real `git push` row (designer, 2026-10-31): REST stays the default, but add one row over git, because a ruleset's refusal over git and over REST are separate paths and M1 depends on both. Use `git -c credential.helper= -c credential.helper='!f() { echo username=x-access-token; echo "password=$(cat <path>)"; }; f' push <https url of the throwaway repo> ...`, which keeps the value out of the command line, with GIT_TRACE and GIT_CURL_VERBOSE off. Prove the acting login from GitHub's response or event log, not from the command. A refused push may leave no event, so first push a non-default branch with the same helper and read that event's actor as the control.
 
 ## Implementation Notes
 (to be filled by the implementer)
