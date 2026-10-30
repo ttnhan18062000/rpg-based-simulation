@@ -55,3 +55,17 @@ urban_political s42 and crowded_frontier s42 at 5000t reuse their 1000t traces, 
 | crowded_frontier | 08afbabcb4b3477c | 08afbabcb4b3477c | yes |
 | frontier_living_world (base) | 5000t trace checkpoint at tick 1000: 607de1258016fc87 | 607de1258016fc87 | yes |
 | frontier_living_world (B) | 5000t trace checkpoint at tick 1000: a8072692aeddcfd2 | a8072692aeddcfd2 | yes |
+
+## Post-merge check (ruling 7): merged B (fe6cb5772) against origin/main c5139b410
+
+PYTHONHASHSEED=0, audit_mode, seed 42, 1000 ticks, the main checkout's `.venv/bin/python` for every run. Trees: `trees/base2` (c5139b410) and `trees/B2` (fe6cb5772), differing only in B's 8 `src` files. Scripts: `chain4.sh`, `compare_post.py`, `attribute.py`.
+
+| world | base2 hash | merged B hash | alive base/B | deaths | counters | outside max(1, 5%) | first set difference | verdict |
+|---|---|---|---|---|---|---|---|---|
+| frontier_living_world | 607de1258016 | a8072692aedd | 31/31 (same set) | same | same | none | t304 e26 | TIE (0.5), inputs identical |
+| urban_political | c6a06e429c66 | d962ff60695c | 22/22 (same set) | same | same | none | t205 e15 | TIE (0.5), inputs identical |
+| crowded_frontier | 7031f948ae62 | 08afbabcb4b3 | 8/8 (same set) | same | same | none | t116 e24 | TIE (0.5), inputs identical |
+
+The base2 and merged-B hashes equal the de5a223ca and B hashes of the 1000t set (same worlds, seed 42), so #788, #789 and #791 to #793 moved none of them.
+
+Merged B, crowded_frontier s42 1000t, final hash by PYTHONHASHSEED: 0, 1, 2, 3 all `08afbabcb4b3477c`. IDENTICAL.

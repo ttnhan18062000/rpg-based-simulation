@@ -8038,7 +8038,7 @@
   tags:
   - delivery
 - type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED.md
+  path: agent-working/tickets/done/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED.md
   ticket_id: TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED
   title: Set ordering that reaches durable state or decisions follows the process
     hash seed. Audit every consumer, then sort.
@@ -8053,7 +8053,11 @@
   - src/engine/patches.py
   - src/engine/apply.py
   - src/core/state.py
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/plan.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/rpg_planner_ruling_2026-10-29.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/test_plan.md
   tags:
   - determinism
 - type: ticket
