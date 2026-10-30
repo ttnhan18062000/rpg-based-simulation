@@ -22,7 +22,8 @@ from src.ai.goals.opening_steps import (
 )
 from src.core.items import food_hunger_recovery
 from src.core.state import AuthoritativeState, BuildingState, EntityState
-from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.engine.appraisal import can_eat_item
+from src.engine.service_admission import admits
 from src.engine.spatial_query import SpatialQueryService
 from src.engine.way_in_range import way_in_range
 
@@ -52,7 +53,7 @@ def ways_in_reach(entity: EntityState, state: AuthoritativeState) -> Tuple[WayKi
     ways = []
     if any(food_hunger_recovery(stack.item_id) > 0.0 and can_eat_item(entity, stack.item_id) for stack in entity.inventory.items):
         ways.append(WayKind.CARRIED_FOOD)
-    if inn_in_reach(entity, state) is not None and can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
+    if inn_in_reach(entity, state) is not None and admits(entity, "EAT"):  # the one admission rule: diet (decision 44) and the payment law
         ways.append(WayKind.INN_MEAL)
     steps = open_food_step_kinds(entity, state)
     for step_kind, way in ((OpeningStepKind.FORAGE, WayKind.FORAGE), (OpeningStepKind.SCAVENGE, WayKind.SCAVENGE), (OpeningStepKind.HUNT, WayKind.HUNT_EAT_RAW)):
