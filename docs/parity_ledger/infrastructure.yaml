@@ -3669,8 +3669,9 @@
   legacy_evidence: null
   v2_evidence: "src/engine/kernel.py:702-736 (Kernel._phase_advancement(), prior_state/self._state\
     \ reassignment ordering); src/engine/kernel.py:806-855 (_phase_observability(),\
-    \ the prior_state.tick fix at line 836); src/observability/event_extractor.py:286,899\
-    \ (the two prior_state.tick fixes); src/domains/information/phase.py:77 (last_assimilated_tick\
+    \ the prior_state.tick fix at line 836); src/observability/extraction/strategy.py\
+    \ and src/observability/extraction/world.py (the two prior_state.tick fixes: last_assimilated_tick,\
+    \ last_calamity_tick_set); src/domains/information/phase.py:77 (last_assimilated_tick\
     \ stamped with pre-advance state.tick); src/world/calamity.py:57 (last_calamity_tick_set\
     \ stamped with pre-advance state.tick); src/engine/runtime_status.py:79 (reset_dwell\
     \ stamps last_transition_tick with the current_tick argument, called pre-advance\
@@ -4080,15 +4081,16 @@
     \ bug fix) and FACTION (7 new) pillar emission. Blocked gaps documented in test_event_extractor_social_faction.py\
     \ gap tests S-23, S-24, F-23, F-24. Translation mappings: leadership_changed,\
     \ betrayal_desertion, alliance_formed added to quality_hub.py. Tests: tests/unit/observability/test_event_extractor_social_faction.py\
-    \ (53 tests). src/observability/event_extractor.py; src/simulation_quality/quality_hub.py;\
-    \ src/observability/events.py (faction EventCategory). TCK-20260629-SIMQ-EMIT-NARRATIVE\
-    \ implements NARRATIVE pillar (7 new emission hooks): chronicle_entry_created\
-    \ (CampaignOrchestrator._emit_chronicle_events()), world_emergence_event + narrative_milestone\
-    \ (EventExtractor from world_events_add \u2014 war/boss/sovereignty), hero_death_unrecorded\
-    \ (EventExtractor entity diff active\u2192inactive for kind=hero), scenario_stalled\
-    \ + scenario_objective_completed (ScenarioRuntimeService event_recorder injection).\
-    \ Gap: scenario_objective_progressed (binary ObjectiveEvaluator \u2014 no partial\
-    \ progress). Tests: tests/unit/observability/test_event_extractor_narrative.py\
+    \ (53 tests). src/observability/extraction/social.py, src/observability/extraction/contracts.py,\
+    \ src/observability/extraction/faction.py and src/observability/event_extractor.py\
+    \ (world-event loop); src/simulation_quality/quality_hub.py; src/observability/events.py\
+    \ (faction EventCategory). TCK-20260629-SIMQ-EMIT-NARRATIVE implements NARRATIVE\
+    \ pillar (7 new emission hooks): chronicle_entry_created (CampaignOrchestrator._emit_chronicle_events()),\
+    \ world_emergence_event + narrative_milestone (EventExtractor from world_events_add\
+    \ \u2014 war/boss/sovereignty), hero_death_unrecorded (EventExtractor entity diff\
+    \ active\u2192inactive for kind=hero), scenario_stalled + scenario_objective_completed\
+    \ (ScenarioRuntimeService event_recorder injection). Gap: scenario_objective_progressed\
+    \ (binary ObjectiveEvaluator \u2014 no partial progress). Tests: tests/unit/observability/test_event_extractor_narrative.py\
     \ (N-01..N-18, 2 gap skips). TCK-20260701-SIMQ-EMIT-AGENCY2: adds defer_with_reason,\
     \ commitment_abandoned, rejection_cascade_tick, route_family_first_use emitters;\
     \ all 4 tested in tests/unit/observability/test_event_extractor_agency2.py (24\
@@ -4418,7 +4420,7 @@
   v2_evidence: 'src/domains/information/router.py:102-103 (candidate ranking by (-expected_certainty,
     cost_gold)); src/domains/information/phase.py:92-105 (Branch B, no fallback past
     candidates[0]); src/domains/information/resolver.py:65-69 (affordability gate
-    returns None); src/observability/event_extractor.py:276-299 (last_assimilated_subject/tick
+    returns None); src/observability/extraction/strategy.py (last_assimilated_subject/tick
     mapped, last_routed_query_subject/tick absent); src/cognition/knowledge_model.py:67-70
     ("insufficient_gold" answer_kind branch has no producer today)
 
@@ -4468,8 +4470,8 @@
     gate returns a structured insufficient_gold signal; payload additively gains expected_certainty/source_kind
     alongside the unchanged subject/query_kind/cost_paid keys); src/domains/information/phase.py
     (InformationBeliefPhase.apply()''s Branch B now loops over router.route()''s candidates
-    instead of only trying candidates[0]); src/observability/event_extractor.py (new
-    additive route_new_query branch, gated on last_routed_query_tick == prior_state.tick,
+    instead of only trying candidates[0]); src/observability/extraction/strategy.py
+    (new additive route_new_query branch, gated on last_routed_query_tick == prior_state.tick,
     mirroring the belief_assimilated/belief_updated pattern); src/engine/intent/action_intent.py
     (ActionIntentAdapter.execute()''s ASK_INFORMATION branch discriminated by "query_kind"
     in intent.payload; information-domain path closes the loop via InformationResponseNormalizer.normalize()
@@ -8251,7 +8253,7 @@
     by default with no REDIS_AVAILABLE env var ever set): (1) the new test''s SimulationEvent
     construction used event_category="action", not a valid EventCategory literal --
     fixed to "strategy", matching the existing event_type="action_executed" pairing
-    already used in src/observability/event_extractor.py:249; (2) test_broker_feed_graceful_when_redis_unavailable
+    already used in src/observability/extraction/strategy.py; (2) test_broker_feed_graceful_when_redis_unavailable
     mocked "src.simulation_quality.feed.RedisStreamConsumer" (wrong patch target --
     RedisStreamConsumer is lazily imported inside BrokerQualityFeed.start(), not present
     in feed.py''s module namespace) and used side_effect=ConnectionError(...) when
@@ -8543,14 +8545,15 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py:22-43 (`_NON_COMBAT_OUTCOME_KINDS`,
-    `_real_combat_update()`), :127 (despawn-branch has_attacker fix), :160-175 (combat_damage,
-    now gated on `_real_combat_update(e_upd) is not None`), :177-187 (Kill-events
-    killer_id fix, CombatKillEvent''s own firing condition intentionally left unchanged),
-    :202-215 (combat_initiated gated), :217-227 (near_death_survival gated, previously
-    ungated entirely). Cross-checked against every real hp_delta-setting call site
-    in src/ (combat.py''s 5 sites, all set attacker_id; world_dynamics.py hazard drain
-    and biological.py starvation/exhaustion, both never set it; town_resolution.py/town_service.py
+  v2_evidence: 'src/observability/extraction/combat.py:20-41 (`_NON_COMBAT_OUTCOME_KINDS`,
+    `real_combat_update()`), src/observability/extraction/lifecycle.py:32 (despawn-branch
+    has_attacker fix), src/observability/extraction/combat.py:43-71 (combat_damage,
+    now gated on `real_combat_update(e_upd) is not None`), :96-147 (Kill-events killer_id
+    fix, CombatKillEvent''s own firing condition intentionally left unchanged), :149-172
+    (combat_initiated gated), :174-198 (near_death_survival gated, previously ungated
+    entirely). Cross-checked against every real hp_delta-setting call site in src/
+    (combat.py''s 5 sites, all set attacker_id; world_dynamics.py hazard drain and
+    biological.py starvation/exhaustion, both never set it; town_resolution.py/town_service.py
     healing paths are positive-only, irrelevant to the hp_diff<0 branch; evolution.py''s
     level-up heal bonus only adds to an existing hp_delta, inherits whatever attacker_id
     was already present; sabotage.py''s hp_delta is on BuildingState, not entity combat.hp,
@@ -8898,6 +8901,7 @@
     have delivered these two events live immediately with no independent verification
     window, the same double-fire-risk reasoning that gave NarrativeShaper its own
     flag apart from ENABLE_PUSH_EVENT_SHAPERS_PHASE2 in the first place). src/observability/event_extractor.py
+    (commitment_abandoned) and src/observability/extraction/strategy.py (rejection_cascade_tick)
     -- both blocks gated behind `not _push_shapers_agency_active` (rollback path).
     src/domains/optimization/feature_flags.py -- new ENABLE_PUSH_EVENT_SHAPERS_AGENCY,
     default ON. Real-kernel-adjacent verification (direct EventExtractor.extract()

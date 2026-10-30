@@ -2984,11 +2984,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 lead_certainty_updated\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 lead_certainty_updated\
     \ block; _CERTAINTY_FLOAT = {PRECISE:1.0, APPROXIMATE:0.5, VAGUE:0.25, EXHAUSTED:0.0}\
     \ As of the push-shaper migrations (see STRAT-247), this event is also derived\
     \ by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestLeadCertaintyUpdated
@@ -3004,11 +3004,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 belief_stale block; _BELIEF_STALE_TICKS\
-    \ = 50; _emitted_stale_leads class-level dict reset in reset_run_state(). config/simulation_quality/detection_params.yaml\
-    \ \u2014 belief_stale_threshold: 50 As of the push-shaper migrations (see STRAT-247),\
-    \ this event is also derived by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 belief_stale block; _BELIEF_STALE_TICKS\
+    \ = 50; _emitted_stale_leads class-level dict reset in reset_run_state() (src/observability/event_extractor.py).\
+    \ config/simulation_quality/detection_params.yaml \u2014 belief_stale_threshold:\
+    \ 50 As of the push-shaper migrations (see STRAT-247), this event is also derived\
+    \ by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestBeliefStale
@@ -3025,11 +3026,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 decision_diverged_by_belief\
+  v2_evidence: "src/observability/extraction/leads.py \u2014 decision_diverged_by_belief\
     \ and decision_divergence_detected blocks; _NON_SURVIVAL_PROJECT_KINDS frozenset\
     \ constant. As of the push-shaper migrations (see STRAT-247), both events are\
     \ also derived by the live-default apply-layer StrategyShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
+    \ src/observability/extraction/leads.py's block above is now the flag-gated (_push_shapers_phase2_active)\
     \ rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_information2.py::TestDecisionDivergedByBelief;
@@ -3157,7 +3158,7 @@
     ) into the existing, unmodified ResourceTransactionResolver.resolve() \"CRAFTING\"\
     /\"SHOP_BUY\" branches (src/core/conservation.py:133,155) \u2014 the same authoritative\
     \ mutation path src/engine/blacksmith.py and src/town/shop.py already use \u2014\
-    \ deliberately not CraftingSystem.craft() directly, which would bypass intent_results/event_extractor.py's\
+    \ deliberately not CraftingSystem.craft() directly, which would bypass intent_results/src/observability/extraction/economy.py's\
     \ item_crafted derivation. AdventureDecisionPhase.apply also now calls ServiceOpportunityProvider.get_opportunities\
     \ (src/domains/adventure/phase.py), previously never wired in, so craft_item/buy_item/repair_gear/ask_information/rest_inn\
     \ opportunities are generated at all.\nTCK-20260714-SIMQ-HARVEST-RESOURCE-ARRIVAL-TRANSITION.\
@@ -4616,6 +4617,26 @@
   test_path: tests/unit/ai/test_retreat_escalates_on_the_need_scale.py
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.139.
   support_boundary: 'Measured against step B tip 3533fde71 (build 358f4cb7f; landed src equivalent, divergence 2.139 Measured): no death-count drift in the 3 worlds; frontier_living_world extinction STOP (scout, wild_creature) accepted as known, owner decision #715 6458811768 (memo row 91). A chosen retreat is a stored target that takes no step (no strategic flight; held for after M1). The panic flight is decided in the tactical pass before goal scores (N15), so this changes the goal-level weighing only. Inherits the act test properties of 2.138.'
+- id: STRAT-290
+  text: 'A way is open to a subject iff the inn would deliver the service now (SURV-06, SURV-07 row 27, AGENCY-03): one admission function (`admits`) is read by the building service and by ways_in_reach, EatScorer, the bed test and the starvation record; the payment law is one constant. The V3 record carries each opening step in reach and whether it was taken: an untried step is a FAIL, no open way and no step is poverty.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/service_admission.py (admits, SERVICE_PAYMENT_LAW), src/engine/building_services.py (service_delta), src/ai/goals/ways.py, src/ai/goals/scorers.py, src/observability/starvation_record.py (StarvationVerdict, opening_steps_in_reach); docs/guidelines/intentional_divergences.md section 2.150'
+  proof_type: regression
+  test_path: tests/unit/engine/test_service_admission.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.150.
+  support_boundary: 'Main runs the CLAMP law, so no answer changes; the ATOMIC law is exercised by tests only until the free-meal removal. keeps_coin is not in admission (pinned gap).'
+- id: STRAT-291
+  text: 'A broke hungry subject takes paid work (SURV-06, SURV-07 row 27): the arrival action is derived from the building (a meal the law admits, else a takeable shift, else the project ends); the earn step is offered only if no present threat to life holds (the test that interrupts a held shift) and the subject would reach the meal alive (health lost past the starvation line over the walk to the work, SHIFT_TICKS and the walk on, at starvation.hp_loss_period, stays below its health); the pull escalates over the same step; a held shift is interrupted only by a present threat to life (wage forfeited), never by hunger.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/work_shift.py (shift_takeable, meal_position_after), src/engine/need_pull.py (step_travel_tiles), src/engine/building_arrival.py, src/ai/goals/opening_steps.py (work_in_reach), src/ai/goals/scorers.py, src/engine/scheduler.py (_is_need_woken); docs/guidelines/intentional_divergences.md section 2.151'
+  proof_type: regression
+  test_path: tests/integration/scenarios/test_a_broke_hungry_worker_earns_and_then_eats.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.151.
+  support_boundary: 'Main runs CLAMP with the free meal on, so the broke-subject effect shows only once the free-meal removal (D73) lands; the scenario tests switch off the core EAT free relief through one named fixture. No partial wages; ask stays a stub.'
 
 - id: STRAT-289
   text: 'TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: a winning goal continues, resumes or supersedes the entity''s LIVE project of its kind, chosen as the current project of the kind, else the newest live record (ACTIVE before SUSPENDED); a COMPLETED or ABANDONED record and storage order take no part. A matching target (target_entity_id when either side has one, else target_id) continues the current project, resumes a suspended one or makes an active non-current one current, creating nothing. A different target is superseded (ABANDONED, ended_by SUPERSEDED_BY_TARGET) only when evaluate_project_switch returns an update, cap-neutral; a losing candidate changes nothing. No live record goes through the capacity gate.'

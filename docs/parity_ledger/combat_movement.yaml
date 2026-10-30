@@ -3260,14 +3260,15 @@
   legacy_evidence: null
   v2_evidence: 'src/observability/event_extractor.py: `_push_shapers_active` flag
     read added at the top of `extract()` (defaults `"ON"` matching `FeatureFlagManager`''s
-    new default when `state.feature_flags` doesn''t override it); combat_damage/combat_initiated/near_death_survival/
-    hazard_drain_applied branches guarded `if not _push_shapers_active:`; Kill-events
-    branch narrowed (not guarded wholesale) per the `is_shaper_owned_kill` logic above.
-    src/domains/optimization/feature_flags.py:25 (`ENABLE_PUSH_EVENT_SHAPERS` default
-    flipped OFF->ON). src/engine/kernel.py:909-935 (`_phase_observability`''s shaper-events
-    block now extends `generated_events` -- delivered through the identical record/timeline
-    path as `EventExtractor`''s own output -- when the flag is "ON"; "SHADOW" mode
-    keeps constructing and logging only, for future Phase-2 validation reuse).
+    new default when `state.feature_flags` doesn''t override it); src/observability/extraction/combat.py:
+    combat_damage/combat_initiated/near_death_survival/ hazard_drain_applied branches
+    guarded `if not _push_shapers_active:`; Kill-events branch narrowed (not guarded
+    wholesale) per the `is_shaper_owned_kill` logic above. src/domains/optimization/feature_flags.py:25
+    (`ENABLE_PUSH_EVENT_SHAPERS` default flipped OFF->ON). src/engine/kernel.py:909-935
+    (`_phase_observability`''s shaper-events block now extends `generated_events`
+    -- delivered through the identical record/timeline path as `EventExtractor`''s
+    own output -- when the flag is "ON"; "SHADOW" mode keeps constructing and logging
+    only, for future Phase-2 validation reuse).
 
     '
   proof_type: regression
@@ -3319,17 +3320,17 @@
     (wounds are declared intentionally permanent; no healing trigger is built).
 
 
-    `src/observability/event_extractor.py`''s wound/scar diff blocks (lines ~280-281,
-    ~302-303) previously had an independent bug (`isinstance(x, list)` instead of
-    `isinstance(x, (list, tuple))`) that silently dropped event emission for all three
-    events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state was
-    committed as a tuple by the real apply path (which it always is in production).
+    `src/observability/extraction/vitals.py`''s wound/scar diff blocks (lines 92-93,
+    111-112, 130-131) previously had an independent bug (`isinstance(x, list)` instead
+    of `isinstance(x, (list, tuple))`) that silently dropped event emission for all
+    three events -- `wound_sustained`, `wound_healed`, and `scar_gained` -- once state
+    was committed as a tuple by the real apply path (which it always is in production).
     This bug is now fixed by `TCK-20260829-HOTFIX-WOUND-SCAR-EVENT-EXTRACTOR-TUPLE-BLIND`:
     both checks now read `isinstance(x, (list, tuple))`, matching the pre-existing
-    correct pattern already used elsewhere in the same file (`src/observability/event_extractor.py:1499`,
-    `:1583`). `wound_sustained` now genuinely fires through the real event-observability
-    layer, confirmed via a new real, non-mocked `Kernel.tick_once()` regression test
-    (`tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop`)
+    correct pattern already used elsewhere in the same file (`src/observability/extraction/faction.py:126`,
+    `src/observability/event_extractor.py:197`). `wound_sustained` now genuinely fires
+    through the real event-observability layer, confirmed via a new real, non-mocked
+    `Kernel.tick_once()` regression test (`tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop`)
     that observes the event land in `kernel._event_recorder.events` at tick 9 of the
     same deterministic 40-tick fixture, produced by the same real production wound.
     `wound_healed`/`scar_gained` event-layer reachability is fixed uniformly by the
@@ -3934,8 +3935,8 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: 'Narrowed the fallback in `src/observability/event_extractor.py` to
-    additionally require `entity.lifecycle.death_reason == "COMBAT"` (the durable,
+  v2_evidence: 'Narrowed the fallback in `src/observability/extraction/combat.py`
+    to additionally require `entity.lifecycle.death_reason == "COMBAT"` (the durable,
     typed field `LifecycleSystem.resolve_lifecycle()` sets in the same EntityUpdate
     as the `active=False` flip, and the only place in the runtime pipeline that legitimately
     performs that flip) before firing `CombatKillEvent`. `hero_death_unrecorded` (a
@@ -4441,7 +4442,7 @@
   legacy_evidence: null
   v2_evidence: src/engine/world_dynamics.py (resolve_dynamics hazard block), src/core/updates.py
     (CombatUpdate.hazard_damage), src/core/combat_constants.py (TERMINAL_COMBAT_OUTCOME_KINDS),
-    src/systems/lifecycle_systems/lifecycle.py (HAZARD branch), src/observability/event_extractor.py
+    src/systems/lifecycle_systems/lifecycle.py (HAZARD branch), src/observability/extraction/combat.py
     + event_shapers.py (hazard_drain_applied keyed on hazard_damage).
   proof_type: regression
   test_path: tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py::test_combat_kill_plus_hazard_records_the_combat_death_and_keeps_hazard_observable

@@ -196,6 +196,7 @@ mechanisms:
       - src/engine/tactical_threat.py::present_threat_terms
       - src/engine/tactical_threat.py::safety_retreat_warranted
       - src/engine/tactical_threat.py::hostile_acts_on
+      - src/engine/tactical_threat.py::perceived_threats
       - src/ai/goals/present_threat.py::acting_threat_to
       - src/engine/tactical_hold.py::held_swing_update
       - src/engine/tactical_hold.py::stalemate_break_update
@@ -1569,6 +1570,7 @@ mechanisms:
       - src/systems/strategic_systems/entity_target_objective.py::objective_outcome
       - src/systems/strategic_systems/entity_target_objective.py::contract_objective_outcome
       - src/ai/goals/escalation.py::escalated_need_wins
+      - src/engine/need_pull.py::step_travel_tiles
       - src/ai/goals/live_record_route.py::route_live_record
       - src/ai/goals/live_record_route.py::orphan_switch_candidate
       - src/ai/goals/live_record_route.py::supersede_on_win
@@ -2823,9 +2825,12 @@ mechanisms:
       - src/systems/economy_systems/market.py::MarketSystem
       - src/systems/economy_systems/reputation_discount.py::apply_reputation_discount
       - src/engine/building_services.py::service_delta
+      - src/engine/service_admission.py::admits
       - src/engine/building_arrival.py::building_arrival_update
       - src/engine/shop_sale.py::plan_sale
       - src/engine/work_shift.py::work_update
+      - src/engine/work_shift.py::shift_takeable
+      - src/engine/work_wake.py::held_work_is_threatened
       - src/engine/serves.py::serves
     verified:
       instrument: code_trace
