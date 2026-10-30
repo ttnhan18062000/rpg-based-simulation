@@ -202,6 +202,7 @@ mechanisms:
       - src/engine/tactical_hold.py::notice_unengaged_hostile
       - src/engine/hostility.py::perceived_hostile
       - src/engine/rpg_depth.py::LeashService
+      - src/engine/scheduler.py::_threat_wakes_sleeper
       - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
@@ -275,6 +276,9 @@ mechanisms:
         as its own mechanism, `sense_gated_detection`. The reasoning above for keeping it out of
         THIS entry's `implemented_by` still holds; only "NOT registered as its own mechanism" is
         superseded.
+        **Note, added 2026-10-30 (same ticket, divergence 2.154, Enforced):** decision 32's wake now also reaches a held SLEEP or REST, a
+        collapse included: on decision 32's cadence a sleeper is woken by an unengaged adjacent hostile or by `acting_threat_to` (a perceived
+        hostile acting on it). The wake is a re-decision only; the fatigue project stays live.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -475,6 +479,8 @@ mechanisms:
       - src/worldbuilding/diet_declaration.py::require_declared_diet
       - src/engine/natural_healing.py::hp_gain
       - src/ai/goals/kind_group.py::kind_group
+      - src/engine/sleep_debt.py::chosen_rest_is_met
+      - src/engine/sleep_debt.py::rest_ended_at_the_floor
     verified:
       instrument: code_trace
       verdict: observed
@@ -518,6 +524,10 @@ mechanisms:
         6000 ticks (2.5 days) after the line instead of about 50. Implemented by TCK-20261008-STARVATION-WEAKENS-FIRST-AND-KILLS-OVER-DAYS-SURV-02:
         `src/engine/starvation.py` (the one tuning table), `apply.py` (the HP term and the recovery scale), `combat.py` (the attack scale).
         **Rule ratified 2026-10-11 (owner decision 42, memo row 65):** every living body heals naturally, 1 HP every round(9600 / max_hp) life-due ticks awake and round(4800 / max_hp) asleep or resting, none at the starving line and half speed while weakened. Implemented by TCK-20261011-EVERY-LIVING-KIND-HEALS-NATURALLY-FASTER-AT-REST-ROW-65: `src/engine/natural_healing.py` (the table and `hp_gain`), `apply.py` (the HP term).
+        **Note, added 2026-10-30 (TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT, divergence 2.153):** a chosen SLEEP or REST
+        lasts until sleep debt is below REST_MIN_SLEEP_DEBT (`sleep_debt.chosen_rest_is_met`, used by `actions._survival_action_ends`); a
+        collapse (decision 41) keeps its end at the wake line. When a chosen rest ends at the floor, the scheduler wakes that subject's brain
+        (`sleep_debt.rest_ended_at_the_floor`) so the fatigue project closes that tick and does not hover at the floor. No new constant.
   - id: derived_stats
     layer: entity
     systems: [progression]
