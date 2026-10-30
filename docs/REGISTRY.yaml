@@ -5760,6 +5760,58 @@
   - determinism
   - engine
 - type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md
+  title: AI-First SDLC — Architecture Discovery and Audit
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md
+  title: 'AI-First SDLC: Architecture Evolution Plan'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md
+  title: 'AI-First SDLC: Decision Summary and Evidence Refresh'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md
+  title: 'Handover: AI-first SDLC evolution work, from agent-working-designer-u24
+    to ubuntu''s agent-working-designer'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/agent_infrastructure/agent_working_direction.md
   title: Agent-Working Direction — Observable, Self-Diagnosing, Adaptable Delivery
   status: active
