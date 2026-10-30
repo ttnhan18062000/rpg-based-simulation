@@ -4629,3 +4629,23 @@
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.143.
   support_boundary: 'The four mapped kinds (ADVENTURE_ROUTE, SOCIAL_CONTRACT, REGION_STABILIZATION, OCCUPATION_CHANGE) never match a stored record and are unchanged here (separate ticket). Direct resume of a matching suspended record is existing behaviour, not endorsed. Measured counts: divergence 2.143.'
 
+- id: STRAT-293
+  text: 'TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT (N14, 2.153): a CHOSEN SLEEP or REST (not a collapse) lasts until the sleep debt is strictly below REST_MIN_SLEEP_DEBT (20) instead of the wake line (58.8), so the fatigue project completes and the subject leaves its tile; a collapse keeps its wake-line end. The subject''s brain is woken as the rest ends below the floor (an idle subject with an ACTIVE fatigue project current and debt below the floor), and the strategic pass evaluates it that tick, so the project closes before the debt accrues back; nothing else is woken. No new constant.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/sleep_debt.py (chosen_rest_is_met, rest_ended_at_the_floor, REST_MIN_SLEEP_DEBT), src/engine/pipeline_phases/actions.py (_survival_action_ends), src/engine/scheduler.py (_critical_item wake), src/systems/strategic_systems/intelligence.py (fused_strategic_pass), src/engine/tactical_rest.py (re-export). docs/mechanics/04_strategic_cognition.md section 1. docs/guidelines/intentional_divergences.md 2.153.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_the_brain_is_woken_as_a_chosen_rest_ends_at_the_floor.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.153.
+  support_boundary: 'A collapse (decision 41) is unchanged. A held rest still holds no brain, so a threat or hunger wake is the only early end (2.154, 2.115). Measured counts: divergence 2.153.'
+- id: STRAT-294
+  text: 'TCK-20261021-A-CROWDED-SERVICE-DOOR-BLOCKS-A-STARVING-SUBJECT (N14, 2.154): a holder of SLEEP or REST, a collapse included, is woken for the brain on decision 32''s cadence when an unengaged hostile is orthogonally adjacent or a perceived hostile is acting on it (acting_threat_to). The wake is a re-decision only: at debt >= 98 the subject collapses again, otherwise it answers the threat; the fatigue project stays live. No new constant.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/scheduler.py (_threat_wakes_sleeper, _is_need_woken), src/ai/goals/present_threat.py (acting_threat_to, unchanged), src/engine/candidate_selector.py (unengaged_adjacent_hostile). docs/mechanics/04_strategic_cognition.md section 1. docs/guidelines/intentional_divergences.md 2.154.'
+  proof_type: regression
+  test_path: tests/unit/engine/test_threat_wakes_a_sleeper.py
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.154.
+  support_boundary: 'Perception is the 10-tile neighbour view capped at 5 by saliency; a shooter hidden behind five closer hostiles is not perceived (disclosed in 2.154, counted in the paired run). Measured counts: divergence 2.154.'
