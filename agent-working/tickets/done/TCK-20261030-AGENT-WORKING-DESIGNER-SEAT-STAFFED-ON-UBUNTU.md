@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU
-phase: open
+phase: done
 date: 2026-10-30
 tags: [process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [process-improvement]
 The roster marks `agent-working-designer` as staffed on host ubuntu, ending the planner's interim hold on the seat.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -66,13 +66,13 @@ Owner instruction #715 6525124859 (2026-10-30, recorded by lead-planner, read by
 - None. lead-planner asked for this citing the owner comment above; the push ask goes through lead-planner.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Flipped `agent-working-designer` to `seat_status: staffed` in `registries/session_roles.yaml`, dropped `interim_holder` and the 'no designer on host ubuntu' comment, added `card_note: "Host ubuntu; twin `-u24`."`. Regenerated the cards with `tools/sessions.generate_agents`: only `session-agent-working-designer.md` changed (no 'held by'; carries the note). `session_layer_working_process.md:157-169` already shows `staffed`, left as is.
 
 ## Test Summary
-(to be filled by the implementer)
+`python3 -m tools.sessions.validate`: 0 findings, 32 roles. `tests/tools/test_session_*` scoped runs and the full `tests/tools` run: see the PR.
 
 ## Files Changed
-(to be filled by the implementer)
+registries/session_roles.yaml; .claude/agents/session-agent-working-designer.md; tests/tools/test_session_u24_twins.py (`test_row7_seat_status`, `test_row3...` now asserts the twin's note for every twin); tests/tools/test_session_roster.py (the unstaffed set drops the designer; test renamed `test_real_registry_has_thirty_two_seats_two_unstaffed`; comment updated); tests/tools/test_session_cards.py (`test_unstaffed_seat_names_its_holder_on_the_card` now uses `codebase-designer`, still unstaffed, held by `agent-working-designer`). The last three edits follow directly from the flip and were not listed in the ticket scope (agent-working-planner approved).
 
 ## Completion Summary
-(to be filled by the implementer)
+The roster marks agent-working-designer staffed on host ubuntu; its card carries `Host ubuntu; twin `-u24`.` and no longer says 'held by'. Validate is clean; the full tests/tools run is recorded in the PR.

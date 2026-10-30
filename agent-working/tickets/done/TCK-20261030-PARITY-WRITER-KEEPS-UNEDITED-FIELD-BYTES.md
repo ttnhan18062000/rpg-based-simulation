@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261030-PARITY-WRITER-KEEPS-UNEDITED-FIELD-BYTES
-phase: open
+phase: done
 date: 2026-10-30
 tags: [ai, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 `parity_ledger_writer.py` keeps the bytes of the fields an edit did not change, and agent-working owns the file.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -74,13 +74,13 @@ Owner decision #715 6525197149: agent-working owns `tools/parity_ledger_writer.p
 - A top-level key's lines are the column-2 `key:` line (column 0 `- key:` for the first key) plus its deeper-indented or blank continuation lines. The parse-back check catches any shape where this is wrong.
 
 ## Implementation Notes
-(to be filled by the implementer)
+`tools/parity_ledger_writer.py`: new `_field_splice_block`; `_splice_entry` now keeps the original lines of every top-level key whose parsed value is unchanged, re-dumps only changed or added keys, drops removed keys, keeps key order and appends new keys. The existing parse-back check still guards the result; it falls back to a whole-entry dump, then a whole-shard dump. `registries/session_roles.yaml` agent-working `owns` gains `tools/parity_ledger_writer.py`; `route` now names agent-working; cards regenerated; `validate` clean.
 
 ## Test Summary
-(to be filled by the implementer)
+PROG-125 repro at 7b95b3a7f (re-point `v2_evidence` against that base's `progression.yaml`): before (origin/main writer) 8 changed diff lines, including a re-wrapped `divergence_note`; after, 3 changed lines, all `v2_evidence`. Mutation check: with the field splice disabled, 6 of the 9 new tests fail (the other 3 are the fallback, first/last and first-key-removed helper cases, which the old code also satisfies). `tests/tools/test_parity_ledger_writer.py`: 50 passed.
 
 ## Files Changed
-(to be filled by the implementer)
+tools/parity_ledger_writer.py; tests/tools/test_parity_ledger_writer.py (`TestFieldLevelSplice`); registries/session_roles.yaml; .claude/agents/session-agent-working-*.md (cards regenerated).
 
 ## Completion Summary
-(to be filled by the implementer)
+The parity ledger writer keeps the bytes of every unedited top-level field of an updated entry; `tools/parity_ledger_writer.py` is owned by agent-working and routes there. The PROG-125 repro changes only `v2_evidence` lines.

@@ -212,6 +212,46 @@ def test_no_gap_states_none_stated(tmp_path):
     ])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "none stated" in result["body"]
+    assert pr_render.KNOWN_GAPS_NONE_STATED in result["body"]
+
+
+def _render_with_summary(tmp_path, **sections):
+    tickets_root = tmp_path / TICKETS
+    tickets_root.mkdir(parents=True)
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing", **sections)
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: x"]),
+        _git_diff_rule(["agent-working/tickets/TCK-20260924-A.md"]),
+    ])
+    return pr_render.render(tickets_root=tickets_root, run_command=runner)["body"]
+
+
+def test_known_gap_marker_surfaces_without_fail(tmp_path):
+    body = _render_with_summary(tmp_path, completion_summary="Done.\n- Known gap: ntfy not re-proven this run.")
+    assert "  - TCK-20260924-A: Known gap: ntfy not re-proven this run." in body
+    assert "none stated" not in body
+
+
+def test_line_with_fail_and_known_gap_appears_once(tmp_path):
+    body = _render_with_summary(tmp_path, test_summary="Known gap: x FAIL in lane y")
+    assert body.count("  - TCK-20260924-A: Known gap: x FAIL in lane y") == 1
+
+
+def test_prose_mentioning_gap_does_not_surface(tmp_path):
+    body = _render_with_summary(tmp_path, completion_summary="No gaps remain, except as stated in the record, and a known gap: lowercase.")
+    assert pr_render.KNOWN_GAPS_NONE_STATED in body
+
+
+def test_no_ticket_path_uses_the_same_empty_wording(tmp_path):
+    tickets_root = tmp_path / TICKETS
+    (tickets_root / "done").mkdir(parents=True)
+    _write_ticket(tickets_root / "done", "TCK-20260924-A", "ai", "Already closed upstream")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: follow-up evidence"]),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md"]),
+    ])
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner, theme="t", scope="ai", why="w")
+    assert pr_render.KNOWN_GAPS_NONE_STATED in result["body"]
 
 
 # ---------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261029-PR-RENDER-KNOWN-GAPS-MISSES-GAPS-STATED-WITHOUT-FAIL
-phase: open
+phase: done
 date: 2026-10-29
 tags: [delivery]
 ---
@@ -15,7 +15,7 @@ tags: [delivery]
 `pr_render.py` writes "Known gaps: none stated" when a ticket does state gaps but not with the word `FAIL`, and gives no way to put them in that line.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -113,13 +113,13 @@ deliberate ... makes reporting it the default").
   same flag to agree.
 
 ## Implementation Notes
-(to be filled by the implementer)
+`tools/delivery/pr_render.py`: `extract_known_gaps` now also collects a line beginning `Known gap:` (optional list marker, case-sensitive), once per line when it also contains `FAIL`; the empty case reads `- Known gaps: none stated (no FAIL or Known gap: line in any ticket's Test/Completion Summary)` from one constant used by both the ticket path and the no-tickets path. `docs/guides/delivery_process.md` describes the marker; the module docstring too. CLAUDE.md was not touched: a pointer there is left for the owner. `pr_template_spec.json`, `pr-body-lint.yml` and `test_parity_index_baseline.py:268` carry no copy of the wording (the last is an unrelated 'Known gaps' heading).
 
 ## Test Summary
-(to be filled by the implementer)
+`tests/tools/test_delivery_pr_render.py` 71 passed, `test_parity_index_baseline.py` and `test_agent_working_paths_guard*.py` passed in the same run (96 + 71 across two runs).
 
 ## Files Changed
-(to be filled by the implementer)
+tools/delivery/pr_render.py; tests/tools/test_delivery_pr_render.py; docs/guides/delivery_process.md.
 
 ## Completion Summary
-(to be filled by the implementer)
+pr_render collects a `Known gap:` line as well as a `FAIL` line, and the empty case names what was checked. Known gap: a CLAUDE.md pointer to the marker is left for the owner to decide (governing file).

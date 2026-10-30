@@ -66,8 +66,7 @@ def test_row3_each_u24_card_has_its_note_and_every_card_is_in_budget(u24, twin):
     card = compose_card(u24, ROSTER, AUTH)
     assert ROSTER.role(u24).card_note and ROSTER.role(u24).card_note in card
     assert "u24desktop" in ROSTER.role(u24).card_note
-    if twin != "agent-working-designer":  # the unstaffed marker on that card already says it; no room for a note
-        assert ROSTER.role(twin).card_note and ROSTER.role(twin).card_note in compose_card(twin, ROSTER, AUTH)
+    assert ROSTER.role(twin).card_note and ROSTER.role(twin).card_note in compose_card(twin, ROSTER, AUTH)
     assert estimate_tokens(card) <= CARD_BUDGET_TOKENS and estimate_tokens(compose_card(twin, ROSTER, AUTH)) <= CARD_BUDGET_TOKENS
 
 
@@ -152,4 +151,4 @@ def test_row7_seat_status():  # 7
     planner = ROSTER.role("agent-working-planner")
     assert (planner.seat_status, planner.interim_holder) == ("staffed", None)
     designer = ROSTER.role("agent-working-designer")
-    assert designer.seat_status == "unstaffed" and designer.interim_holder
+    assert (designer.seat_status, designer.interim_holder) == ("staffed", None)

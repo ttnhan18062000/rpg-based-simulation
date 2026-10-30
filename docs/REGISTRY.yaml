@@ -7890,6 +7890,22 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU.md
+  ticket_id: TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU
+  title: The roster marks `agent-working-designer` as staffed on host ubuntu, ending
+    the planner's interim hold on the seat.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-30'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/generate_agents.py, tools/sessions/card.py
+  - tests/tools/test_session_u24_twins.py, tests/tools/test_session_roster.py
+  - .claude/agents/session-agent-working-designer.md
+  artifact_files: []
+  tags:
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE.md
   ticket_id: TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE
   title: The urban_political seed123 500t COGNITION grade guard averages a None score
@@ -7904,6 +7920,22 @@
   tags:
   - simulation-quality
   - regression
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261030-PARITY-WRITER-KEEPS-UNEDITED-FIELD-BYTES.md
+  ticket_id: TCK-20261030-PARITY-WRITER-KEEPS-UNEDITED-FIELD-BYTES
+  title: '`parity_ledger_writer.py` keeps the bytes of the fields an edit did not
+    change, and agent-working owns the file.'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - _splice_entry
+  - tests/tools/test_parity_ledger_writer.py
+  - registries/session_roles.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
@@ -7989,6 +8021,22 @@
   artifact_files: []
   tags:
   - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-PR-RENDER-KNOWN-GAPS-MISSES-GAPS-STATED-WITHOUT-FAIL.md
+  ticket_id: TCK-20261029-PR-RENDER-KNOWN-GAPS-MISSES-GAPS-STATED-WITHOUT-FAIL
+  title: '`pr_render.py` writes "Known gaps: none stated" when a ticket does state
+    gaps but not with the word `FAIL`, and gives no way to put them in that line.'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - extract_known_gaps
+  - tools/delivery/pr_template_spec.json
+  - tests/tools/test_delivery_pr_render.py
+  - .github/workflows/pr-body-lint.yml
+  artifact_files: []
+  tags:
+  - delivery
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS.md
   ticket_id: TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS
