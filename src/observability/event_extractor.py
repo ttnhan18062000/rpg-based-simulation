@@ -348,7 +348,7 @@ class EventExtractor:
                 eq, prior_eq = entity.equipment, prior_ent.equipment
                 eq_slots = eq.slots if isinstance(eq.slots, dict) else {}
                 prior_eq_slots = prior_eq.slots if isinstance(prior_eq.slots, dict) else {}
-                for slot in set(eq_slots) | set(prior_eq_slots):
+                for slot in sorted(set(eq_slots) | set(prior_eq_slots), key=lambda s: getattr(s, "value", s)):
                     new_item = eq_slots.get(slot)
                     old_item = prior_eq_slots.get(slot)
                     if new_item == old_item:
@@ -376,7 +376,7 @@ class EventExtractor:
                 # unfixed bug -- see this ticket's own investigation.md).
                 eq_dur = eq.durability if isinstance(eq.durability, dict) else {}
                 prior_eq_dur = prior_eq.durability if isinstance(prior_eq.durability, dict) else {}
-                for slot in set(eq_dur) | set(prior_eq_dur):
+                for slot in sorted(set(eq_dur) | set(prior_eq_dur), key=lambda s: getattr(s, "value", s)):
                     new_dur = eq_dur.get(slot)
                     old_dur = prior_eq_dur.get(slot)
                     if not _is_real_number(new_dur, old_dur) or new_dur == old_dur:
@@ -418,7 +418,7 @@ class EventExtractor:
                     ))
                 new_recipes = ident.known_recipes if isinstance(ident.known_recipes, (set, frozenset)) else set()
                 prior_recipes = prior_ident.known_recipes if isinstance(prior_ident.known_recipes, (set, frozenset)) else set()
-                for recipe_id in new_recipes - prior_recipes:
+                for recipe_id in sorted(new_recipes - prior_recipes, key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="recipe_learned", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
@@ -1160,7 +1160,7 @@ class EventExtractor:
                 _prior_id = prior_ent.identity
                 _curr_skills = getattr(_curr_id, "learned_skills", None) or frozenset()
                 _prior_skills = getattr(_prior_id, "learned_skills", None) or frozenset()
-                for _sk in (set(_curr_skills) - set(_prior_skills)):
+                for _sk in sorted(set(_curr_skills) - set(_prior_skills), key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="skill_unlocked", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
@@ -1170,7 +1170,7 @@ class EventExtractor:
 
                 _curr_traits = getattr(_curr_id, "traits", None) or frozenset()
                 _prior_traits = getattr(_prior_id, "traits", None) or frozenset()
-                for _tr in (set(_curr_traits) - set(_prior_traits)):
+                for _tr in sorted(set(_curr_traits) - set(_prior_traits), key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="trait_expressed", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
@@ -1180,7 +1180,7 @@ class EventExtractor:
 
                 _curr_breaks = getattr(_curr_id, "active_breakthroughs", None) or frozenset()
                 _prior_breaks = getattr(_prior_id, "active_breakthroughs", None) or frozenset()
-                for _bt in (set(_curr_breaks) - set(_prior_breaks)):
+                for _bt in sorted(set(_curr_breaks) - set(_prior_breaks), key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="pillar_trait_unlocked", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
