@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS
-phase: open
+phase: done
 date: 2026-10-28
 tags: [observability, testing]
 ---
@@ -15,7 +15,7 @@ tags: [observability, testing]
 Characterization tests that pin the event stream of EventExtractor.extract before src/observability/event_extractor.py is split
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,11 +91,18 @@ This ticket pins what `extract()` emits today, so that ticket 2 can prove it cha
 ## Assumptions / Open Questions
 - With flags OFF, the shapers and `extract()` should not both emit; that is how the flags were designed. If they double-emit, record it and don't fix it.
 - `tests/fixtures/` is not gitignored for `.jsonl`. Check with `git check-ignore` before committing.
+- **Hold-and-fix ordering.** Event order for set-listing events used to follow the process hash seed. The goldens were held until rpg hotfix (A) (#790, de5a223ca) merged, then recorded on top of it. This ticket does not wait for (B), the state-side `list(set())` fix (STATE-SET-ORDER).
+- **(B) is a finding, not a re-pin.** If (B) later changes any event these goldens pin, that is a finding for rpg-planner-ubuntu. The goldens are never silently re-pinned.
+- **Two-seed check.** The recorders run at `PYTHONHASHSEED=0`, and a test records the corpus and both kernel scenarios again at a second seed and asserts they are byte-identical.
 
 ## Implementation Notes
+Test-only. A pytest plugin wraps `EventExtractor.extract`, evaluates each call under 8 configs and writes count plus SHA-256 prefix over canonical lines. Details: staging artifacts `plan.md`, `investigation.md`, `test_plan.md`. Findings (not fixed): under default flags `extract()` emits almost nothing; the rollback flags are where output lives.
 
 ## Test Summary
+`tests/unit/observability/test_event_extractor_characterization.py`: 10 passed (about 82 s). Coverage of `event_extractor.py` 98 % branch; both unreached emitting sites have direct tests. 5 probes each fail the tests. Two-seed check passes. `git diff origin/main -- src` empty.
 
 ## Files Changed
+`tests/unit/observability/test_event_extractor_characterization.py`, `tests/unit/observability/extractor_characterization/{__init__,recorder_plugin,kernel_scenario,corpus}.py`, `tests/fixtures/event_extractor_characterization/{unit_corpus,kernel_runs}.jsonl`.
 
 ## Completion Summary
+Event output of `EventExtractor.extract` is pinned per config for 371 unit-corpus calls and two 200-tick seeded kernel runs, on top of hotfix (A).
