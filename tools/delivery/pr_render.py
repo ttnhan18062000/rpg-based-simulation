@@ -367,7 +367,7 @@ def extract_known_gaps(ticket: dict) -> list:
         for line in ticket.get(section, "").splitlines():
             stripped = line.strip().lstrip("-*").strip()
             if "FAIL" in line or stripped.startswith(KNOWN_GAP_MARKER):
-                gaps.append(line.strip().lstrip("-").strip())
+                gaps.append(stripped)
     return gaps
 
 

@@ -69,10 +69,10 @@ Owner instruction #715 6525124859 (2026-10-30, recorded by lead-planner, read by
 Flipped `agent-working-designer` to `seat_status: staffed` in `registries/session_roles.yaml`, dropped `interim_holder` and the 'no designer on host ubuntu' comment, added `card_note: "Host ubuntu; twin `-u24`."`. Regenerated the cards with `tools/sessions.generate_agents`: only `session-agent-working-designer.md` changed (no 'held by'; carries the note). `session_layer_working_process.md:157-169` already shows `staffed`, left as is.
 
 ## Test Summary
-`python3 -m tools.sessions.validate`: 0 findings, 32 roles. `tests/tools/test_session_*` scoped runs and the full `tests/tools` run: see the PR.
+`python3 -m tools.sessions.validate`: 0 findings, 32 roles. Full `tests/tools` run at `-n 2` on SHA ceeb45f5f (before the later ticket-text and extract_known_gaps rendering fix, which were re-checked with a scoped rerun): 5280 passed, 56 skipped, 1 xfailed, 398.6 s.
 
 ## Files Changed
 registries/session_roles.yaml; .claude/agents/session-agent-working-designer.md; tests/tools/test_session_u24_twins.py (`test_row7_seat_status`, `test_row3...` now asserts the twin's note for every twin); tests/tools/test_session_roster.py (the unstaffed set drops the designer; test renamed `test_real_registry_has_thirty_two_seats_two_unstaffed`; comment updated); tests/tools/test_session_cards.py (`test_unstaffed_seat_names_its_holder_on_the_card` now uses `codebase-designer`, still unstaffed, held by `agent-working-designer`). The last three edits follow directly from the flip and were not listed in the ticket scope (agent-working-planner approved).
 
 ## Completion Summary
-The roster marks agent-working-designer staffed on host ubuntu; its card carries `Host ubuntu; twin `-u24`.` and no longer says 'held by'. Validate is clean; the full tests/tools run is recorded in the PR.
+The roster marks agent-working-designer staffed on host ubuntu; its card carries `Host ubuntu; twin `-u24`.` and no longer says 'held by'. Validate is clean; the full tests/tools run passed (5280 passed, 56 skipped, 1 xfailed).

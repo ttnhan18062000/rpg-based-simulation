@@ -122,4 +122,5 @@ deliberate ... makes reporting it the default").
 tools/delivery/pr_render.py; tests/tools/test_delivery_pr_render.py; docs/guides/delivery_process.md.
 
 ## Completion Summary
-pr_render collects a `Known gap:` line as well as a `FAIL` line, and the empty case names what was checked. Known gap: a CLAUDE.md pointer to the marker is left for the owner to decide (governing file).
+pr_render collects a line beginning with the Known-gap marker, and the empty case names what was checked.
+Known gap: a CLAUDE.md pointer to the marker is left for the owner to decide (governing file).

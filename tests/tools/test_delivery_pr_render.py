@@ -232,6 +232,11 @@ def test_known_gap_marker_surfaces_without_fail(tmp_path):
     assert "none stated" not in body
 
 
+def test_star_list_marker_is_stripped_in_the_rendered_gap(tmp_path):
+    body = _render_with_summary(tmp_path, completion_summary="* Known gap: star item.")
+    assert "  - TCK-20260924-A: Known gap: star item." in body
+
+
 def test_line_with_fail_and_known_gap_appears_once(tmp_path):
     body = _render_with_summary(tmp_path, test_summary="Known gap: x FAIL in lane y")
     assert body.count("  - TCK-20260924-A: Known gap: x FAIL in lane y") == 1
