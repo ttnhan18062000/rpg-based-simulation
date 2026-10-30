@@ -1,7 +1,7 @@
 """The quiet-window gate of ``rerun_baselines record`` and the in-run foreign-load check for pinned runs.
 
-Owner's CPU split (#715, 2026-10-30): Docker on vCPUs 0-3, perf runs pinned to 4-5. A pinned run is gated on the busy fraction of its own CPUs (the 1-minute
-load average sees the whole host, which the split makes irrelevant), and checked again after it ran for work that landed on its CPUs mid-run (``user.slice``
+Owner's CPU split (#715, 2026-10-30): Docker on vCPUs 0-3, perf runs pinned to 4-5. A pinned run is gated on the busy fraction of its own CPUs and, as well, on the 1-minute load average (a host-wide
+check, since 2026-10-30), and checked again after it ran for work that landed on its CPUs mid-run (``user.slice``
 is not confined to 0-3). An unpinned run keeps the load-average rule and skips the in-run check. Every reader is injectable: the unit tests never sleep and
 never read the real ``/proc``.
 """
@@ -40,6 +40,14 @@ CpuJiffies = Dict[int, Tuple[int, int]]  # cpu -> (busy, total)
 
 class GateError(Exception):
     """A reading the gate needs cannot be taken: the series refuses rather than skip the check."""
+
+
+class SwapMovedError(GateError):
+    """``pswpin``/``pswpout`` moved while a pinned run was measuring: the host swapped during the run."""
+
+    def __init__(self, pages_in: int, pages_out: int) -> None:
+        super().__init__(f"swap activity during the run (pswpin +{pages_in}, pswpout +{pages_out} pages)")
+        self.pages_in, self.pages_out = pages_in, pages_out
 
 
 def read_cpu_jiffies(path: str = "/proc/stat") -> CpuJiffies:
@@ -122,7 +130,7 @@ def gate_read(
     return reading
 
 
-def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) -> Tuple[bool, str]:
+def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float, max_probe_ms: Optional[float] = None) -> Tuple[bool, str]:
     """``(ok, text)``; the text lists every reading and names each failed check. A reading that cannot be taken (memory, swap counters) is a failure: on this host both are always readable, so a ``None`` means something is broken."""
     load, avail, busy, swap = reading.get("loadavg_1min"), reading.get("available_mb"), reading.get("busy_pct"), reading.get("swap_io_delta")
     failed: List[str] = []
@@ -131,8 +139,15 @@ def evaluate(reading: Dict[str, Any], max_load: float, min_available_mb: float) 
         parts.append("busy % of allowed CPUs " + ", ".join(f"cpu{c} {p}" for c, p in busy.items()))
         if max(busy.values()) >= MAX_PINNED_BUSY_PCT:
             failed.append(f"allowed-CPU busy >= {MAX_PINNED_BUSY_PCT:.0f} %")
-    elif load is None or load >= max_load:
+    if load is None or load >= max_load:
         failed.append(f"loadavg1 >= {max_load}")
+    if max_probe_ms is not None and busy is not None:  # a pinned run only; off (None) unless the caller sets a limit
+        probe = reading.get("probe_ms")
+        parts.append(f"host-speed probe {probe} ms")
+        if probe is None:
+            failed.append("host-speed probe unreadable")
+        elif probe > max_probe_ms:
+            failed.append(f"host-speed probe > {max_probe_ms} ms")
     if avail is None:
         failed.append("available memory unreadable")
     elif avail < min_available_mb:
@@ -156,8 +171,9 @@ class RunWatch:
 
     def __init__(self, stat: Callable[[], CpuJiffies] = read_cpu_jiffies, cgroup_usec: Callable[[], int] = read_own_cgroup_usec,
                  affinity: Callable[[], Optional[Set[int]]] = allowed_cpus, clock: Callable[[], float] = time.monotonic,
-                 cgroup_path: Callable[[], str] = read_own_cgroup_path) -> None:
-        self._stat, self._usec, self._clock, self._path = stat, cgroup_usec, clock, cgroup_path
+                 cgroup_path: Callable[[], str] = read_own_cgroup_path, vmstat: Callable[[], Optional[Tuple[int, int]]] = read_swap_counters) -> None:
+        self._stat, self._usec, self._clock, self._path, self._vmstat = stat, cgroup_usec, clock, cgroup_path, vmstat
+        self.swap_delta: Optional[Tuple[int, int]] = None
         self.cpus: Optional[Set[int]] = None
         self._affinity = affinity
 
@@ -170,13 +186,22 @@ class RunWatch:
         path = self._path()
         if not fnmatch.fnmatchcase(path.rstrip("/").rsplit("/", 1)[-1], SCOPE_PATTERN):
             raise qg_error(path)
+        self._s0 = self._vmstat()
+        if self._s0 is None:
+            raise GateError("swap counters unreadable (/proc/vmstat): a pinned series needs the in-run swap check")
         self._j0, self._u0, self._t0 = j, self._usec(), self._clock()
 
     def finish(self) -> Optional[float]:
-        """The foreign share of the run (``None`` for an unpinned run): (busy on the allowed CPUs - own CPU time) / (len(allowed) * wall seconds), clamped at 0."""
+        """Raises ``SwapMovedError`` when pswpin/pswpout moved during the run. The foreign share of the run (``None`` for an unpinned run): (busy on the allowed CPUs - own CPU time) / (len(allowed) * wall seconds), clamped at 0."""
         if self.cpus is None:
             return None
         j1, u1, t1 = self._stat(), self._usec(), self._clock()
+        s1 = self._vmstat()
+        if s1 is None:
+            raise GateError("swap counters unreadable (/proc/vmstat) at the end of the run")
+        self.swap_delta = (s1[0] - self._s0[0], s1[1] - self._s0[1])
+        if self.swap_delta != (0, 0):
+            raise SwapMovedError(*self.swap_delta)
         busy_s = sum(j1[c][0] - self._j0[c][0] for c in self.cpus) / USER_HZ
         own_s = (u1 - self._u0) / 1e6
         wall = max(t1 - self._t0, 1e-9)

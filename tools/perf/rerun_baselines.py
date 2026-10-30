@@ -260,8 +260,11 @@ def host_conditions() -> Dict[str, Optional[float]]:
     return {"loadavg_1min": round(os.getloadavg()[0], 2), "available_mb": available}
 
 
-def _gate_reading() -> Dict[str, Any]:
-    return qg.gate_read(host_conditions)
+def _gate_reading(max_probe_ms: Optional[float] = None) -> Dict[str, Any]:
+    reading = qg.gate_read(host_conditions)
+    if max_probe_ms is not None and reading.get("busy_pct") is not None:  # pinned only: the spin runs on the same allowed CPUs the measured run will
+        reading["probe_ms"] = host_speed_series()["median"]
+    return reading
 
 
 def wait_for_quiet_window(
@@ -269,21 +272,23 @@ def wait_for_quiet_window(
     min_available_mb: float = MIN_AVAILABLE_MB,
     wait_s: float = QUIET_WAIT_S,
     poll_s: float = QUIET_POLL_S,
-    read: Callable[[], Dict[str, Any]] = _gate_reading,
+    read: Optional[Callable[[], Dict[str, Any]]] = None,
     sleep: Callable[[float], None] = time.sleep,
     clock: Callable[[], float] = time.monotonic,
     readings: Optional[List[Dict[str, Any]]] = None,
+    max_probe_ms: Optional[float] = None,
 ) -> Tuple[bool, str]:
     """Poll until the host is quiet or ``wait_s`` has passed; ``(ok, what was read last, naming each failed check)``. The last reading is appended to ``readings``.
 
     Quiet = memory at or above ``min_available_mb`` and no swap-in/out over the sample, and for a process pinned to a strict subset of the host's CPUs every
-    allowed CPU below 10 % busy (the load average is then not looked at); for an unpinned process, load below ``max_load``. Memory that cannot be read is not a
-    reason to refuse. ``wait_s`` 0 checks once.
+    allowed CPU below 10 % busy; load below ``max_load`` for every process, pinned or not; a pinned process with ``max_probe_ms`` set also needs the host-speed
+    probe at or below it. A reading that cannot be taken fails by name. ``wait_s`` 0 checks once.
     """
     deadline = clock() + wait_s
+    read = read or (lambda: _gate_reading(max_probe_ms))
     while True:
         now = read()
-        ok, text = qg.evaluate(now, max_load, min_available_mb)
+        ok, text = qg.evaluate(now, max_load, min_available_mb, max_probe_ms)
         if readings is not None:
             readings[:] = [now]
         if ok or clock() >= deadline:
@@ -447,7 +452,7 @@ def cmd_memory_pass(name: str, out: Path) -> int:
     return 0
 
 
-def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S, memory_pass: bool = False) -> int:
+def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False, wait_s: float = QUIET_WAIT_S, memory_pass: bool = False, max_probe_ms: Optional[float] = None) -> int:
     spec_for(name)  # raises RerunError for an unknown name before anything runs
     out_dir = out_root / name
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -456,7 +461,7 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     for index in range(1, runs_for(name) + 1):
         path = out_dir / f"run{index}.json"
         reading: List[Dict[str, Any]] = []
-        quiet, seen = wait_for_quiet_window(wait_s=wait_s, readings=reading)
+        quiet, seen = wait_for_quiet_window(wait_s=wait_s, readings=reading, max_probe_ms=max_probe_ms)
         print(f"gate before run {index}: {seen}")
         if not quiet:
             print(f"cannot run: run {index} of {name} would start outside the quiet window ({seen}; need {MAX_LOAD_1MIN} load, >= {MIN_AVAILABLE_MB:.0f} MB, no swap activity): attempt discarded", file=sys.stderr)
@@ -476,10 +481,12 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
             return 1
         try:
             foreign = watch.finish()
+        except qg.SwapMovedError as exc:
+            print(f"cannot run: run {index} of {name} stopped, {exc}: series stopped, no candidate written", file=sys.stderr)
+            return 1
         except qg.GateError as exc:
             print(f"cannot run: run {index} of {name} stopped, the in-run foreign-load check cannot be taken: {exc}", file=sys.stderr)
             return 1
-        gates.append({"run": index, "gate": seen, "reading": reading[0] if reading else None, "foreign_share": foreign})
         if foreign is not None:
             print(f"run {index} foreign share of the allowed CPUs: {foreign * 100:.1f} %")
             if foreign >= qg.MAX_FOREIGN_SHARE:
@@ -487,6 +494,9 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
                 return 1
         record = BenchmarkRecord.from_dict(json.loads(path.read_text(encoding="utf-8")))
         meta = json.loads(path.with_suffix(".meta.json").read_text(encoding="utf-8"))
+        probe_before, probe_after = (meta.get("probe_before") or {}).get("median"), (meta.get("probe_after") or {}).get("median")
+        gates.append({"run": index, "gate": seen, "reading": reading[0] if reading else None, "foreign_share": foreign, "swap_delta": getattr(watch, "swap_delta", None),
+                      "probe_pre_ms": (reading[0] if reading else {}).get("probe_ms"), "probe_before_ms": probe_before, "probe_after_ms": probe_after, "max_probe_ms": max_probe_ms})
         runs.append(Run(str(path), record.result.latency_ms["avg"], meta["loadavg_1min"], meta["swap_used_mb"], meta["peak_rss_mb"], meta["wall_s"],
                         (meta.get("probe_before") or {}).get("median"), (meta.get("probe_after") or {}).get("median")))
     summary = summarize(runs, rule=rule_for(name))
@@ -501,7 +511,7 @@ def cmd_record(name: str, out_root: Path, cause: str, keep_samples: bool = False
     off_normal = sorted({m.mode for m in cand.result.runtime_mode_sequence} - {"NORMAL"})
     host = f"{platform.node()} / {cpu} / {os.cpu_count()} vCPU"
     note = promotion_note(name, summary, host)
-    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host, "interpreter": sys.executable, "dependency_fingerprint": cand.identity.runtime.dependency_fingerprint, "cpu_affinity": cand.identity.runtime.cpu_affinity, "gates": gates,
+    doc = {"name": name, "spread": summary.spread, "spread_all_runs": summary.spread_all_runs, "rule": summary.rule, "noisy": summary.noisy, "off_normal": off_normal, "median_run": summary.median_index + 1, "host": host, "interpreter": sys.executable, "dependency_fingerprint": cand.identity.runtime.dependency_fingerprint, "cpu_affinity": cand.identity.runtime.cpu_affinity, "max_probe_ms": max_probe_ms, "gates": gates,
            "runs": [dataclasses.asdict(r) for r in summary.runs], "note": note}
     (out_dir / "summary.json").write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(note)
@@ -523,6 +533,7 @@ def _parser() -> argparse.ArgumentParser:
     rec.add_argument("--cause", required=True, help="the ticket id the re-record belongs to; printed into the promote command (there is no default: a hard-coded one named the wrong ticket)")
     rec.add_argument("--out-root", type=Path, default=OUT_ROOT)
     rec.add_argument("--wait-s", type=float, default=QUIET_WAIT_S, help="how long to wait before each run for the quiet window (pinned: allowed CPUs < 10 % busy; unpinned: loadavg1 < 1.5; always >= 3 GB available and no swap activity; 0 = check once); a run never starts outside it")
+    rec.add_argument("--max-probe-ms", type=float, default=None, help="pinned runs only: the host-speed probe must be at or below this before a run starts (the gate waits, as for the other checks); both probes of every run are recorded in summary.json as data; a host-specific protocol setting, off by default")
     rec.add_argument("--memory-pass", action="store_true", help="once, after the last timed run, add the working_set_* keys to the candidate (a fresh untimed collector-on process; off by default)")
     rec.add_argument("--keep-samples", action="store_true", help="keep every sampled tick's latency of each run under <out>/<name>/samples/ (for a noise diagnosis)")
     mea = sub.add_parser("measure", help="one measured record in this process (the worker of ``record``)")
@@ -549,7 +560,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return cmd_measure(args.name, args.out, args.samples_dir, args.memory_pass)
         if args.command == "memory-pass":
             return cmd_memory_pass(args.name, args.out)
-        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s, args.memory_pass)
+        return cmd_record(args.name, args.out_root, args.cause, args.keep_samples, args.wait_s, args.memory_pass, args.max_probe_ms)
     except (RerunError, CapacityRunError) as exc:
         print(f"cannot run: {exc}", file=sys.stderr)
         return 1

@@ -29,10 +29,12 @@ def gate(busy_cpu4: int = 0, swap=(0, 0), affinity=frozenset({4, 5}), base=None,
     return qg.gate_read(lambda: base or reading(), sleep=lambda s: None, stat=lambda: next(calls), vmstat=lambda: next(swaps), affinity=lambda: set(affinity) if affinity else None)
 
 
-def test_a_pinned_run_is_gated_on_the_busy_fraction_of_its_own_cpus_not_on_the_load_average() -> None:
+def test_a_pinned_run_needs_its_cpus_quiet_and_the_host_load_below_the_bound() -> None:
     ok, text = qg.evaluate(gate(busy_cpu4=500, base=reading(load=0.1)), 1.5, 3000.0)
     assert not ok and "allowed-CPU busy" in text and "loadavg1 >=" not in text
-    assert qg.evaluate(gate(busy_cpu4=90, base=reading(load=9.0)), 1.5, 3000.0)[0]  # 9 % busy passes at a host load of 9: the load average is not looked at when pinned
+    ok, text = qg.evaluate(gate(busy_cpu4=90, base=reading(load=9.0)), 1.5, 3000.0)  # 9 % busy on the allowed CPUs, but the host is at load 9
+    assert not ok and "loadavg1 >= 1.5" in text and "allowed-CPU busy" not in text
+    assert qg.evaluate(gate(busy_cpu4=90, base=reading(load=1.49)), 1.5, 3000.0)[0]
 
 
 def test_the_busy_fraction_bound_is_strict_below_ten_percent() -> None:
@@ -114,7 +116,7 @@ def watch(busy_seconds_each: float, own_usec: int, wall: float, affinity=frozens
     stats = iter([jiff({}), jiff({4: int(busy_seconds_each * 100), 5: int(busy_seconds_each * 100)})])
     usecs = iter([1_000_000, 1_000_000 + own_usec])
     clock = iter([100.0, 100.0 + wall])
-    return qg.RunWatch(stat=lambda: next(stats), cgroup_usec=lambda: next(usecs), affinity=lambda: set(affinity), clock=lambda: next(clock), cgroup_path=lambda: path)
+    return qg.RunWatch(stat=lambda: next(stats), cgroup_usec=lambda: next(usecs), affinity=lambda: set(affinity), clock=lambda: next(clock), cgroup_path=lambda: path, vmstat=lambda: (0, 0))
 
 
 def test_the_foreign_share_is_busy_minus_own_over_allowed_cpu_seconds() -> None:
@@ -139,7 +141,7 @@ def test_a_pinned_process_with_an_unreadable_cgroup_refuses_rather_than_skips() 
     def unreadable() -> int:
         raise qg.GateError("no cpu.stat")
 
-    w = qg.RunWatch(stat=lambda: HOST, cgroup_usec=unreadable, affinity=lambda: {4, 5}, cgroup_path=lambda: SCOPE)
+    w = qg.RunWatch(stat=lambda: HOST, cgroup_usec=unreadable, affinity=lambda: {4, 5}, cgroup_path=lambda: SCOPE, vmstat=lambda: (0, 0))
     with pytest.raises(qg.GateError):
         w.start()
 
@@ -222,3 +224,73 @@ def test_a_gate_failure_names_the_failed_check_and_stops_the_series(monkeypatch:
     monkeypatch.setattr(rr.subprocess, "run", fake_run)
     assert rr.cmd_record("resource_100_local", tmp_path, CAUSE) == 1
     assert "swap activity" in capsys.readouterr().err and not (tmp_path / "resource_100_local" / "candidate.json").exists()
+
+
+def probe_gate(probe, limit=35.0, busy_cpu4=0, affinity=frozenset({4, 5})):
+    return qg.evaluate(gate(busy_cpu4=busy_cpu4, affinity=affinity, base=reading(**({} if probe is None else {"probe_ms": probe}))), 1.5, 3000.0, limit)
+
+
+def test_the_probe_limit_is_off_by_default_and_only_gates_pinned_runs() -> None:
+    assert qg.evaluate(gate(base=reading(probe_ms=900.0)), 1.5, 3000.0)[0]  # no limit set
+    assert probe_gate(900.0, affinity=frozenset(range(6)))[0]  # unpinned: no probe check
+
+
+def test_a_pinned_run_waits_while_the_before_probe_is_above_the_limit() -> None:
+    assert probe_gate(35.0)[0] and probe_gate(29.0)[0]
+    ok, text = probe_gate(35.1)
+    assert not ok and "host-speed probe > 35.0 ms" in text
+    ok, text = probe_gate(None)
+    assert not ok and "host-speed probe unreadable" in text
+
+
+def test_the_swap_counters_are_read_at_the_start_and_end_of_a_pinned_run_and_any_move_stops_it() -> None:
+    swaps = iter([(10, 20), (10, 20)])
+    w = watch(1.0, 1_000_000, 10.0)
+    w._vmstat = lambda: next(swaps)
+    w.start()
+    assert w.finish() is not None and w.swap_delta == (0, 0)
+    swaps = iter([(10, 20), (13, 24)])
+    w = watch(1.0, 1_000_000, 10.0)
+    w._vmstat = lambda: next(swaps)
+    w.start()
+    with pytest.raises(qg.SwapMovedError, match=r"pswpin \+3, pswpout \+4") as caught:
+        w.finish()
+    assert (caught.value.pages_in, caught.value.pages_out) == (3, 4)
+
+
+def test_unreadable_swap_counters_refuse_a_pinned_series() -> None:
+    w = watch(1.0, 1_000_000, 10.0)
+    w._vmstat = lambda: None
+    with pytest.raises(qg.GateError, match="swap counters unreadable"):
+        w.start()
+
+
+def test_a_series_whose_run_swapped_is_stopped_naming_the_run_and_the_pages(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+    class Swapper(FakeWatch):
+        def finish(self):
+            raise qg.SwapMovedError(2, 5)
+
+    assert _drive(monkeypatch, tmp_path, Swapper([])) == 1
+    err = capsys.readouterr().err
+    assert "run 1" in err and "pswpin +2, pswpout +5" in err and "no candidate" in err
+    assert not (tmp_path / "resource_100_local" / "candidate.json").exists()
+
+
+def test_both_probes_and_the_limit_are_recorded_as_data(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(rr, "wait_for_quiet_window", lambda *a, **k: (True, "quiet"))
+    monkeypatch.setattr(rr, "new_run_watch", lambda: FakeWatch([0.0, 0.0, 0.0]))
+
+    def fake_run(argv, env=None, check=False, **kw):
+        if "--out" not in argv:
+            return REAL_RUN(argv, env=env, check=check, **kw)
+        out = Path(argv[argv.index("--out") + 1])
+        out.write_text(json.dumps(make_record(avg=40.0).to_dict()), encoding="utf-8")
+        meta = {"loadavg_1min": 0.5, "swap_used_mb": 0.0, "wall_s": 1.0, "peak_rss_mb": 90.0, "probe_before": {"median": 30.0}, "probe_after": {"median": 57.0}}
+        out.with_suffix(".meta.json").write_text(json.dumps(meta), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(rr.subprocess, "run", fake_run)
+    assert rr.cmd_record("resource_100_local", tmp_path, CAUSE, max_probe_ms=35.0) == 0  # an after-probe of 57 ms does not stop the series
+    summary = json.loads((tmp_path / "resource_100_local" / "summary.json").read_text(encoding="utf-8"))
+    assert summary["max_probe_ms"] == 35.0
+    assert [(g["probe_before_ms"], g["probe_after_ms"]) for g in summary["gates"]] == [(30.0, 57.0)] * 3
