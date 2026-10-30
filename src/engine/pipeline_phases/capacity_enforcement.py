@@ -70,7 +70,9 @@ class CapacityEnforcementPhase:
                     all_concerns[concern.id] = concern
                 for c_id in strat_upd.concerns_remove:
                     all_concerns.pop(c_id, None)
-                    
+                # Id-descending order, so the stable lowest-urgency-first trim drops the higher id on a tie
+                # (not insertion history; determinism).
+                all_concerns = dict(sorted(all_concerns.items(), key=lambda kv: kv[0], reverse=True))
                 concern_removals = CapacityService.trim_dict(
                     all_concerns,
                     profile.max_concerns,

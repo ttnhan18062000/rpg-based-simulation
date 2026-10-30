@@ -105,3 +105,35 @@ def test_update_merges_return_sorted_lists():
     assert merged.learned_skills == ["a_skill", "b_skill", "z_skill"]
     assert merged.traits_add == ["t1", "t2"]
     assert merged.traits_remove == ["r1", "r2"]
+
+
+def _concern(cid: str, urgency: float):
+    from src.core.strategic import ConcernKind, ConcernState
+
+    return ConcernState(id=cid, kind=ConcernKind.DANGER, urgency=urgency, created_tick=0)
+
+
+def test_enforce_bandwidth_drops_the_higher_id_on_an_urgency_tie_regardless_of_insertion_order():
+    """An older, higher-id concern ties a newer, lower-id one at the cap: the higher id goes."""
+    from dataclasses import replace
+
+    from src.core.builder import V2EntityBuilder
+    from src.systems.strategic_systems.detour import DetourSuggestionSystem
+
+    entity = V2EntityBuilder(7).kind("hero").location(0.0, 0.0).build()
+    cap = entity.strategic.profile.max_concerns
+    fillers = {f"f{i:02d}": _concern(f"f{i:02d}", 0.9) for i in range(cap - 1)}
+    older_high = _concern("z_old", 0.1)
+    newer_low = _concern("a_new", 0.1)
+    for order in ((older_high, newer_low), (newer_low, older_high)):
+        concerns = {**fillers, **{c.id: c for c in order}}
+        e = replace(entity, strategic=replace(entity.strategic, concerns=concerns))
+        assert DetourSuggestionSystem.enforce_bandwidth(e, 0).concerns_remove == ["z_old"]
+
+
+def test_capacity_trim_drops_the_higher_id_on_an_urgency_tie():
+    from src.strategy.capacity import CapacityService
+
+    data = {"z_old": _concern("z_old", 0.1), "a_new": _concern("a_new", 0.1), "m": _concern("m", 0.9)}
+    ordered = dict(sorted(data.items(), key=lambda kv: kv[0], reverse=True))
+    assert CapacityService.trim_dict(ordered, 2, lambda c: c.urgency) == ["z_old"]

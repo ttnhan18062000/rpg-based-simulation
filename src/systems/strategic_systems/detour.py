@@ -175,8 +175,7 @@ class DetourSuggestionSystem:
         # Enforce concern bandwidth
         active_concerns = sorted(
             entity.strategic.concerns.values(),
-            key=lambda c: c.urgency,
-            reverse=True
+            key=lambda c: (-c.urgency, c.id),  # tie at the cap: the higher id is dropped (determinism, not insertion history)
         )
         if len(active_concerns) > profile.max_concerns:
             excess = active_concerns[profile.max_concerns:]
