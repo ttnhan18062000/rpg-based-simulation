@@ -27,6 +27,13 @@ class ProjectStatus(str, Enum):
     ABANDONED = "ABANDONED"
 
 
+class ProjectEnd(str, Enum):
+    """Why a project was ended, set once together with the terminal status ABANDONED and never cleared or rewritten (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED).
+
+    `SUPERSEDED_BY_TARGET`: a candidate of the same kind at a different target replaced this live record (`supersede_record`, the one writer). A project ended for any other reason keeps `ended_by` None."""
+    SUPERSEDED_BY_TARGET = "SUPERSEDED_BY_TARGET"
+
+
 class ObjectiveStatus(str, Enum):
     """Status of a project objective."""
     UNRESOLVED = "UNRESOLVED"
@@ -333,6 +340,16 @@ class ProjectState:
     active_objective_id: Optional[str] = None
     created_tick: int = 0
     failure_count: int = 0
+    # Typed end reason, set only together with status ABANDONED by `supersede_record` and omitted from the canonical dict while None (an unrelated state hash does not move).
+    ended_by: Optional[ProjectEnd] = None
+
+    def canonical_extra(self) -> Dict[str, Any]:
+        """The canonical-dict entries of this project that are omitted while empty: `ended_by` (a project that was never superseded keeps the unrelated state hash where it was)."""
+        return {"ended_by": self.ended_by.value} if self.ended_by is not None else {}
+
+    def canonical_objectives(self) -> List[Dict[str, Any]]:
+        """The objectives for the canonical dict: every field, `target_entity_id` omitted while None."""
+        return [{f: val for f, val in dataclasses.asdict(o).items() if not (f == "target_entity_id" and val is None)} for o in self.objectives]
 
 
 # TCK-20261007-STRATEGIC-CAPACITY-GATE-COUNTS-TERMINAL-PROJECTS-SO-NO-NEW-PROJECT-KIND-CAN-START: ONE rule for which projects
@@ -350,6 +367,44 @@ def is_live_project(project: ProjectState) -> bool:
 def live_projects(projects: Mapping[str, ProjectState]) -> Dict[str, ProjectState]:
     """The projects that count against `max_active_projects`."""
     return {pid: p for pid, p in projects.items() if is_live_project(p)}
+
+
+def same_kind(project: ProjectState, kind: Any) -> bool:
+    """True when the project's kind is the goal's kind: the same enum class (a ProjectKind or not) AND the same value. GoalKind and ProjectKind are both str enums that share
+    HARVESTING and SOCIAL and compare equal on them; that equality is an accident, and a GoalKind goal must never continue, resume or end an adventure-route or contract
+    project. The class split is the one ``_score_scale_max`` already reads (a ProjectKind is on the 2.9 scale, anything else on the utility scale)."""
+    return isinstance(project.kind, ProjectKind) == isinstance(kind, ProjectKind) and project.kind == kind
+
+
+def same_kind_record(projects: Mapping[str, ProjectState], kind: Any, current_project_id: Optional[str] = None) -> Optional[ProjectState]:
+    """The live record a goal of ``kind`` continues, resumes or supersedes; dict order plays no part (TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED).
+
+    Kind identity is ``same_kind`` (same enum class and value).
+    1. the current project when it is of the kind (and live);
+    2. else the newest live record of the kind by ``created_tick`` (a tie goes to the larger id), an ACTIVE one before a SUSPENDED one;
+    3. else None: a COMPLETED or ABANDONED record is a record, not an effort in progress (2.77), and takes no part."""
+    current = projects.get(current_project_id) if current_project_id else None
+    if current is not None and same_kind(current, kind) and is_live_project(current):
+        return current
+    live = [p for p in projects.values() if same_kind(p, kind) and is_live_project(p)]
+    if not live:
+        return None
+    return max(live, key=lambda p: (p.status == ProjectStatus.ACTIVE, p.created_tick, p.id))
+
+
+def project_target_matches(project: ProjectState, target_id: Any, target_entity_id: Optional[int]) -> bool:
+    """True when the project's typed target equals the candidate's: ``target_entity_id`` when either side has one, else ``target_id``; both None is a match, so a kind with no
+    typed target stays kind-only. The project's target is its active objective's (the first objective when none is active)."""
+    objective = next((o for o in project.objectives if o.id == project.active_objective_id), None) or (project.objectives[0] if project.objectives else None)
+    record_target, record_entity = (objective.target, objective.target_entity_id) if objective is not None else (None, None)
+    if record_entity is not None or target_entity_id is not None:
+        return record_entity == target_entity_id
+    return (None if record_target is None else str(record_target)) == (None if target_id is None else str(target_id))
+
+
+def supersede_record(project: ProjectState) -> ProjectState:
+    """The one writer of ``ended_by``: the live ``project`` ended by a same-kind candidate at a different target (status ABANDONED, ``ended_by`` SUPERSEDED_BY_TARGET)."""
+    return dataclasses.replace(project, status=ProjectStatus.ABANDONED, ended_by=ProjectEnd.SUPERSEDED_BY_TARGET)
 
 
 #: The project kinds of the standing needs (the values of GoalKind.HUNGER and GoalKind.FATIGUE).
