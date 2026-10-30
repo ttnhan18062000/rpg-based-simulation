@@ -113,6 +113,32 @@ None.
 
 ## Implementation Notes
 
+### Evidence: why the protocol changed (2026-10-29 / 10-30 pinned windows; text only, no candidate JSON)
+
+Setup of both tables: `systemd-run --user --scope -q -p MemoryMax=3G -p MemorySwapMax=0 taskset -c 4-5 .venv/bin/python tools/perf/rerun_baselines.py record <name> --wait-s 1800` at `ea08a48a6`; host ubuntu, i5-11400H, 6 vCPU; fingerprint `deps-v1:e71fd7267597388a9cf4f55773d8d95cffdbae01581544075d54ffabb6e82066` (30) and `cpu_affinity` "4-5" on every run. Probe = the median of 5 host-speed spins (ms, higher = slower host moment), taken by the measure child before the state build and after the timed span. Gate columns are as read at each run start; swap in+out pages were 0 at every start; foreign share of the allowed CPUs is in the last column. v0001 fingerprint = unknown.
+
+**Pinned `idle_100_local` (2026-10-30; unpromoted evidence, 13.7 % over the middle 3 of 5, 53.5 % over all 5; the tool picked run 1)**
+
+| run | avg_ms | probe before -> after | wall_s | host load1 | MemAvailable MB | busy cpu4/cpu5 % | host swap used MB | foreign share |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 45.7 | 35.6 -> 30.8 | 5.0 | 2.29 | 3410 | 4.4 / 2.1 | 3272 | 0.0 % |
+| 2 | 50.5 | 39.9 -> 31.0 | 3.9 | 3.26 | 3616 | 5.9 / 4.7 | 3269 | 0.0 % |
+| 3 | 58.6 | 40.7 -> 51.0 | 4.7 | 2.98 | 3560 | 2.1 / 1.6 | 3269 | 0.0 % |
+| 4 | 44.4 | 30.8 -> 32.7 | 3.6 | 1.80 | 3496 | 3.3 / 1.7 | 3273 | 0.0 % |
+| 5 | 38.2 | 32.9 -> 57.6 | 4.1 | 2.59 | 3169 | 4.8 / 1.0 | 3458 | 0.0 % |
+
+**Pinned `movement_100_local` series A (2026-10-30; NOISY, 19.0 % over the middle 3 of 5, 42.6 % over all 5; discarded)**
+
+| run | avg_ms | probe before -> after | wall_s | host load1 | MemAvailable MB | busy cpu4/cpu5 % | host swap used MB | foreign share |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 121.5 | 49.1 -> 42.5 | 9.8 | 2.20 | 3216 | 6.1 / 8.1 | 3466 | 0.1 % |
+| 2 | 102.1 | 26.8 -> 34.4 | 7.2 | 1.80 | 3112 | 7.5 / 4.3 | 3484 | 0.0 % |
+| 3 | 90.8 | 29.0 -> 38.2 | 6.4 | 1.00 | 3151 | 4.2 / 3.6 | 3488 | 0.0 % |
+| 4 | 129.5 | 46.2 -> 34.6 | 8.4 | 0.92 | 3183 | 4.4 / 1.7 | 3496 | 0.0 % |
+| 5 | 105.3 | 53.0 -> 57.2 | 8.1 | 0.74 | 4361 | 1.0 / 1.0 | 4024 | 0.0 % |
+
+Reading (five points per series; a correlation, not a cause): in both series the before-probe sorts the averages and nothing else gated on does. Movement: the two fastest runs (2 and 3) have the quietest before-probes (26.8 and 29.0 ms), and the three slowest (1, 4, 5) have 46 to 53 ms, while host load1 was only 0.92 and 0.74 on slow runs 4 and 5. Idle: the slowest runs (3 and 2) have the slowest before-probes (40.7 and 39.9 ms) and the fastest (5) a quiet one (32.9 ms). Foreign share was at most 0.1 % everywhere, so the noise is not other processes on CPUs 4-5 during a run; it is host-speed variation the 5 s busy sample does not see. After-probe spikes (idle runs 3 and 5: 51.0 and 57.6 ms) fell after the timed span and did not touch the run's own average, which is why the probe gate is pre-run only. Host swap in use rose during both windows (3.27 to 3.46 GB during idle; 3.47 to 4.02 GB during movement) while pswpin/pswpout stayed 0 at every start; the record's own processes were swap-capped, the source was not diagnosed. The earlier unpinned series (2026-10-29, `/usr/bin/python3` and the first `.venv` series) are not evidence: the first two fingerprinted the stale system stack (`deps-v1:e4a1cd0c`, 29), the third ran unpinned.
+
 ## Test Summary
 
 ## Files Changed
