@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO
-phase: open
+phase: done
 date: 2026-10-29
 tags: []
 ---
@@ -15,7 +15,7 @@ tags: []
 A subject that starts broke never takes paid work when hungry, so it earns no wage in 5000 ticks, and removing the free meal (D73) starves it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -121,6 +121,20 @@ Arithmetic (lane B): a person's hunger rate is 0.05/tick, so a 200-tick shift ad
 5. SHIFT HOLD: WORK is a held action. A present threat to life wakes it (tier 1), and the wage is forfeited (wage-at-end, no partial pay). Hunger does NOT wake a feasible shift. Tests: (a) a threat ends the shift with no wage; (b) hunger rising during a feasible shift does not end it, and the subject finishes, is paid 6 and eats.
 6. Prerequisite: building 20000 offers work. If the earn step names a building with no work, fix it in this ticket.
 Bible 04 gets one sentence under Standing Needs Escalate for the multi-step arrival adjustment. The designer reviews the text.
+### Implementation (rpg-implementer-2, branch rpg-earn-at-arrival, stacked on rpg-one-admission)
+- `building_arrival._hunger_arrival`: the action is derived from the building and `admits` (meal -> EAT; a takeable shift -> WORK with `shift_start`; a present threat only -> nothing dispatched, the hunger project untouched; otherwise the existing `_end_project`).
+- `work_shift.shift_takeable`: no present threat (`work_wake.held_work_is_threatened`) AND the subject reaches the meal alive (ticks to the meal from `need_pull.step_travel_tiles`, ticks before the line from `STARVING_LINE`, health lost at `starvation.hp_loss_period`; the line is a cost, not a veto). `work_in_reach` (open step and `ways_in_reach`) reads it.
+- The pull escalates over the whole step (`OpeningStep.ticks_at_target` / `onward_pos`). A held WORK is woken by a present threat only (`scheduler._is_need_woken` -> `work_wake`), wage forfeited; hunger does not wake it.
+- Leaf modules: `need_wake.py` (NEED_WAKE_CADENCE), `work_wake.py`; `tactical.perceived_threats` moved to `tactical_threat.py`.
+- Designer rulings 2026-10-29 (arithmetic (i)+(iii), no partial wages) and 2026-10-30 (threat clause in `shift_takeable`; alive-at-the-meal rule; Bible 04 wording verbatim).
+- Out of this ticket: the sleep-wins-with-no-bed coupling and the stalemate-break overwrite (TCK-20261030-SLEEP-WINS-OVER-STARVING-HUNGER-WHEN-NO-BED, TCK-20261030-STALEMATE-BREAK-OVERWRITES-A-PROJECT-MOVE-EVERY-TICK), reach bounds, the free-meal removal (D73).
+
 ## Test Summary
+- `tests/unit/engine/test_earn_shift.py` (18) and `tests/integration/scenarios/test_a_broke_hungry_worker_earns_and_then_eats.py` (4): the real-kernel scenario (earns a wage and buys a meal at the inn), hunger rising does not end a feasible shift, a threat ends a held shift with no wage, the scripted-threat seam (mutation without the clause reproduces 51 one-tick shifts), the takeable boundaries (urban shape, hp not lasting, projected hp exactly 0), arrival by building under both laws, no abandoned project under a threat. 
+- Measured: paired run on main (final head 9400ac2b0 vs b9287a3de): 15 of 15 final hashes identical, deaths 139->139, 62->62, 177->177. D73-shape probe (throwaway, never pushed): starvation 1 / 0 / 0, shifts per person-day 1.86 / 0.05 / 0.28, N1 0, no loop. See divergence 2.151 for the outcome split and the two follow-up findings.
+
 ## Files Changed
+src/engine/work_shift.py, src/engine/work_wake.py (new), src/engine/need_wake.py (new), src/engine/building_arrival.py, src/engine/scheduler.py, src/engine/need_pull.py, src/engine/tactical.py, src/engine/tactical_threat.py, src/ai/goals/opening_steps.py, src/ai/goals/scorers.py, tests/unit/engine/test_earn_shift.py (new), tests/integration/scenarios/test_a_broke_hungry_worker_earns_and_then_eats.py (new), tests/unit/tools/test_mechanism_registry_completeness_check.py (pins), registries/mechanisms.yaml (bindings), docs/mechanics/04_strategic_cognition.md, docs/parity_ledger/strategic_cognition.yaml (STRAT-291), docs/guidelines/intentional_divergences.md (2.151), this ticket and its artifacts.
+
 ## Completion Summary
+A broke hungry subject now earns: the arrival at a building derives its action from what the building can do (a meal the law admits, a shift it can take, else the project ends), a shift is takeable iff no present threat holds and the subject reaches the meal alive, the pull escalates over the whole step, and a held shift is interrupted only by a present threat. On main the effect is none (15 of 15 hashes identical); the real effect appears once the free meal goes. Known and not done here: sleep outranks hunger when a broke subject has no bed (TCK-20261030-SLEEP-WINS-OVER-STARVING-HUNGER-WHEN-NO-BED), the stalemate-break overwrite (TCK-20261030-STALEMATE-BREAK-OVERWRITES-A-PROJECT-MOVE-EVERY-TICK), partial wages, ask, reach bounds.
