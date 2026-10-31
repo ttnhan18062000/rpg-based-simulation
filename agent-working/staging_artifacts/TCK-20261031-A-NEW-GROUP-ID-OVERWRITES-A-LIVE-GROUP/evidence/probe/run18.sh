@@ -1,8 +1,8 @@
 #!/bin/bash
-# 18 timing/size runs: 3 worlds x 3 reps x {base 6fdfdf555, branch a09850b44}, alternating base/branch within each rep (rep 2 runs branch first, so drift does not always fall on one side), s42 2000t, probe v2, audit_mode, PYTHONHASHSEED=0.
+# 18 timing/size runs: 3 worlds x 3 reps x {base 6fdfdf555, branch edb638b6a}, alternating base/branch within each rep (rep 2 runs branch first, so drift does not always fall on one side), s42 2000t, probe v2, audit_mode, PYTHONHASHSEED=0.
 # Same CPUs (taskset -c 4-5), sequential, MemAvailable >= 3 GB, resumable (.done marker), stops at STOP_HHMM (default 2200) or 75 min of own wall.
 T=/data/vboxuser/Work/groups_base; STOP=${STOP_HHMM:-2200}; START=$(date +%s); mkdir -p $T/out18
-order=""; for w in crowded_frontier frontier_living_world urban_political; do for rep in 1 2 3; do if [ $rep = 2 ]; then order="$order $w:$rep:a09850b44 $w:$rep:6fdfdf555"; else order="$order $w:$rep:6fdfdf555 $w:$rep:a09850b44"; fi; done; done
+order=""; for w in crowded_frontier frontier_living_world urban_political; do for rep in 1 2 3; do if [ $rep = 2 ]; then order="$order $w:$rep:edb638b6a $w:$rep:6fdfdf555"; else order="$order $w:$rep:6fdfdf555 $w:$rep:edb638b6a"; fi; done; done
 for spec in $order; do
   IFS=: read w rep sha <<< "$spec"; lab=${w}_r${rep}_$sha
   [ -f $T/out18/$lab.done ] && continue

@@ -185,24 +185,28 @@ def test_seed_skips_squads_and_covers_the_highest_non_squad_id():
 
 
 def test_no_id_is_reissued_over_a_long_form_and_dissolve_run():
-    """Hard-law style check: across many ticks of forming and dissolving, every GroupRecord id appears once."""
+    """Hard-law style check: across many ticks of forming and dissolving, every id the allocator hands out (update.groups_add) is new:
+    never already in the store and never handed out before. Recording the allocator's own output means a re-issued id shows up as a duplicate."""
     state = AuthoritativeState(tick=0, seed=1)
-    issued = []
+    handed_out = []
     pair_ids = itertools.count(100, 2)
     for t in range(1, 13):
-        a = next(pair_ids); b = a + 1
+        a = next(pair_ids)
+        b = a + 1
         entities = dict(state.entities)
         entities.update(_pair(a, b, float(a), f"c{a}"))
         state = replace(state, entities=entities, tick=t)
-        before = set(state.groups)
-        state = ApplyPath.apply_generation(state, GroupSystem.update_groups(state))
-        issued.extend(sorted(set(state.groups) - before))
+        upd = GroupSystem.update_groups(state)
+        for g in upd.groups_add:
+            assert g.id not in state.groups, f"id {g.id} re-issued over a stored record at tick {t}"
+            handed_out.append(g.id)
+        state = ApplyPath.apply_generation(state, upd)
         if t % 3 == 0:  # kill the newest group's leader: dissolves it and keeps the record
             leader = max(state.groups.values(), key=lambda g: g.id).leader_id
             state = ApplyPath.apply_generation(state, GroupSystem.update_groups(
                 state, StateUpdate(entity_updates={leader: EntityUpdate(entity_id=leader, combat=CombatUpdate(alive_set=False))})))
         assert _resolves(state) == []
-    assert len(issued) == len(set(issued)) and len(issued) >= 10
+    assert len(handed_out) == len(set(handed_out)) and len(handed_out) >= 10
 
 
 def test_group_phase_carries_adds_and_the_counter_and_a_squad_collision_leaves_no_ghost():
