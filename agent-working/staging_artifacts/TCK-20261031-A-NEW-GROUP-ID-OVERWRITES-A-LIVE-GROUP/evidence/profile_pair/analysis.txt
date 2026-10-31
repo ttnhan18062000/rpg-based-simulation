@@ -1,0 +1,43 @@
+initial entity ids: base 55 branch 55 common 55 | base ghost ids 22 initial on both 22 later-born 0
+
+=== base: hash 93a1944fe116 formations 185 dissolutions 175 events 131 alive {'last': [2000, 30], '250': 45, '500': 37, '750': 35, '1000': 31, '1250': 31, '1500': 30, '1750': 30, '2000': 30}
+(a) formations with a base-ghost member 67; with one that is an initial id on both trees 67; distinct base-ghost entities forming 22
+(2) same membership re-forming <=10 ticks after it dissolved: 147; <=50: 151; no prior dissolution of that membership or >50 ticks: 34; distinct memberships 33; top5 [((22, 46), 30), ((15, 16), 20), ((47, 54), 17), ((21, 53), 16), ((6, 11), 16)] share 0.54
+    end reason of the dissolution before a <=10 re-form: {('member_contract_invalid',): 147}
+    end reason of the dissolution before a <=50 re-form: {('member_contract_invalid',): 151}
+    groups ended with lifetime <=2 ticks, by reason: {('member_contract_invalid',): 154, ('member_dead_or_inactive',): 1, ('member_contract_invalid', 'member_dead_or_inactive'): 1, ('l110_leader_dead_inactive_or_missing',): 1}
+    groups ended with lifetime <=10 ticks, by reason: {('l110_leader_dead_inactive_or_missing',): 2}
+    groups ended with lifetime >10 ticks, by reason: {('member_distance',): 3, ('member_contract_invalid',): 12, ('member_distance_and_contract',): 1}
+    mirror check: ticks 2000, mirror predicted 175 dissolutions, code made 175; predicted-not-made 0, made-not-predicted 0; examples [] / []
+    dissolutions outside update_groups (defection pass): 0; cooperation phase: calls 2000, dissolutions it made 0, cohesion verdicts {'STABLE': 1342, 'NEEDS_REGROUP': 79, 'MEMBER_ABANDONING': 13}
+(1) pool series (mean per tick: eligible pool / grouped-listed+ghost / ghost) by 250-tick windows, with formations in the window:
+    t0-249: pool 42.1 grouped 8.8 ghost 3.30 formations 120
+    t250-499: pool 29.6 grouped 11.5 ghost 7.76 formations 39
+    t500-749: pool 19.1 grouped 16.1 ghost 15.92 formations 5
+    t750-999: pool 18.7 grouped 15.2 ghost 15.21 formations 0
+    t1000-1249: pool 17.0 grouped 14.0 ghost 14.00 formations 0
+    t1250-1499: pool 15.8 grouped 14.8 ghost 14.00 formations 3
+    t1500-1749: pool 13.4 grouped 16.6 ghost 15.13 formations 18
+    t1750-1999: pool 14.0 grouped 16.0 ghost 16.00 formations 0
+    totals: pool-ticks 42428, ghost-ticks 25331 (entity-ticks excluded from the pool by a ghost group_id)
+
+=== branch: hash 85fcc03d4ee9 formations 1035 dissolutions 1031 events 128 alive {'last': [2000, 28], '250': 46, '500': 40, '750': 34, '1000': 31, '1250': 30, '1500': 29, '1750': 28, '2000': 28}
+(a) formations with a base-ghost member 807; with one that is an initial id on both trees 807; distinct base-ghost entities forming 22
+(2) same membership re-forming <=10 ticks after it dissolved: 861; <=50: 887; no prior dissolution of that membership or >50 ticks: 148; distinct memberships 101; top5 [((30, 38), 113), ((5, 10), 96), ((45, 49), 66), ((11, 36), 57), ((5, 8), 37)] share 0.36
+    end reason of the dissolution before a <=10 re-form: {('member_contract_invalid',): 861}
+    end reason of the dissolution before a <=50 re-form: {('member_contract_invalid',): 881, ('member_distance',): 6}
+    groups ended with lifetime <=2 ticks, by reason: {('member_contract_invalid',): 908, ('member_dead_or_inactive',): 2, ('member_contract_invalid', 'member_dead_or_inactive'): 1}
+    groups ended with lifetime <=10 ticks, by reason: {('l110_leader_dead_inactive_or_missing',): 1, ('member_contract_invalid',): 11, ('member_distance',): 1}
+    groups ended with lifetime >10 ticks, by reason: {('member_distance',): 27, ('member_contract_invalid',): 67, ('member_dead_or_inactive',): 5, ('member_distance_and_contract',): 1, ('l110_leader_dead_inactive_or_missing',): 7}
+    mirror check: ticks 2000, mirror predicted 1031 dissolutions, code made 1031; predicted-not-made 0, made-not-predicted 0; examples [] / []
+    dissolutions outside update_groups (defection pass): 0; cooperation phase: calls 2000, dissolutions it made 0, cohesion verdicts {'STABLE': 6313, 'NEEDS_REGROUP': 390, 'MEMBER_ABANDONING': 1034}
+(1) pool series (mean per tick: eligible pool / grouped-listed+ghost / ghost) by 250-tick windows, with formations in the window:
+    t0-249: pool 42.8 grouped 8.4 ghost 0.00 formations 144
+    t250-499: pool 31.2 grouped 11.7 ghost 0.00 formations 217
+    t500-749: pool 25.7 grouped 11.3 ghost 0.00 formations 208
+    t750-999: pool 27.5 grouped 5.5 ghost 0.00 formations 214
+    t1000-1249: pool 23.5 grouped 6.7 ghost 0.00 formations 30
+    t1250-1499: pool 24.3 grouped 4.7 ghost 0.00 formations 74
+    t1500-1749: pool 20.5 grouped 7.8 ghost 0.00 formations 89
+    t1750-1999: pool 21.9 grouped 6.1 ghost 0.00 formations 59
+    totals: pool-ticks 54365, ghost-ticks 0 (entity-ticks excluded from the pool by a ghost group_id)
