@@ -9,7 +9,7 @@ tags: [ai, governance, delivery]
 
 # Research stage R0: inventory record
 
-Result record for `TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS` (plan section 70). R0 is read-only apart from the tags. Plan read as on main at `1ccaba303`; repository state read at `origin/main` `6fdfdf555`, 2026-10-31. Nothing here is a decision: OD-16 to OD-21 stay undecided and no budget is named.
+Result record for `TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS` (plan section 70). R0 is read-only apart from the tags (created by the owner). Plan read as on main at `1ccaba303`; repository state read at `origin/main` `6fdfdf555`, 2026-10-31. Nothing here is a decision: OD-16 to OD-21 stay undecided and no budget is named.
 
 ## 1. Candidate tasks (plan section 66)
 
@@ -62,18 +62,18 @@ Every row has a disposition. The disposition is the plan's recommendation carrie
 
 ## 4. Baseline tags (OD-15, decided: freeze baselines as tags)
 
-No tag exists locally or on the remote (`git ls-remote --tags origin` returned nothing on 2026-10-31). **No tag has been created, even locally.** Proposed, all annotated, all at `6fdfdf5556548105e28ab370832f36bc96241561` (current `origin/main`):
+The owner created and pushed the four annotated tags on 2026-10-31 (#715 comment 6541773425). All four are on `origin`, annotated, at `6fdfdf5556548105e28ab370832f36bc96241561`. R0 created no tag and moved none. Each tag message holds only a name and a measured result; **the test command is in this record, not in the tag**.
 
-| Tag | What it freezes | Test command recorded in the tag message |
-|---|---|---|
-| `baseline/sdlc-pipeline-workflows-20261031` | `.claude/workflows/implement-ticket.js`, `implement-epic.js`, the two skills, their source-pinned tests | `pytest tests/agent_orchestration tests/agent_orchestration_claude_adapter tests/tools -k "implement_ticket or implement_epic or workflow or sidecar or step0"` |
-| `baseline/sdlc-provider-neutral-contract-20261031` | `tools/agent_orchestration`, `agent-working/agent-orchestration` YAML and adapters | `pytest tests/agent_orchestration tests/agent_orchestration_claude_adapter tests/agent_orchestration_codex_adapter` |
-| `baseline/sdlc-codex-track-20261031` | `tools/agent_codex*`, `agent_replay_codex`, `agent_orchestration_codex_adapter` | the Codex part of the CI lane's `pytest` list (the `tests/agent_codex_*`, `tests/agent_replay_codex`, `tests/agent_orchestration_codex_adapter` directories) |
-| `baseline/sdlc-agent-replay-20261031` | `tools/agent_replay` (sampler, runner, detectors) | `pytest tests/agent_replay` |
+| Tag | What it freezes | Result in the tag message | Test command (lives here) |
+|---|---|---|---|
+| `baseline/sdlc-pipeline-workflows-20261031` | `.claude/workflows/implement-ticket.js`, `implement-epic.js`, the two skills, their source-pinned tests | 342 passed, 3 skipped, 1 xfailed | `pytest tests/agent_orchestration tests/agent_orchestration_claude_adapter tests/tools -k "implement_ticket or implement_epic or workflow or sidecar or step0"` |
+| `baseline/sdlc-provider-neutral-contract-20261031` | `tools/agent_orchestration`, `agent-working/agent-orchestration` YAML and adapters | 139 passed | `pytest tests/agent_orchestration tests/agent_orchestration_claude_adapter tests/agent_orchestration_codex_adapter` |
+| `baseline/sdlc-codex-track-20261031` | `tools/agent_codex*`, `agent_replay_codex`, `agent_orchestration_codex_adapter` | 299 passed, 5 skipped | `pytest` over `tests/agent_codex_live_transport`, `agent_codex_pilot_executor`, `agent_codex_pilot_guardrails`, `agent_codex_pilot_orchestration`, `agent_codex_posttool_adapter`, `agent_codex_realrepo_pilot_harness`, `agent_codex_runtime_shadow`, `agent_replay_codex`, `agent_orchestration_codex_adapter` |
+| `baseline/sdlc-agent-replay-20261031` | `tools/agent_replay` (sampler, runner, detectors) | 45 passed | `pytest tests/agent_replay` |
 
-**Last-known-good state is not measured**: the test commands were not run at `6fdfdf555`. Each tag message must carry the result, so the four test runs need a lead slot before the tag is created. If a newer `origin/main` is wanted for the tags, the SHA changes and is re-sent.
+**How the results were measured:** 2026-10-31, CPUs 4-5, `-n 2`, in a detached git checkout of `6fdfdf555`. A first attempt in a tree made with `git archive` (no `.git`) failed, because some tests run `git status`; it was discarded and the numbers above come from the re-run in a real checkout.
 
-Tags are **not protected** until the ruleset ticket (`TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION`) lands; until then anyone with push access can move or delete one. A tag push is a separate owner ask.
+Tags are **not protected** until the ruleset ticket (`TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION`) lands; until then anyone with push access can move or delete one.
 
 ## 5. Still needed before R1
 
@@ -81,4 +81,3 @@ Nothing in this list is started; R1 and later stages wait for the owner (#715 65
 
 - The owner's decisions on OD-16 (evaluation investment and execution), OD-17 (framework), OD-18 (scope of comparisons) and OD-21 (threshold and budget per stage). None is decided and this record names no budget.
 - The positive and negative control for each of the 7 provisional tasks, the section 66 environment-rebuild check, and rewritten task specs that no longer name the cause.
-- The baseline tags in section 4, pushed after the owner's yes.

@@ -8016,6 +8016,22 @@
   - delivery
   - planning
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
+  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
+  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
+    and baselines are frozen as git tags.'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
   ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
   title: The ruleset is exported as the rollback point, and the tools that assume
@@ -8109,22 +8125,6 @@
   - ai
   - governance
   - security
-- type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
-  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
-  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
-    and baselines are frozen as git tags.'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-31'
-  related_code_areas:
-  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
-  - agent-working/stored_artifacts/ (result record)
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
 - type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION.md
   ticket_id: TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION

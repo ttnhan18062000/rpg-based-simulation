@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
-phase: open
+phase: done
 date: 2026-10-31
 tags: [ai, governance, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 Research stage R0: candidate tasks and the disposition review are recorded, and baselines are frozen as git tags.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -70,13 +70,14 @@ Record: `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (pl
 - Candidates: 7 provisional tasks, 4 quarantined with reasons, from 11 tickets (10 PRs). Each verdict is "static reading; controls not run, needed before R1"; the owner narrowed R0 so the controls are not run (#715 6540856174).
 - Disposition review: all 14 section 32a rows have a disposition, with what was checked and what was not. Plan rows noted: Codex size (32a 5k alone against 3,455 by an exact glob; sections 32/retirement table say 5.0k with replay), 61 test files against about 57, Headroom still configured (not yet done), one CI lane shared by Codex and the contract tests, `retrieval_cache.py` runtime trace not done.
 - Billing and subscription limits: **outstanding by the owner's choice** (#715 6540856174: "not now"); no details recorded.
-- Baseline tags: four names proposed, all at `6fdfdf5556548105e28ab370832f36bc96241561`. **No tag created, even locally.** Last-known-good results are not measured (a lead slot is needed); tags are unprotected until the ruleset ticket.
+- Baseline tags: created and pushed by the owner (#715 6541773425), four annotated tags at `6fdfdf5556548105e28ab370832f36bc96241561`; R0 created none. Measured results (replay 45 passed; Codex 299 passed, 5 skipped; provider-neutral 139 passed; pipeline 342 passed, 3 skipped, 1 xfailed) are in the tag messages; the test commands are in the record. Tags stay unprotected until the ruleset ticket.
 
 ## Test Summary
-Read-only ticket; no code. The four tag test sets are outstanding (lead slot); the task controls are deferred by the owner.
+Read-only ticket; no code. The four tag test sets ran at `6fdfdf555` in a detached checkout (results in the record); the task controls are deferred by the owner.
 
 ## Files Changed
 - `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (new)
 
 ## Completion Summary
-NOT closed. AC1 (candidate list with count, source close, verdict) met by static reading. AC2 met (every 32a row has a disposition). AC3 **open**: tags do not exist and need the owner's yes after measured results. AC4 met (before R1: OD-16, 17, 18, 21; the task controls; the tags; nothing decided; no budget named). Known gap: tag results are outstanding; billing and the task controls are deferred by the owner.
+AC1 met by static reading (7 provisional tasks, 4 quarantined; verdicts marked "static reading; controls not run, needed before R1"). AC2 met (every 32a row has a disposition). AC3 met: tags exist on the remote at the recorded SHA after the owner's yes (#715 6541773425). AC4 met: before R1 the record lists OD-16, 17, 18, 21 and the task controls; nothing is decided and no budget is named. Billing stays outstanding by the owner's choice (#715 6540856174). 
+Known gap: the 7 candidate tasks have no positive or negative control run, deferred by the owner until R1.
