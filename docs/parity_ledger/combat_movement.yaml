@@ -2837,7 +2837,7 @@
     a deterministic tie-break: power, then skill id (pick_highest_power_skill, src/engine/tactical.py),
     so it does not follow PYTHONHASHSEED. Divergence 2.144.'
   proof_type: null
-  test_path: tests/unit/determinism/test_set_order_follows_no_hash_seed.py::test_equal_power_skills_pick_the_lowest_skill_id_at_every_seed
+  test_path: tests/unit/engine/test_set_order_follows_no_hash_seed.py::test_equal_power_skills_pick_the_lowest_skill_id_at_every_seed
   divergence_note: 'Divergence 2.144 (STABILIZED): equal-power skills tie-break by
     skill id instead of set iteration order.'
   support_boundary: null
@@ -2851,7 +2851,7 @@
     a deterministic tie-break: power, then skill id (pick_highest_power_skill, src/engine/tactical.py),
     so it does not follow PYTHONHASHSEED. Divergence 2.144.'
   proof_type: null
-  test_path: tests/unit/determinism/test_set_order_follows_no_hash_seed.py::test_equal_power_skills_pick_the_lowest_skill_id_at_every_seed
+  test_path: tests/unit/engine/test_set_order_follows_no_hash_seed.py::test_equal_power_skills_pick_the_lowest_skill_id_at_every_seed
   divergence_note: 'Divergence 2.144 (STABILIZED): equal-power skills tie-break by
     skill id instead of set iteration order.'
   support_boundary: null

@@ -119,13 +119,13 @@ Unit-level work done on ruling 3 (2026-10-30): the tactical tie-break (extracted
 Acceptance (all met, no push by the implementer): cross-seed (crowded_frontier s42 1000t, final hash identical at PYTHONHASHSEED 0-3 on B, `08afbabc…`); seed-0 NO OUTCOME DRIFT on 3 worlds x s42-46 at 1000t plus s42 at 5000t per world (18 pairs, rulings 4 to 6), every moved hash traced to a concern-cap tie trim with identical inputs (15 traced pairs), prefix check once per world; post-merge check against origin/main c5139b410 (ruling 7). Corrected trim counts (a same-tick comparison of the kept SET, order ignored; `evidence/attribute.py`) replace the earlier positional "151 of 4349" and "8095 of 43219". Divergence 2.144 Measured records all of it.
 
 ## Test Summary
-- `tests/unit/determinism/test_set_order_follows_no_hash_seed.py`: 10 passed, including positive controls that flip with the seed for the skill pick and the concern merge, the `enforce_bandwidth` and capacity-phase tie tests (the phase test's positive control shows origin/main drops the oldest-inserted tied concern instead).
+- `tests/unit/engine/test_set_order_follows_no_hash_seed.py`: 10 passed, including positive controls that flip with the seed for the skill pick and the concern merge, the `enforce_bandwidth` and capacity-phase tie tests (the phase test's positive control shows origin/main drops the oldest-inserted tied concern instead).
 - Scoped not-slow regression on the merged tree (`tests/unit/{strategic,combat,core,engine,progression,domains,ai,economy}`, `tests/engine`, `tests/mechanic_scenarios`): 3349 passed, 3 skipped, 1 xfailed. `generate_registry --check` in sync; paths guard 11 passed.
 - Measured runs: see `evidence/results_table.md` (18 acceptance pairs, 15 traced first differences, post-merge check, prefix check, post-reboot control).
 
 ## Files Changed
 - `src/engine/tactical.py` (`pick_highest_power_skill`: power, then skill id), `src/core/updates.py`, `src/engine/evolution.py`, `src/engine/apply_plan.py`, `src/domains/combat_engagement/learning.py`, `src/engine/pipeline_phases/capacity_enforcement.py`, `src/systems/strategic_systems/intelligence.py`, `src/systems/strategic_systems/detour.py` (sorted merges and the concern-cap id tie-break).
-- `tests/unit/determinism/test_set_order_follows_no_hash_seed.py`.
+- `tests/unit/engine/test_set_order_follows_no_hash_seed.py`.
 - `docs/guidelines/intentional_divergences.md` (2.144), `docs/mechanics/02_combat_laws.md` (5.5), `docs/parity_ledger/combat_movement.yaml` (COMB-264, COMB-265), `docs/REGISTRY.yaml`.
 - Ticket, staging artifacts (moved to `stored_artifacts`), monitoring shards.
 
