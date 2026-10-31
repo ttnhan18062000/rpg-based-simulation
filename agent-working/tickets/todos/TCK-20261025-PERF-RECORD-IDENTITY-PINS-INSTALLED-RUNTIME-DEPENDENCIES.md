@@ -139,6 +139,50 @@ Setup of both tables: `systemd-run --user --scope -q -p MemoryMax=3G -p MemorySw
 
 Reading (five points per series; a correlation, not a cause): in both series the before-probe sorts the averages and nothing else gated on does. Movement: the two fastest runs (2 and 3) have the quietest before-probes (26.8 and 29.0 ms), and the three slowest (1, 4, 5) have 46 to 53 ms, while host load1 was only 0.92 and 0.74 on slow runs 4 and 5. Idle: the slowest runs (3 and 2) have the slowest before-probes (40.7 and 39.9 ms) and the fastest (5) a quiet one (32.9 ms). Foreign share was at most 0.1 % everywhere, so the noise is not other processes on CPUs 4-5 during a run; it is host-speed variation the 5 s busy sample does not see. After-probe spikes (idle runs 3 and 5: 51.0 and 57.6 ms) fell after the timed span and did not touch the run's own average, which is why the probe gate is pre-run only. Host swap in use rose during both windows (3.27 to 3.46 GB during idle; 3.47 to 4.02 GB during movement) while pswpin/pswpout stayed 0 at every start; the record's own processes were swap-capped, the source was not diagnosed. The earlier unpinned series (2026-10-29, `/usr/bin/python3` and the first `.venv` series) are not evidence: the first two fingerprinted the stale system stack (`deps-v1:e4a1cd0c`, 29), the third ran unpinned.
 
+**Calibration slot, 2026-10-31 (after the VT-x change; branch at d4bd4c96b = origin/main b0cb9402b merged; owner yes #715 6545634722; evidence, not a record)**
+
+Step 1, host-speed probe on CPUs 4-5 in a `run-*.scope`, `host_speed_series()` median of 5 spins, one reading every 30 s from 22:56:34 to 23:06:05 (20 readings, ms): 43.19, 39.30, 42.55, 41.81, 37.52, 38.61, 38.26, 39.99, 35.20, 36.84, 41.28, 45.63, 41.08, 44.27, 43.63, 43.99, 41.97, 40.88, 40.28, 42.43. Median 41.18, range 35.20 to 45.63; host load1 0.09 to 0.90. Under the rule fixed beforehand (1.25 x median) the provisional limit is 51.48 ms; perf-planner: not the final limit, step 1 reruns if the host state changes.
+
+Step 2, one pinned `movement_100_local` series, no `--max-probe-ms`, out-root `reports/perf/calib_1031`: STOPPED in run 1 by the tool: `cannot run: run 1 of movement_100_local stopped, swap activity during the run (pswpin +3, pswpout +0 pages): series stopped, no candidate written`. Gate before run 1 passed (load1 0.41, available 4325 MB, cpu4 0.6 % / cpu5 0.4 % busy, swap in+out 0). Run 1 meta: wall_s 10.55, probe 42.99 before (values 41.76, 45.94, 47.96, 36.59, 42.99), 38.21 after, host swap used 3467 MB. No summary.json and no candidate, so no per-run table, spread, verdict or fingerprint. Kept as evidence under git-ignored `reports/perf/calib_1031/` (`movement_100_local/run1.json`, `run1.meta.json`, `probe.log`, `series.log`). The "Tick N exceeded budget ... vs limit 100 ms" lines in `series.log` are not diagnosed and feed no gate.
+
+perf-planner's sample (wording to be supplied by perf-planner): `/proc/vmstat` read by perf-planner on a quiet host showed swap-in in 18 of 18 ten-second windows, so the in-run swap check would stop another series the same way; recommendation to lead: close idle seats and clear swap (owner, sudo), no rule change.
+
+**Calibration B, 2026-10-31 23:27 to 23:39 (swap cleared by the owner first; commit d4bd4c96b; owner choice #715 6545989333; NOT promoted; `reports/perf/` is git-ignored, so these notes are the durable copy of the figures)**
+
+Before start: MemAvailable 3769 MB, swap used about 0 (SwapFree 8388600 of 8388604 kB), pswpin 2876668, pswpout 3574536, load1 0.48, system.slice AllowedCPUs 0-3. At the end MemAvailable 4667 MB, SwapFree 7666700 kB (about 705 MB used by other processes during the window).
+
+Step 1, 20 probes (ms, median of 5 spins each, 30 s apart, CPUs 4-5): 54.02, 36.62, 46.97, 35.55, 41.96, 36.62, 45.83, 41.92, 36.63, 31.28, 39.89, 37.55, 45.79, 34.62, 32.49, 36.20, 33.73, 30.44, 42.67, 37.84. Median 37.09; 1.25 x median = 46.36 ms (the 51.48 ms of the first calibration is retired).
+
+Step 2, pinned `movement_100_local`, no `--max-probe-ms`, 5 runs completed, no gate stop (spread 2.2 % over the middle 3 of 5, all 5: 23.6 %; verdict not NOISY; rule middle_3; median run 5; fingerprint `deps-v1:e71fd7267597388a9cf4f55773d8d95cffdbae01581544075d54ffabb6e82066` (30), cpu_affinity 4-5; peak RSS 77 MB each run):
+
+| run | avg_ms | probe before -> after | wall_s | host load1 | MemAvailable MB | busy cpu4/cpu5 % | host swap used MB | swap io delta | foreign share |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 96.870 | 30.689 -> 38.015 | 7.31 | 0.06 | 4563.8 | 0.2 / 0.2 | 705 | 0 | 0.0 % |
+| 2 | 91.483 | 40.418 -> 33.297 | 6.66 | 0.16 | 4573.3 | 0.0 / 0.2 | 705 | 0 | 0.0 % |
+| 3 | 113.032 | 46.825 -> 36.114 | 8.15 | 0.27 | 4566.1 | 0.4 / 0.4 | 705 | 0 | 0.0 % |
+| 4 | 99.050 | 40.753 -> 31.491 | 6.91 | 0.49 | 4585.1 | 0.2 / 0.0 | 705 | 0 | 0.0 % |
+| 5 | 97.454 | 33.604 -> 36.440 | 6.87 | 0.56 | 4570.1 | 0.4 / 0.2 | 705 | 0 | 0.0 % |
+
+Sort test (rule fixed beforehand: the two runs with the lowest before-probe are also the two fastest by avg_ms): lowest before-probes are runs 1 and 5; fastest are runs 2 and 1; no match, so the probe does not sort and, with spread under 15 %, the probe gate stays off for the record window. Run ids (`data/runs`, removed by id): run_1793464659_5169_1668294_20a7c1dd, run_1793464693_5169_1668359_a968a2de, run_1793464706_5169_1668401_5de691dd, run_1793464720_5169_1668452_6f5877ca, run_1793464733_5169_1668484_5fe3bdb1. Evidence under `reports/perf/calib_1031b/`.
+
+**Record chain, 2026-10-31 23:39 to 23:44 (commit d4bd4c96b; owner approval #715 6545634722; probe gate off, no `--max-probe-ms`; `--memory-pass` off because the committed v0001 idle and movement records carry no `working_set_*` keys; NOT promoted, nothing under `tests/perf/baselines/`; STOPPED by a gate in movement A, run 2, so series B and the A/A compare did not run)**
+
+Pinned `idle_100_local`, exit 0, 5 runs: NOISY, 33.45 % over the middle 3 of 5 (all 5: 89.0 %), rule middle_3, median run 4, off_normal empty; fingerprint `deps-v1:e71fd7267597388a9cf4f55773d8d95cffdbae01581544075d54ffabb6e82066` (30), cpu_affinity 4-5.
+
+| run | avg_ms | probe before -> after | wall_s | host load1 | MemAvailable MB | busy cpu4/cpu5 % | host swap used MB | swap io delta | foreign share |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 50.728 | 40.214 -> 32.928 | 4.11 | 0.49 | 4381.8 | 7.5 / 5.3 | 704.8 | 0 | 1.72 % |
+| 2 | 95.884 | 49.806 -> 46.036 | 6.97 | 0.35 | 4444.0 | 2.0 / 2.2 | 704.8 | 0 | 0.0 % |
+| 3 | 76.250 | 44.648 -> 42.097 | 5.86 | 0.42 | 4453.1 | 3.2 / 6.1 | 704.8 | 0 | 0.0 % |
+| 4 | 64.345 | 34.541 -> 36.530 | 5.16 | 0.22 | 4432.1 | 0.4 / 0.0 | 704.8 | 0 | 0.0 % |
+| 5 | 57.136 | 33.404 -> 37.010 | 4.69 | 0.32 | 4419.6 | 2.6 / 1.6 | 704.8 | 0 | 0.0 % |
+
+(load1, MemAvailable and busy columns are the gate readings before each run; wall_s and swap used are from the run meta; the meta load1 differs slightly.)
+
+Pinned `movement_100_local` series A: run 1 completed (wall_s 8.82, probe 40.73 -> 41.66, gate before: load1 0.42, available 4477.4 MB, cpu4 0.5 / cpu5 0.9 % busy, swap I/O 0, foreign share 0.0 %); run 2 gate before: load1 0.54, available 4468.7 MB, cpu4 1.0 / cpu5 0.2 % busy, swap I/O 0; run 2 STOPPED: `cannot run: run 2 of movement_100_local stopped, swap activity during the run (pswpin +1, pswpout +0 pages): series stopped, no candidate written`. No summary.json and no candidate for A; series B and the A/A compare(A, B) were not run. Host at the stop: MemAvailable 4570 MB, SwapFree 7666992 kB (about 705 MB used), load1 0.50; pswpin 2876668 -> 2877348 and pswpout 3574536 -> 3752205 across the window (cumulative host counters). The log carries a WatchdogTrip alert (tick 5, 137.6 ms vs 100 ms) and "Tick N exceeded budget" lines; noted as having appeared, no conclusion drawn.
+
+Run ids (`data/runs`, removed by id): idle: run_1793464834_5169_1669360_55113761, run_1793464865_5169_1669529_aa95829c, run_1793464879_5169_1669654_4207b16d, run_1793464933_5169_1669745_9b09f6fe, run_1793464944_5169_1669849_ba35ac8e; movement A runs 1 and 2: run_1793465016_5169_1670056_ed137173, run_1793465031_5169_1670113_8a3ff95c. Evidence under `reports/perf/record_1031/`. Part 2 acceptance criteria stay unticked; the ticket status is unchanged.
+
 ## Test Summary
 
 ## Files Changed
