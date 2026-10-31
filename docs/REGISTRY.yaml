@@ -5760,6 +5760,58 @@
   - determinism
   - engine
 - type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md
+  title: AI-First SDLC — Architecture Discovery and Audit
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md
+  title: 'AI-First SDLC: Architecture Evolution Plan'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md
+  title: 'AI-First SDLC: Decision Summary and Evidence Refresh'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md
+  title: 'Handover: AI-first SDLC evolution work, from agent-working-designer-u24
+    to ubuntu''s agent-working-designer'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/agent_infrastructure/agent_working_direction.md
   title: Agent-Working Direction — Observable, Self-Diagnosing, Adaptable Delivery
   status: active
@@ -7889,6 +7941,164 @@
   - world
   - content
   last_verified: '2026-10-09'
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND.md
+  ticket_id: TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND
+  title: The AI-first SDLC plan, audit, decision summary and handover are committed
+    under docs/plans/agent_infrastructure/.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - docs/plans/agent_infrastructure/
+  - docs/REGISTRY.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
+  ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
+  title: 'Evolve the AI-first SDLC: separate authority, verifiable completion, evidence,
+    simplification, context reliability, and a small evaluation track.'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-CONTEXT-AND-SESSION-RELIABILITY.md
+  ticket_id: TCK-20261031-SDLC-CONTEXT-AND-SESSION-RELIABILITY
+  title: Agents can trust the freshness and authority of search, graph and handover
+    context.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/knowledge_search.py, tools/search_mcp.py, tools/hybrid_retrieval.py
+  - tools/sessions/session_start_hook.py, tools/graphify_*
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS.md
+  ticket_id: TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS
+  title: The GitHub behaviours the merge and credential design depends on are tested
+    on a throwaway public repo.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION.md
+  ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
+  title: The guard inspects interpreter payloads and asks on `gh api` writes and merges,
+    and secret-shaped strings are redacted from tool rows and the transit export.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/sessions/guard.py, tools/sessions/classify.py
+  - tools/agent-monitoring/post_tool_hook.py, tools/handover_transit.py
+  - .claude/settings.json
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
+  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
+  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
+    closes require a `path_note`, and the baseline table is frozen.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/record_hand_orchestrated_closure.py
+  - docs/agent-monitoring/schema.md
+  - docs/plans/agent_infrastructure/session_layer_working_process.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL.md
+  ticket_id: TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL
+  title: Agents authenticate as a machine user on both hosts, and owner credentials
+    are gone from both hosts and revoked.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/ per the inventory
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
+  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
+  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
+    and baselines are frozen as git tags.'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
+  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
+  title: The ruleset is exported as the rollback point, and the tools that assume
+    the owner's login are listed.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION.md
+  ticket_id: TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION
+  title: The production ruleset is set per OD-3 (M1), and a tag ruleset protects the
+    frozen baselines.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - security
 - type: ticket
   path: agent-working/tickets/done/TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU.md
   ticket_id: TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU
