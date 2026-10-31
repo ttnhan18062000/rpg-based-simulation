@@ -13,7 +13,7 @@ Result record for `TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS` (plan secti
 
 ## 1. Candidate tasks (plan section 66)
 
-Method: the 80 first-parent merges since 2026-10-10 were filtered to those that change both code and tests (about 40). Ten merged PRs (eleven tickets) with a narrow, single-purpose change were read against the admission test; two of them (#789, #779) only for a shorter check. **Every verdict is "static reading; controls not run, needed before R1"**: ticket text, test file names and test imports were read. The positive control (the grader passes on the true solution) and negative control (it fails on the base commit) were **not run**; that needs a lead slot and is outstanding. "Provisional" means admissible on the static reading and subject to those controls. By the owner's narrowing of R0 (#715 6540856174) the controls are **not** run in R0.
+Method: the 80 first-parent merges since 2026-10-10 were filtered to those that change both code and tests (about 40). Ten merged PRs (eleven tickets) with a narrow, single-purpose change were read against the admission test; two of them (#789, #779) only for a shorter check. **Every verdict is "static reading; controls not run, needed before R1"**: ticket text, test file names and test imports were read. The positive control (the grader passes on the true solution) and negative control (it fails on the base commit) were **not run**; that needs a lead slot and is outstanding. "Provisional" means admissible on the static reading and subject to those controls. The controls are **not** run in R0: agent-working-planner narrowed R0 after the owner deferred R1 and later research (#715 6540856174).
 
 Base is the merge's first parent; solution is the merge commit.
 
