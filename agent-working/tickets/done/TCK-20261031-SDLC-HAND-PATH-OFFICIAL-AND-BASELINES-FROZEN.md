@@ -73,7 +73,7 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 - `session_layer_working_process.md` section 7.1 records the hand/batch model as official (OD-1, #715 6529263880) and states what it does not decide (OD-5).
 - `SDLC_DECISION_RECORD.md`: decided = exactly what #715 6529263880 and 6529808776 say; every other OD reads undecided. Where the plan's wording differs from the comments, the comment's words are used (listed in the record).
 - `SDLC_BASELINES_FROZEN.md`: section 46 as written at `1ccaba303`, each row with ref and SHA; nothing re-measured; the ubuntu pre-2026-10-30 timings statement (#715 6527003378).
-- CLAUDE.md was not edited. Its closure example shows `--path-reason` alternatives with no `--path-note`; reported to the planner.
+- CLAUDE.md: one line added after the closure example (new line 109), saying `owner_directed` needs `--path-note`, text and approval from the owner (#715 6541771190).
 
 ## Test Summary
 - `tests/tools/test_path_reason_and_phase_coverage.py`, `test_record_hand_orchestrated_closure.py`, `test_record_run.py`: 116 passed (scoped run). `tests/agent_orchestration` and `tests/docs`: 150 passed, 2 skipped, 1 xfailed.
@@ -88,5 +88,3 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 
 ## Completion Summary
 AC1: the decision record marks OD-1, 2, 3, 10, 14, 15 decided with #715 6529263880 and OD-3 subject to E6b; all others undecided. AC2: refused with a test on each writer; other reasons unaffected. AC3: every baseline row names ref and SHA. AC4: full `tests/tools` run, one failure found and fixed (registry drift), see Test Summary.
-
-Known gap: the CLAUDE.md closure example still shows `--path-reason` alternatives with no `--path-note` (one-line note chosen by the owner, #715 6540849801; not edited until the owner has seen the final text).
