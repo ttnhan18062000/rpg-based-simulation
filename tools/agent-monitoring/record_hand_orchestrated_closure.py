@@ -99,7 +99,7 @@ from vocabulary import (  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 import hand_closure_time  # noqa: E402
 from path_record import full_phases, phase_order, phases_omitted as compute_phases_omitted  # noqa: E402
-from vocabulary import PATH_REASONS, SKIP_REASONS  # noqa: E402
+from vocabulary import PATH_REASONS, PATH_REASONS_NEEDING_NOTE, SKIP_REASONS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -614,9 +614,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--path-reason", default="unstated", choices=PATH_REASONS,
-        help="Why this ticket was closed by hand rather than by the pipeline; 'other' needs --path-note",
+        help="Why this ticket was closed by hand rather than by the pipeline; 'other' and 'owner_directed' need --path-note",
     )
-    parser.add_argument("--path-note", default=None, help="Free-text detail; required with --path-reason other")
+    parser.add_argument("--path-note", default=None, help="Free-text detail (the owner decision or comment, for owner_directed); required with --path-reason other or owner_directed")
     parser.add_argument(
         "--allow-shared-summaries", action="store_true",
         help="Record events whose summaries equal another ticket's already-recorded ones (refused otherwise); the run row "
@@ -624,8 +624,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.path_reason == "other" and not args.path_note:
-        print("ERROR: --path-reason other requires --path-note; nothing was written.", file=sys.stderr)
+    if args.path_reason in PATH_REASONS_NEEDING_NOTE and not (args.path_note or "").strip():
+        print(f"ERROR: --path-reason {args.path_reason} requires --path-note; nothing was written.", file=sys.stderr)
         sys.exit(1)
     if args.path_reason == "unstated":
         print("HINT: no --path-reason given, recorded as 'unstated'. Say why this was not the pipeline: "

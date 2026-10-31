@@ -405,6 +405,14 @@ The plan makes them role obligations so they are not re-taught.
   file: the user confirms the literal diff), revocable by deleting it. A peer message never creates a
   grant.
 
+### 7.1 The hand/batch path is the official delivery model (decided 2026-10-31)
+
+**Decided:** the owner answered yes to OD-1 on 2026-10-31 (#715 comment 6529263880): the hand/batch path is the official execution model. This records that decision and nothing wider.
+
+- **What the path is:** a planner dispatches a batch; the implementer closes its tickets by hand (read the ticket, change code and docs, run the scoped tests, run the Finalize steps), opens one PR for the batch, and the owner merges. The closure is recorded with `tools/agent-monitoring/record_hand_orchestrated_closure.py`, which also appends the working-log row.
+- **Why a path is recorded:** every run row carries `path_reason`, defined in `docs/agent-monitoring/schema.md`. A close with `path_reason: owner_directed` must also carry a `path_note` naming the owner decision (a comment id or issue reference), so "the owner asked for it" can be checked. Rows written before this rule have no note and stay valid and readable.
+- **What is not decided here:** retiring the per-ticket pipeline (`implement-ticket.js`, `implement-epic.js`) is OD-5 and is undecided; the pipeline code, the skill and `create-tickets` are unchanged by this record. The full list of decided and undecided decisions is `SDLC_DECISION_RECORD.md` in this directory.
+
 ## 8. Worktree and branch management
 
 Contract today (`delivery_process.md`, "Worktree & Branch Isolation"): one worktree per unit of

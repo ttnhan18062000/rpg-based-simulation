@@ -5812,6 +5812,30 @@
   - delivery
   - planning
 - type: doc
+  path: docs/plans/agent_infrastructure/SDLC_BASELINES_FROZEN.md
+  title: 'AI-First SDLC: Frozen Baselines'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/SDLC_DECISION_RECORD.md
+  title: 'AI-First SDLC: Decision Record'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/agent_infrastructure/agent_working_direction.md
   title: Agent-Working Direction — Observable, Self-Diagnosing, Adaptable Delivery
   status: active
@@ -7955,6 +7979,26 @@
   tags:
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
+  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
+  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
+    closes require a `path_note`, and the baseline table is frozen.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/record_hand_orchestrated_closure.py
+  - docs/agent-monitoring/schema.md
+  - docs/plans/agent_infrastructure/session_layer_working_process.md
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/test_plan.md
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND.md
   ticket_id: TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND
   title: The AI-first SDLC plan, audit, decision summary and handover are committed
@@ -7971,6 +8015,41 @@
   - governance
   - delivery
   - planning
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
+  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
+  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
+    and baselines are frozen as git tags.'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/test_plan.md
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
+  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
+  title: The ruleset is exported as the rollback point, and the tools that assume
+    the owner's login are listed.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
 - type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
   ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
@@ -8035,23 +8114,6 @@
   - governance
   - security
 - type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
-  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
-  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
-    closes require a `path_note`, and the baseline table is frozen.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-31'
-  related_code_areas:
-  - tools/agent-monitoring/record_hand_orchestrated_closure.py
-  - docs/agent-monitoring/schema.md
-  - docs/plans/agent_infrastructure/session_layer_working_process.md
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
-- type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL.md
   ticket_id: TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL
   title: Agents authenticate as a machine user on both hosts, and owner credentials
@@ -8066,38 +8128,6 @@
   - ai
   - governance
   - security
-- type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
-  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
-  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
-    and baselines are frozen as git tags.'
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-31'
-  related_code_areas:
-  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
-  - agent-working/stored_artifacts/ (result record)
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
-- type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
-  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
-  title: The ruleset is exported as the rollback point, and the tools that assume
-    the owner's login are listed.
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-31'
-  related_code_areas:
-  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
-  - agent-working/stored_artifacts/ (result record)
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
 - type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION.md
   ticket_id: TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION
