@@ -65,3 +65,53 @@ Relayed via lead-planner-u24 and lead-planner. The text below is word for word a
 - Dispatch needs the ubuntu owner's go. If the fix changes a cited mechanism's implemented_by, rpg-planner will supply the mechanisms.yaml note text then."
 
 lead-planner's note, same message: the known-red entry stays in place until the re-anchor. Order among B, this ticket and the generator ticket comes once the owner has answered.
+
+## Ruling 4 (2026-10-31): the 16 moved anchors
+
+Relayed via lead-planner-u24 and lead-planner. The text between the rules is word for word as relayed.
+
+---
+In short: 15 of 16 rows are untraced (agreed). Nothing is re-anchored until each moved row has a cause shown.
+
+1. CAUSE vs PATH. Between the two commits, src/ differs only in scorers.py and need_pull.py, so a moved row is #769's code unless a run is nondeterministic. What's unproven is the path. A row passes when the probe shows: (a) every tick before the first difference is identical; and (b) the first difference is a score changed by retreat_pull (COMBAT_RETREAT or a pull it feeds) and nothing else. A first difference anywhere else is a STOP, to the designer.
+
+2. PROBES, all short and read-only (logging lives in scratch, not the repo):
+- P1: urban_political s123 500t (the ECONOMY row; also covers s123 1000t via 3).
+- P2: generated_frontier_3_42 s456 200t (COMBAT).
+- P3: urban_political s42 500t (covers the s42 500t rows and the two status flips, see 4).
+Each probe logs every retreat_pull call that changes a score, and the first difference in scorer, goal or project. For each moved pillar it names the first event difference behind it, so the move ties to the pull's effect.
+
+3. INFERRED LONGER RUNS (s42 1000t/2000t, s123 1000t): no probes of their own. Prefix check instead: the existing 1000t/2000t trace or log hashes must equal the 500t probe run up to t500, at both commits. If they match, the later moves inherit the probe's path; if not, the row is untraced and gets its own probe.
+Repeatability: re-run P1 once at d914bace7 and compare. Byte-identical rules out nondeterminism for the sweep; anything else is a STOP to rpg-planner.
+
+4. STATUS FLIPS (FACTION to no-data, COGNITION from no-data): not score moves; re-anchoring a status needs its own reason. P3 must show what removed FACTION's input and what supplied COGNITION's, each traced back to the retreat path. If FACTION's no-data fails evaluate_simq's own grade check, the re-anchor must NOT make that check pass by moving the anchor (that is editing an artifact to pass a gate). It goes to the designer: either the pillar needs data in that scenario (a real regression), or the grade check's no-data handling is a SimQ scorer ticket.
+
+5. ORDER:
+- B's re-check, then P1-P3, the prefix check and the repeat. Light, one host slot at a time.
+- Then TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP: the fix, then a fresh 162-run sweep.
+- Then re-run probes only on rows still out of tolerance whose values changed with the groups fix.
+- Re-anchor last, with a per-row reason: traced path, prefix-inherited path, or a designer ruling.
+The 38 rows already out at the parent are pre-existing reds, not #769's: list them in the evidence, and do not re-anchor them under this ticket.
+
+6. FULL TABLE: yes, please. Push rpg-ubuntu-simq-anchor-bisect-impl as an S2 backup (no PR) so rpg-planner can read evidence/sweep/moved_keys.md and the compare script that produced the 16 and 38.
+---
+
+lead-planner's notes, same message:
+- Slot go: P1, P2, P3 and the one P1 repeat, after B's re-check, usual wrapper, sequential. This replaces its earlier conditional go. A fresh sweep or any extra probe is a fresh ask.
+- Prefix check: the sweep logs it read are summaries with no tick hashes. If no tick-level trace exists for the 1000t/2000t runs, re-running them is not covered by this go. Tell it first, with the cost.
+- Groups dispatch: the order in 5 does not start it. The owner's go is still open, and the fix and the fresh sweep each need it or a later go.
+- S2 push of the bisect branch: covered by the standing approval (#715 6473439661), no PR. Tell it when it is up, and confirm the branch has no credential or unrelated content.
+- Check 4's condition from the data: it read FACTION as REGRESS in evaluate_simq's output at s42 500t and 2000t. Treat it as met unless P3 shows otherwise, so it goes to the designer via rpg-planner.
+
+### Ruling 4 addendum (2026-10-31)
+
+Relayed via lead-planner-u24 and lead-planner, word for word.
+
+---
+The count of 15 of 16 untraced stands. The two s42 200t WORLD rows that are not traced are covered like this:
+- urban_political s42 200t WORLD: covered by P3 (urban_political s42 500t) under the same prefix rule. P3's first difference must fall at or before t200, and the 200t run's hashes must match P3's run up to t200 at both commits.
+- selfmodel_execution_probe s42 200t WORLD: a different profile, so no prefix applies. Add P4, a 200t probe of selfmodel_execution_probe s42, with the same logging and the same pass rule.
+The matching 0.32 -> 0.25 across the three profiles is a hint, not evidence. Each row still needs its own path shown.
+---
+
+lead-planner's note: its slot go now covers P4 as well, on the same terms. The prefix-check note applies to the 200t hashes too: tell it first, with the cost, if they need a re-run.

@@ -38,3 +38,10 @@ for key, pillar, st, an, sa, sb, oa, ob in rows:
     print(f"| {key} | {pillar} | {an} | {sa} | {sb} | {d} | {oa} | {ob}{'  <<< OUT' if out else ''} |")
 print(f"\nkeys with both reports: {len(keys)-len(missing)} of {len(keys)}; missing: {missing}")
 print(f"pillar anchors compared: {len(rows)}; moved by #769: {n_moved}; moved from in to out of tolerance: {n_out}; already out before: {sum(1 for r in rows if r[6] is False)}")
+
+print("\n## Already outside tolerance at the parent a25619971 (pre-existing reds, not #769's; no re-anchor under this ticket)\n")
+print("| key | pillar | anchor | a25619971 | d914bace7 | moved by #769 |")
+print("|---|---|---|---|---|---|")
+for key, pillar, st, an, sa, sb, oa, ob in rows:
+    if oa is False:
+        print(f"| {key} | {pillar} | {an} | {sa} | {sb} | {'yes' if st != 'same' else 'no'} |")
