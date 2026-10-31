@@ -37,6 +37,25 @@ T05 is not automatically created when a target is missed. Product scale must sti
 semantic/authority complexity, and exact options must be shown as completed, rejected, or
 insufficient.
 
+**Inputs folded into T05 (recorded 2026-10-26; T05 still has no ticket, by design).** The
+owner's engine-modes decision (#715 issuecomment-6408481790, option A) makes Mode 3 evaluate-only
+and drops Mode 5. Two items wait here, so they cannot drop out unnoticed:
+
+- **Mode 3b** (regional or concurrent RESOLUTION). The evaluation input is
+  `docs/plans/architecture/engine_execution_modes_proposal.md` (Mode 3b; smallest safe
+  experiment: shadow write-region counts only, no parallel code). It needs an ADR before any 3b
+  code.
+- **Mode 3a** (free-threaded CPython). This is an import-only spike on 3.14t: does the GIL stay
+  off, and do the tests pass. It runs after H1/H2, F4 and F1 land. Known hazards: the
+  thread-local tick context, `decision_trace_writer`, and the unwired process pool, which would
+  pickle the world caches per chunk. These come from a read-only finding by lead-planner that
+  perf has not verified.
+
+Neither item is filed until T03 records an unmet target, per the row above. The capacity
+evidence for that decision is the bigger-world target the owner kept on 2026-10-26 (#715
+issuecomment-6409936521): `docs/performance/optimization_architecture.md` §1, measured by a
+`PERF-M2-T04` capacity run.
+
 ## Gate B outcomes
 
 | Outcome | Meaning | Next action |

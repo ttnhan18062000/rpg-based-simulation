@@ -42,6 +42,7 @@ from tools.perf.hash_callsite_inventory import (  # noqa: E402  (shared ast and 
     _import_aliases,
     _parent_map,
     _unparse,
+    forget_children,
 )
 
 SRC_ROOT = "src"
@@ -167,11 +168,15 @@ def _read(node: ast.AST, parents: Dict[ast.AST, ast.AST], rel: str, source: str,
     }
 
 
-def scan_source(source_text: str, rel: str) -> Dict[str, List[Dict[str, Any]]]:
-    """Reads and unresolved candidates found in one module's source text."""
+def scan_source(source_text: str, rel: str, tree: Optional[ast.AST] = None) -> Dict[str, List[Dict[str, Any]]]:
+    """Reads and unresolved candidates found in one module's source text (``tree`` is its parse, when the caller already has one)."""
     if not any(token in source_text for token in _PREFILTER):
         return {"reads": [], "unresolved_candidates": []}
-    tree = ast.parse(source_text)
+    if tree is None:  # a standalone call: parse here and do not leave this tree's nodes in the cache
+        try:
+            return scan_source(source_text, rel, ast.parse(source_text))
+        finally:
+            forget_children()
     parents = _parent_map(tree)
     aliases = _import_aliases(tree)
     psutil_instances = _psutil_instances(tree, aliases)
@@ -248,10 +253,21 @@ def _module_name(rel: str) -> str:
     return ".".join(parts)
 
 
+def _statements(tree: ast.AST):
+    """Every statement of a module in any scope (and the except handlers and match cases that hold them), skipping all expressions: an import is a statement."""
+    stack = [tree]
+    while stack:
+        node = stack.pop()
+        yield node
+        for name in node._fields:
+            value = getattr(node, name, None)
+            if isinstance(value, list):
+                stack.extend(item for item in value if isinstance(item, (ast.stmt, ast.excepthandler, ast.match_case)))
+
+
 def _imports_of(tree: ast.AST, this_module: str, known: Set[str]) -> Set[str]:
     out: Set[str] = set()
-    package = this_module.rsplit(".", 1)[0] if "." in this_module else this_module
-    for node in _dfs(tree):
+    for node in _statements(tree):
         if isinstance(node, ast.Import):
             for a in node.names:
                 if a.name in known:
@@ -295,11 +311,19 @@ def tick_reachable_modules(trees: Dict[str, ast.AST]) -> Set[str]:
 # --------------------------------------------------------------------------- the whole scan
 
 def build_report(root: Path) -> Dict[str, Any]:
+    try:
+        return _build_report(root)
+    finally:
+        forget_children()
+
+
+def _build_report(root: Path) -> Dict[str, Any]:
     reads: List[Dict[str, Any]] = []
     unresolved: List[Dict[str, Any]] = []
     unparsed: List[str] = []
     trees: Dict[str, ast.AST] = {}
     sources: Dict[str, str] = {}
+    parsed: Dict[str, ast.AST] = {}
     for path in sorted((root / SRC_ROOT).rglob("*.py")):
         rel = path.relative_to(root).as_posix()
         try:
@@ -310,10 +334,11 @@ def build_report(root: Path) -> Dict[str, Any]:
             continue
         trees[_module_name(rel)] = tree
         sources[rel] = text
+        parsed[rel] = tree
 
     reachable = tick_reachable_modules(trees)
     for rel, text in sorted(sources.items()):
-        found = scan_source(text, rel)
+        found = scan_source(text, rel, parsed[rel])
         in_tick = _module_name(rel) in reachable
         for r in found["reads"]:
             r["reachable_from_kernel"] = in_tick

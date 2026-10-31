@@ -27,7 +27,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -63,14 +63,66 @@ _GUARD_NODES = (ast.If, ast.While)
 
 # --------------------------------------------------------------------------- ast helpers
 
+#: ``ast.iter_child_nodes`` is pure Python and dominates the scan, because each tree is walked several times (parents, aliases, instances, the call loop, the
+#: function loop, imports). Children are computed once per node and kept until ``forget_children()``; ``build_report`` clears it when it is done.
+_CHILDREN: Dict[ast.AST, List[ast.AST]] = {}
+
+
+#: The pre-order node list of each module tree, for the same reason (a module is walked about five times; its functions are walked once or twice each).
+_MODULE_ORDER: Dict[ast.AST, List[ast.AST]] = {}
+
+
+def forget_children() -> None:
+    """Drop the walk caches (they hold every node of every tree scanned since the last call)."""
+    _CHILDREN.clear()
+    _MODULE_ORDER.clear()
+
+
+#: Operator and context nodes (``Load``, ``Add``, ``And``, ``Eq``, ...) carry no fields and no meaning here, and one hangs off every name and operator: the walk
+#: leaves them out. Nothing in this module or in ``wall_clock_inventory`` asks for one by traversal (``BoolOp.op`` is read as an attribute).
+_INERT = (ast.expr_context, ast.operator, ast.boolop, ast.unaryop, ast.cmpop)
+
+
+def _child_nodes(node: ast.AST) -> List[ast.AST]:
+    """The child nodes of *node* in ``_fields`` order with list fields flattened (``ast.iter_child_nodes`` without its generator layers and without the inert nodes)."""
+    out: List[ast.AST] = []
+    for name in node._fields:
+        value = getattr(node, name, None)
+        if isinstance(value, ast.AST):
+            if not isinstance(value, _INERT):
+                out.append(value)
+        elif isinstance(value, list):
+            out.extend(item for item in value if isinstance(item, ast.AST) and not isinstance(item, _INERT))
+    return out
+
+
 def _children(node: ast.AST) -> List[ast.AST]:
-    return list(ast.iter_child_nodes(node))
+    children = _CHILDREN.get(node)
+    if children is None:
+        children = _CHILDREN[node] = _child_nodes(node)
+    return children
 
 
-def _dfs(node: ast.AST):
-    yield node
-    for child in _children(node):
-        yield from _dfs(child)
+def _dfs(node: ast.AST) -> Iterator[ast.AST]:
+    """Pre-order, source-order traversal with an explicit stack: each node is visited once (a recursive ``yield from`` re-yields it through every frame above it)."""
+    if isinstance(node, ast.Module):
+        order = _MODULE_ORDER.get(node)
+        if order is None:
+            order = _MODULE_ORDER[node] = list(_walk(node))
+        return iter(order)
+    return _walk(node)
+
+
+def _walk(node: ast.AST) -> Iterator[ast.AST]:
+    stack = [node]
+    cache = _CHILDREN
+    while stack:
+        current = stack.pop()
+        yield current
+        children = cache.get(current)
+        if children is None:
+            children = cache[current] = _child_nodes(current)
+        stack.extend(reversed(children))
 
 
 def _parent_map(root: ast.AST) -> Dict[ast.AST, ast.AST]:
@@ -196,11 +248,15 @@ def _guards(node: ast.AST, parents: Dict[ast.AST, ast.AST]) -> List[str]:
 _PREFILTER = ("get_hash", "compute_hash", "get_fingerprint", "fingerprint", "to_canonical_data", "to_canonical_json")
 
 
-def scan_source(source: str, rel_path: str) -> Dict[str, List[Dict[str, Any]]]:
-    """Call sites, unresolved candidates and direct digests found in one module's source text."""
+def scan_source(source: str, rel_path: str, tree: Optional[ast.AST] = None) -> Dict[str, List[Dict[str, Any]]]:
+    """Call sites, unresolved candidates and direct digests found in one module's source text (``tree`` is its parse, when the caller already has one)."""
     if not any(token in source for token in _PREFILTER):
         return {"call_sites": [], "unresolved_candidates": []}
-    tree = ast.parse(source)
+    if tree is None:  # a standalone call: parse here and do not leave this tree's nodes in the cache
+        try:
+            return scan_source(source, rel_path, ast.parse(source))
+        finally:
+            forget_children()
     parents = _parent_map(tree)
     aliases = _import_aliases(tree)
     instances = _instance_assignments(tree, aliases)
@@ -336,6 +392,13 @@ def _read(path: Path) -> Optional[str]:
 
 
 def build_report(root: Path = REPO_ROOT) -> Dict[str, Any]:
+    try:
+        return _build_report(root)
+    finally:
+        forget_children()
+
+
+def _build_report(root: Path) -> Dict[str, Any]:
     call_sites: List[Dict[str, Any]] = []
     unresolved: List[Dict[str, Any]] = []
     unparsed: List[str] = []

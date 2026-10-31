@@ -5695,7 +5695,7 @@
   - testing
 - type: doc
   path: docs/performance/benchmark_identity_schema.md
-  title: Benchmark Identity and Result Schema (schema 1.2)
+  title: Benchmark Identity and Result Schema (schema 1.5)
   status: active
   layer: performance
   authority: P2
@@ -7966,6 +7966,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED.md
+  ticket_id: TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED
+  title: Find what moves the ubuntu VM's speed, then re-record idle_100_local and
+    movement_100_local as v0002
+  tier: standard
+  ticket_type: chore
+  date: '2026-11-01'
+  related_code_areas:
+  - tools/perf/rerun_baselines.py, tools/perf/quiet_gate.py
+  - tests/perf/baselines/
+  artifact_files: []
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
   ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
   title: Append rpg-planner's binding note about the capacity trim's tie rule to the
@@ -8685,6 +8699,22 @@
   tags:
   - economy
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE.md
+  ticket_id: TCK-20261027-PERF-INVENTORY-SCANNERS-WALK-EACH-TREE-ONCE
+  title: 'Make the perf inventory scanners at least 2x faster: an iterative AST walk,
+    each file parsed once (wall_clock_inventory, hash_callsite_inventory, phase_inventory),
+    with byte-identical output'
+  tier: hotfix
+  ticket_type: refactor
+  date: '2026-10-27'
+  related_code_areas:
+  - tools/perf/hash_callsite_inventory.py
+  - tools/perf/wall_clock_inventory.py
+  - tools/perf/phase_inventory.py
+  artifact_files: []
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL.md
   ticket_id: TCK-20261027-RPG-MEASURE-CACHE-DEFAULT-HOST-NEUTRAL
   title: The paired run's default cache path is host-neutral, resolved when called,
@@ -8818,6 +8848,54 @@
   tags:
   - process-improvement
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261026-COMBAT-ENGAGEMENT-CONSIDER-PER-PAIR-COST-AFTER-H1.md
+  ticket_id: TCK-20261026-COMBAT-ENGAGEMENT-CONSIDER-PER-PAIR-COST-AFTER-H1
+  title: Profile and name what is left of combat_engagement's per-pair `_consider`
+    cost after H1 (~1.6 s per tick, 70 % of the tick at 1000 entities)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - src/domains/combat_engagement/
+  - tools/perf/profile_tick.py
+  artifact_files: []
+  tags:
+  - performance
+  - combat
+  - investigation
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261026-PERF-CAPACITY-SIZING-PROBE-AT-10K-ENTITIES.md
+  ticket_id: TCK-20261026-PERF-CAPACITY-SIZING-PROBE-AT-10K-ENTITIES
+  title: One short capacity sizing probe at 10,000 entities, recorded against the
+    kept bigger-world target in `optimization_architecture.md` §1 (CLASS_B host, not
+    a CLASS_A verdict)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/perf/capacity_run.py
+  - src/perf/scenarios.py
+  - src/perf/profiles.py
+  artifact_files: []
+  tags:
+  - performance
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261026-PERF-COLLECTION-PHASE-GROWTH-ATTRIBUTION.md
+  ticket_id: TCK-20261026-PERF-COLLECTION-PHASE-GROWTH-ATTRIBUTION
+  title: Attribute the collection phase's growth from about 50 ms to about 260 ms
+    per tick (movement, measurement-only)
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-26'
+  related_code_areas:
+  - tools/perf/profile_tick.py
+  - src/engine/
+  artifact_files: []
+  tags:
+  - performance
+  - investigation
+- type: ticket
   path: agent-working/tickets/done/TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL.md
   ticket_id: TCK-20261025-CROSS-HOST-LEADS-TALK-OVER-REMOTE-CONTROL
   title: The two leads message each other across hosts over Remote Control, and every
@@ -8910,6 +8988,23 @@
   - tests/codebase/test_codebase_health_baseline.py
   artifact_files: []
   tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261025-PERF-RECORD-IDENTITY-PINS-INSTALLED-RUNTIME-DEPENDENCIES.md
+  ticket_id: TCK-20261025-PERF-RECORD-IDENTITY-PINS-INSTALLED-RUNTIME-DEPENDENCIES
+  title: A benchmark record's identity pins the installed runtime dependency set;
+    then re-record idle_100_local and movement_100_local as v0002
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-25'
+  related_code_areas:
+  - Runtime
+  - the Runtime capture path in src/perf/
+  - tests/perf/baselines/
+  - tests/unit/perf/
+  artifact_files: []
+  tags:
+  - performance
+  - determinism
 - type: ticket
   path: agent-working/tickets/done/TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS.md
   ticket_id: TCK-20261025-README-DETERMINISM-AND-ENTITIES-FLAG-CLAIMS

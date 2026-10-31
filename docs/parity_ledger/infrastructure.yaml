@@ -12890,14 +12890,15 @@
 
 - id: INFRA-430
   text: 'TCK-20261010-PERF-M2-T02B-RECORD (PERF-M2 OD-1, OD-3, OD-4, OD-6): benchmark
-    identity and result schema 1.4 (src/perf/benchmark_record.py SCHEMA_VERSION) is
+    identity and result schema 1.5 (src/perf/benchmark_record.py SCHEMA_VERSION) is
     binding in docs/performance/benchmark_identity_schema.md and implemented by src/perf/benchmark_record.py.
     BenchmarkRecord is frozen and round-trips through to_dict/from_dict. compare(base,
     head, thresholds) returns PASS, REGRESSION, INCONCLUSIVE or NOT_APPLICABLE with
     a reason: a missing base, a MAJOR schema_version mismatch (only a MAJOR mismatch
-    is INCONCLUSIVE; the steps from 1.0 to 1.4 were all additive MINOR bumps: 1.1
+    is INCONCLUSIVE; the steps from 1.0 to 1.5 were all additive MINOR bumps: 1.1
     the optional identity.runner section, 1.2 the optional after-collect keys of result.memory_mb,
-    1.3 the optional working_set_* keys of result.memory_mb, 1.4 the optional outcome.check),
+    1.3 the optional working_set_* keys of result.memory_mb, 1.4 the optional outcome.check, 1.5 the blocking identity.runtime.cpu_affinity and
+    identity.runtime.dependency_fingerprint and the recorded-only identity.runtime.dependency_count),
     a missing or different result.cost_accounting_version, a declared hardware class
     that is not the detected one, or any blocking identity field that differs is INCONCLUSIVE
     and names the field; a head-side non-NORMAL RuntimeMode against an all-NORMAL
