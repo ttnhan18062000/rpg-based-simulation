@@ -79,7 +79,7 @@ None.
 ## Implementation Notes
 Two live references outside agent-working's files name the old path, at lines 45 and 411 of origin/main (match on text). `route` results:
 - `docs/plans/live_map_rendering_and_surface_integration_milestone_plan.md` has no holder. Change `docs/plans/plans_tracking.md` to `docs/plans/agent_infrastructure/plans_tracking.md` in this PR and say so in the PR body.
-- `docs/plans/codebase_health/python_code_craft_foundation_ticket_brief.md` is held by codebase-planner. Do not edit it unless the planner says codebase-planner agreed. Otherwise the PR body lists it as that holder's open edit.
+- `docs/plans/codebase_health/python_code_craft_foundation_ticket_brief.md` is held by codebase-planner, whose seat is not running. Lead-planner's word (citing #715 6543261623): change the path on line 45 in this PR, and nothing else in that file. Name the line in the PR body so that codebase-planner sees it at its next start.
 
 ## Test Summary
 
