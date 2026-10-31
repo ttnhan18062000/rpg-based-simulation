@@ -23,6 +23,11 @@ Usage:
           {"phase": "Finalize", "status": "ok", "summary": "..."}
         ]'
 
+`--review-ref <PR#>#<comment id>` (TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW): when the domain planner reviewed this
+ticket's PR by comment, name that comment and the recorder writes Review as `ok` with the link, instead of the default
+`skipped`/`no_hand_tool`. Give it only once the review comment exists; without it the event stays `skipped`, so a missing
+review still shows in the retro. Refused for a tier whose plan has no Review step (hotfix) and when you narrated a Review.
+
 Each event object only needs `phase`/`status`/`summary` (plus an optional per-event `ts`, `agent`
 override) -- `run_id`, `execution_id`, `provider`, `ticket_id`, and `seq` (1-indexed, in array
 order) are filled in automatically and shared across the whole batch, matching a single real
@@ -84,6 +89,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -284,6 +290,22 @@ def folded_phase_events(tier: str, events: list[dict], default_agent: str, chang
                                     "changed no docs/ file beyond docs/REGISTRY.yaml and docs/parity_ledger/.")
         added.append(event)
     return added
+
+
+_REVIEW_REF = re.compile(r"^[1-9][0-9]*#[1-9][0-9]*$")
+
+
+def review_ref_event(ref: str, default_agent: str) -> dict:
+    """The Review event for a hand close whose PR the domain planner reviewed by comment
+    (TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW, owner option (a), #715 6545962757). `ref` is
+    `<PR number>#<comment id>`; the event is `ok` and names it, so the retro no longer reads the folded Review as a gap.
+    Without a ref the folded event stays `skipped`/`no_hand_tool`, so a review that really is missing still shows."""
+    if not _REVIEW_REF.match(ref or ""):
+        raise ValueError(f"--review-ref must look like <PR number>#<comment id>, got {ref!r}")
+    pr, comment = ref.split("#")
+    return {"phase": "Review", "agent": default_agent, "status": "ok",
+            "summary": f"Review ran as the domain planner's PR review of PR #{pr} (comment {comment}): the hand path has no "
+                       f"separate review step, so the recorder links the review comment instead (--review-ref {ref})."}
 
 
 def insert_in_plan_order(events: list[dict], added: list[dict]) -> list[dict]:
@@ -618,6 +640,12 @@ def main() -> None:
     )
     parser.add_argument("--path-note", default=None, help="Free-text detail (the owner decision or comment, for owner_directed); required with --path-reason other or owner_directed")
     parser.add_argument(
+        "--review-ref", default=None, metavar="PR#COMMENT",
+        help="The planner's PR review of this ticket, as <PR number>#<comment id>: records Review as ok with that link "
+        "instead of skipped/no_hand_tool. Refused for a tier whose plan has no Review step (hotfix) or when you narrated a "
+        "Review event. Give it only once the review comment exists; without it the event stays skipped, so a missing review shows.",
+    )
+    parser.add_argument(
         "--allow-shared-summaries", action="store_true",
         help="Record events whose summaries equal another ticket's already-recorded ones (refused otherwise); the run row "
         "then carries summaries_shared: true",
@@ -668,6 +696,24 @@ def main() -> None:
         if not changed_cache:
             changed_cache.append(_ticket_changed_files(args.ticket_id))
         return changed_cache[0]
+
+    if args.review_ref is not None:
+        try:
+            review_event = review_ref_event(args.review_ref, args.agent)
+            review_planned = "Review" in full_phases(args.tier)
+        except Exception as e:  # noqa: BLE001 - a bad ref or unreadable plan refuses before anything is written
+            print(f"ERROR: {e}; nothing was written.", file=sys.stderr)
+            sys.exit(1)
+        if not review_planned:
+            print(f"ERROR: --review-ref given, but the {args.tier} plan has no Review step to attach it to; nothing was written.",
+                  file=sys.stderr)
+            sys.exit(1)
+        if "Review" in {e.get("phase") for e in events}:
+            print("ERROR: --review-ref given and a Review event was narrated too; give one of them. Nothing was written.",
+                  file=sys.stderr)
+            sys.exit(1)
+        events = insert_in_plan_order(events, [review_event])
+        print(f"NOTE: recorded Review:ok linked to {args.review_ref} (the planner's PR review).", file=sys.stderr)
 
     folded = folded_phase_events(args.tier, events, args.agent, changed_once() if needs_docs_check else set())
     if folded:

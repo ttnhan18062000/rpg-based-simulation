@@ -111,3 +111,27 @@ def test_retro_renders_the_paths_section_and_keeps_notes_without_force(tmp_path)
 
 def test_retro_without_the_section_is_unchanged():
     assert "## Paths" not in generate_retro.generate([], [], "2026-W41", "2026-W41")
+
+
+def test_a_review_recorded_ok_with_a_ref_is_ran_and_no_longer_a_routing_candidate():
+    """TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW: the 12 runs skip Review and Architecture-Verify as the
+    recorder writes them today (both candidates), then the same runs with Review recorded ok (only Architecture-Verify)."""
+    def week(review_ok):
+        runs, events = [], []
+        for i in range(12):
+            run, evs = _hand_standard(i, "small_change")
+            run["phases_omitted"] = [p for p in run["phases_omitted"] if p not in ("Review", "Architecture-Verify")]
+            for phase in ("Review", "Architecture-Verify"):
+                evs.append({"run_id": run["run_id"], "execution_id": run["execution_id"], "phase": phase,
+                            "status": "ok" if review_ok and phase == "Review" else "skipped",
+                            **({} if review_ok and phase == "Review" else {"skip_reason": "no_hand_tool"})})
+            runs.append(run)
+            events += evs
+        return runs, events
+    before = _group(*week(False))
+    assert before["phases"]["Review"]["skipped"] == 12 and {"Review", "Architecture-Verify"} <= set(path_report.routing(before)[0])
+    after = _group(*week(True))
+    assert (after["phases"]["Review"]["ran"], after["phases"]["Review"]["skipped"]) == (12, 0)
+    candidates, _ = path_report.routing(after)
+    assert "Review" not in candidates and "Architecture-Verify" in candidates
+    assert "`--review-ref`" in path_report.render_section(*week(True), 12)
