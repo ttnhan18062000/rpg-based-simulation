@@ -78,7 +78,7 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 ## Test Summary
 - `tests/tools/test_path_reason_and_phase_coverage.py`, `test_record_hand_orchestrated_closure.py`, `test_record_run.py`: 116 passed (scoped run). `tests/agent_orchestration` and `tests/docs`: 150 passed, 2 skipped, 1 xfailed.
 - New tests: a note is required for `owner_directed` and `other` by the run validator (missing and empty); the other reasons need none; the closure CLI refuses `owner_directed` with no note and with a blank note and writes nothing; an old row without a note still passes the shard check.
-- `tests/tools/` in a lead slot: see the PR body (AC4).
+- `tests/tools/` in a lead slot (AC4), on `c3a8cf0b7`, CPUs 4-5, `-n 2`: 5301 passed, 56 skipped, 1 xfailed, 1 failed in 7m16s. The one failure, `test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`, was real drift: `docs/REGISTRY.yaml` lacked the two new records. Regenerated and committed (`8af37db8c`); that file now passes (69 passed). Only `docs/REGISTRY.yaml` differs between the two commits; the full run was not repeated.
 
 ## Files Changed
 - `tools/agent-monitoring/vocabulary.py`, `record_run.py`, `record_hand_orchestrated_closure.py`
@@ -87,7 +87,6 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 - `docs/plans/agent_infrastructure/session_layer_working_process.md`, `SDLC_DECISION_RECORD.md` (new), `SDLC_BASELINES_FROZEN.md` (new)
 
 ## Completion Summary
-AC1: the decision record marks OD-1, 2, 3, 10, 14, 15 decided with #715 6529263880 and OD-3 subject to E6b; all others undecided. AC2: refused with a test on each writer; other reasons unaffected. AC3: every baseline row names ref and SHA. AC4: see the PR body.
+AC1: the decision record marks OD-1, 2, 3, 10, 14, 15 decided with #715 6529263880 and OD-3 subject to E6b; all others undecided. AC2: refused with a test on each writer; other reasons unaffected. AC3: every baseline row names ref and SHA. AC4: full `tests/tools` run, one failure found and fixed (registry drift), see Test Summary.
 
-Known gap: the full `tests/tools` run (AC4) has not run yet; it waits for a lead slot and its result is added before the push.
 Known gap: the CLAUDE.md closure example still shows `--path-reason` alternatives with no `--path-note` (one-line note chosen by the owner, #715 6540849801; not edited until the owner has seen the final text).
