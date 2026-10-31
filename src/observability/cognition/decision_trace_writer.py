@@ -31,6 +31,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from src.observability.active_decision_trace import get_active_writer, set_active_writer  # noqa: F401  (re-export)
 from src.observability.config import ObservabilityConfig
 from src.observability.cognition.tick_index import DecisionTraceIndex
 from src.observability.queue import BoundedObservabilityQueue, QueueDrainWorker
@@ -46,19 +47,8 @@ class _DecisionTraceQueueItem:
     entry: Dict[str, Any] = field(default_factory=dict)
 
 
-# Module-level active writer registry — set by Kernel at run start/end.
-_active_writer: Optional["DecisionTraceWriter"] = None
-
-
-def set_active_writer(writer: Optional["DecisionTraceWriter"]) -> None:
-    """Register (or clear) the run-scoped DecisionTraceWriter singleton."""
-    global _active_writer
-    _active_writer = writer
-
-
-def get_active_writer() -> Optional["DecisionTraceWriter"]:
-    """Return the currently active DecisionTraceWriter, or None."""
-    return _active_writer
+# The run-scoped active-writer slot lives in a dependency-free module so the adventure
+# scorer can read it without loading this package (OFF-mode import isolation). Re-exported.
 
 
 class DecisionTraceWriter:

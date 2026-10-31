@@ -1,4 +1,4 @@
-src.ai.goals.adventure_scorer -> src.observability.cognition.decision_trace_writer
+src.ai.goals.adventure_scorer -> src.observability.active_decision_trace
 src.cognition.knowledge_model -> src.world.providers.information
 src.config.optimization_profiles -> src.engine.cache_registry
 src.config.profiles -> src.engine.cadence
