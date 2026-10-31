@@ -15,6 +15,13 @@ Bash-visible deletes are covered by the M5A permission rules, and the Workflow t
 Uncertainty is never silently allowed: a command that partly matches an authority pattern, or hides it behind
 shell indirection (`eval`, `bash -c`, a variable-expanded `git`/`gh`, command substitution), is flagged.
 This is a guardrail against mistakes, not a sandbox (plan section 10 threat model).
+
+TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION closes four forms the classifier let through as "no action":
+`env git push` (a wrapper before the real command: `env`, `command`, `nohup`, `time`, `exec`, `setsid`, `nice`,
+`timeout`), `python3 -c` / `node -e` (an interpreter payload that names `git push`, a PR merge or a delete),
+`gh api -X PUT` (a merge, or any other write that can change repository settings) and `gh pr close --delete-branch`.
+Ordinary commands stay allowed: a read-only `python3 -c`, a `gh api` GET, `gh pr view`, a `gh api -X PATCH` PR edit.
+An interpreter payload is read as text, so string-building around the words (`'pu' + 'sh'`) is not seen.
 """
 
 from __future__ import annotations
@@ -257,8 +264,187 @@ def _push_destinations(args: list[str]) -> tuple[list[str], bool, bool]:
     return explicit, implicit, all_refs
 
 
+_PLAIN_WRAPPERS = frozenset({"nohup", "time", "exec", "setsid", "command", "builtin", "nice", "timeout"})
+_ENV_OPTS_WITH_ARG = frozenset({"-u", "--unset", "-C", "--chdir"})
+
+
+def _unwrap(tokens: list[str]) -> list[str]:
+    """The command a wrapper runs: `env [-i] [-u X] [VAR=v] CMD ...`, `command CMD`, `nohup`, `time`, `exec`, `setsid`,
+    `nice [-n N]` and `timeout [opts] DURATION`. A wrapper that only looks something up (`command -v`) runs nothing."""
+    for _ in range(8):  # nested wrappers; bounded
+        if not tokens:
+            return tokens
+        verb = tokens[0].rsplit("/", 1)[-1]
+        if verb == "env":
+            i = 1
+            while i < len(tokens):
+                tok = tokens[i]
+                if tok in _ENV_OPTS_WITH_ARG:
+                    i += 2
+                elif tok.startswith("-") or _ASSIGNMENT.match(tok):
+                    i += 1
+                else:
+                    break
+            tokens = tokens[i:]
+        elif verb in _PLAIN_WRAPPERS:
+            if verb == "command" and any(t in ("-v", "-V") for t in tokens[1:3]):
+                return []
+            i = 1
+            while i < len(tokens) and tokens[i].startswith("-"):
+                i += 2 if (verb == "nice" and tokens[i] == "-n") or (verb == "timeout" and tokens[i] in ("-k", "-s")) else 1
+            if verb == "timeout" and i < len(tokens) and re.match(r"^[\d.]+[smhd]?$", tokens[i]):
+                i += 1  # the duration
+            tokens = tokens[i:]
+        else:
+            return tokens
+    return tokens
+
+
+_INTERPRETER = re.compile(r"^(?:python[\d.]*|node(?:js)?|perl|ruby)$")
+_EVAL_FLAGS = frozenset({"-c", "-e", "-E", "--eval", "-p", "--print"})
+_PAYLOAD_PUSH = re.compile(r"\bgit\b[\s\S]*\bpush\b")
+_PAYLOAD_GH = re.compile(r"\bgh\b")
+
+
+def _interpreter_payloads(command: str) -> list[str]:
+    """The code strings handed to `python3 -c`, `node -e`, `perl -e` and `ruby -e` in a command, read from the raw text
+    (quoted strings are what they carry). An unbalanced quote yields none: the raw-text checks cover that case."""
+    try:
+        lexer = shlex.shlex(_strip_heredocs(command), posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        return []
+    found: list[str] = []
+    for i, tok in enumerate(tokens):
+        if not _INTERPRETER.match(tok.rsplit("/", 1)[-1]):
+            continue
+        for j in range(i + 1, min(i + 8, len(tokens))):
+            if tokens[j] in (";", "&&", "||", "|", "&"):
+                break
+            if tokens[j] in _EVAL_FLAGS and j + 1 < len(tokens):
+                found.append(tokens[j + 1])
+                break
+    return found
+
+
+def _payload_actions(payload: str) -> tuple[set[str], str]:
+    """Authority-class actions a code payload names, as text: `git` with `push`, `gh` with a merge, a PUT or a branch
+    delete. Always uncertain (text, not a parse), so the guard asks only for push, merge and delete."""
+    actions: set[str] = set()
+    names: list[str] = []
+    if _PAYLOAD_PUSH.search(payload):
+        actions.add(PUSH)
+        names.append("git push")
+    if _PAYLOAD_GH.search(payload):
+        if re.search(r"\bmerge\b", payload):
+            actions.add(MERGE)
+            names.append("a PR merge")
+        elif re.search(r"\bPUT\b", payload):
+            actions.add(MERGE)
+            names.append("a PUT write")
+    if re.search(r"--delete-branch|\bDELETE\b", payload) and (_PAYLOAD_GH.search(payload) or _PAYLOAD_PUSH.search(payload)):
+        actions.add(DELETE_REMOTE_BRANCH)
+        names.append("a delete")
+    return actions, ("interpreter payload names " + ", ".join(names)) if names else ""
+
+
+_API_FIELD_FLAGS = frozenset({"-f", "-F", "--field", "--raw-field", "--input"})
+_GRAPHQL_MERGE = re.compile(r"\bmergePullRequest\b|\benablePullRequestAutoMerge\b")
+_GRAPHQL_DELETE = re.compile(r"\bdeleteRef\b")
+_GRAPHQL_REF_WRITE = re.compile(r"\bupdateRef\b|\bcreateRef\b")
+_REFS_PATH = re.compile(r"/git/refs(?:/|$)")
+_REFS_HEADS = re.compile(r"/git/refs/heads/(.+)$")
+
+
+def _gh_api_method(tokens: list[str]) -> str:
+    """The HTTP method of a `gh api` call, upper-cased: explicit (`-X PUT`, `-XPUT`, `--method PUT`, `--method=PUT`), else
+    POST when it sends fields (`-f`, `-F`, `--field`, `--raw-field`, `--input`), else GET."""
+    for i, tok in enumerate(tokens):
+        if tok in ("-X", "--method") and i + 1 < len(tokens):
+            return tokens[i + 1].upper()
+        if tok.startswith("--method="):
+            return tok.split("=", 1)[1].upper()
+        if tok.startswith("-X") and len(tok) > 2:
+            return tok[2:].upper()
+    if any(t in _API_FIELD_FLAGS or t.startswith(("--field=", "--raw-field=", "--input=")) or re.match(r"^-[fF].", t) for t in tokens):
+        return "POST"
+    return "GET"
+
+
+def _gh_api_actions(tokens: list[str], default_branches: tuple[str, ...]) -> tuple[set[str], bool, list[str]]:
+    """(actions, uncertain, details) for one `gh api ...` call (tokens start at `gh`). What it can do to the repository:
+    a PUT (a PR merge, or settings such as rulesets and protection), a POST to `/merges`, a GraphQL `mergePullRequest`,
+    any DELETE, and a write to `/git/refs` (a ref created, moved or deleted). A GET, a PATCH on a pull request or an
+    issue and a POST of a comment stay allowed. A ref write whose target branch cannot be told is flagged uncertain,
+    which the guard asks about like a push."""
+    method = _gh_api_method(tokens)
+    args = [t for t in tokens[2:] if not t.startswith("-")]
+    endpoint = next((a for a in args if "/" in a or a == "graphql"), "")
+    path = "/" + endpoint.split("?", 1)[0].strip("/")
+    text = " ".join(tokens)
+    actions: set[str] = set()
+    details: list[str] = []
+    uncertain = False
+    if endpoint == "graphql" or path == "/graphql":
+        if _GRAPHQL_MERGE.search(text):
+            actions.add(MERGE)
+            details.append("gh api graphql: a pull request merge")
+        if _GRAPHQL_DELETE.search(text):
+            actions.add(DELETE_REMOTE_BRANCH)
+            details.append("gh api graphql: deleteRef")
+        if _GRAPHQL_REF_WRITE.search(text):
+            actions.add(PUSH)
+            uncertain = True
+            details.append("gh api graphql: a ref is created or moved")
+        return actions, uncertain, details
+    if method == "DELETE":
+        actions.add(DELETE_REMOTE_BRANCH)
+        details.append("gh api DELETE: a deletion in the repository")
+    elif method == "PUT":
+        actions.add(MERGE)
+        details.append("gh api PUT: a PR merge, or a write to repository settings")
+    elif method == "POST" and re.search(r"/merges$", path):
+        actions.add(MERGE)
+        details.append("gh api POST .../merges: a branch merge")
+    elif method in ("POST", "PATCH") and _REFS_PATH.search(path):
+        heads = _REFS_HEADS.search(path)
+        if method == "PATCH" and heads and heads.group(1) in default_branches:
+            actions |= {PUSH, PUSH_DEFAULT_BRANCH}
+            details.append("gh api PATCH on the default branch's ref: moves it")
+        else:
+            actions.add(PUSH)
+            uncertain = True
+            details.append(f"gh api {method} on git refs: a branch is created or moved, target not known")
+    return actions, uncertain, details
+
+
+def _gh_api_calls(command: str, default_branches: tuple[str, ...]) -> tuple[set[str], bool, list[str]]:
+    """Every `gh api` call in the raw command text (quoted arguments are what they carry, so GraphQL bodies are seen),
+    through wrappers: `gh` followed by `api`, up to the next command separator."""
+    try:
+        lexer = shlex.shlex(_strip_heredocs(command), posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        tokens = list(lexer)
+    except ValueError:
+        return set(), False, []
+    actions: set[str] = set()
+    uncertain = False
+    details: list[str] = []
+    for i, tok in enumerate(tokens):
+        if tok.rsplit("/", 1)[-1] != "gh" or tokens[i + 1:i + 2] != ["api"]:
+            continue
+        end = next((j for j in range(i + 1, len(tokens)) if tokens[j] in (";", "&&", "||", "|", "&")), len(tokens))
+        a, u, d = _gh_api_actions(tokens[i:end], default_branches)
+        actions |= a
+        uncertain = uncertain or u
+        details += d
+    return actions, uncertain, details
+
+
 def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> tuple[set[str], bool, bool]:
     """(actions, push_implicit, uncertain_repo) for one segment."""
+    tokens = _unwrap(tokens)
     if not tokens:
         return set(), False, False
     verb = tokens[0].rsplit("/", 1)[-1]
@@ -277,10 +463,13 @@ def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFA
         return set(), False, False
     if verb == "gh":
         rest = [t for t in tokens[1:] if not t.startswith("-")]
+        delete_branch = any(t in ("-d", "--delete-branch") or t.startswith("--delete-branch=") for t in tokens[1:])
         if rest[:2] == ["pr", "create"]:
             return {OPEN_PR}, False, False
         if rest[:2] == ["pr", "merge"]:
-            return {MERGE}, False, False
+            return ({MERGE, DELETE_REMOTE_BRANCH} if delete_branch else {MERGE}), False, False
+        if rest[:2] == ["pr", "close"] and delete_branch:
+            return {DELETE_REMOTE_BRANCH}, False, False
         if rest[:1] == ["api"]:
             joined = " ".join(tokens)
             if re.search(r"(?:-X|--method)[ =]DELETE\b", joined, re.IGNORECASE):
@@ -348,6 +537,7 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
     """Classify a Bash command, splitting compound commands and checking every segment.
 
     Data (heredoc bodies, quoted text) is removed first (`strip_text`), so a note that merely mentions "push" is not one."""
+    raw_command = command
     command = strip_text(command)
     actions: set[str] = set()
     details: list[str] = []
@@ -357,6 +547,17 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
     cd_chain: list[str] = []
     bad_cd = cd_after_action = False
     mentions_governed = any(f in command for f in (AUTHORITY_FILE, *GOVERNING_FILES))
+
+    api_actions, api_uncertain, api_details = _gh_api_calls(raw_command, default_branches)
+    actions |= api_actions
+    uncertain = uncertain or api_uncertain
+    details += api_details
+    for payload in _interpreter_payloads(raw_command):
+        payload_actions, payload_detail = _payload_actions(payload)
+        if payload_actions:
+            actions |= payload_actions
+            uncertain = True
+            details.append(payload_detail)
 
     if _INDIRECTION.search(command) and _AUTHORITY_WORDS.search(command):
         uncertain = True
@@ -382,6 +583,8 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
             continue
         seg_actions, seg_implicit, seg_redirected = _segment_actions(tokens, default_branches)
         actions |= seg_actions
+        if MERGE in seg_actions and DELETE_REMOTE_BRANCH in seg_actions:
+            details.append("a PR merge that also deletes the branch")
         push_implicit = push_implicit or seg_implicit
         switches_branch = switches_branch or _switches_branch(tokens)
         if seg_redirected and ({COMMIT, PUSH} & seg_actions):

@@ -14,6 +14,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
+try:  # TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION: a broken redactor must never leak a token or fail the hook
+    from secret_redact import REDACTION_FAILED, safe_redact_text as redact_text  # noqa: E402
+    _REDACTOR_OK = True
+except Exception:  # noqa: BLE001
+    _REDACTOR_OK = False
+    REDACTION_FAILED = "[REDACTION_FAILED]"
+
+    def redact_text(text):
+        return REDACTION_FAILED if text else text
 # Decision 3 (TCK-20260902-MONITORING-SHARD-WRITE-PATH's plan.md) ruled out importing
 # generate_retro.py (2,344 lines, pulls in sqlite3/re/three cross-module imports) into this hot
 # hook purely to reuse a one-line strftime call -- a real, heavy transitive-dependency cost for a
@@ -116,17 +125,19 @@ def _read_ranged(tool_name: str, tool_input: dict) -> bool | None:
 
 
 def _input_summary(tool_name: str, tool_input: dict) -> str:
+    """A short description of the call for the row. Secret-shaped strings are redacted from the WHOLE text before it is
+    cut, so a token the cut would split in half is still replaced (TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION)."""
     if tool_name in ("Read", "Edit", "Write", "MultiEdit"):
-        return (tool_input.get("file_path") or "")[:120]
+        return redact_text(tool_input.get("file_path") or "")[:120]
     if tool_name == "Bash":
-        return (tool_input.get("command") or "")[:80]
+        return redact_text(tool_input.get("command") or "")[:80]
     if tool_name == "Agent":
-        return (tool_input.get("description") or tool_input.get("prompt") or "")[:80]
+        return redact_text(tool_input.get("description") or tool_input.get("prompt") or "")[:80]
     if tool_name.startswith("mcp__"):
         # e.g. mcp__knowledge-search__search_docs with {"query": "..."}
         query = tool_input.get("query") or tool_input.get("q") or tool_input.get("text") or ""
-        return f"query={query!r}"[:120]
-    return str(tool_input)[:80]
+        return redact_text(f"query={query!r}")[:120]
+    return redact_text(str(tool_input))[:80]
 
 
 try:
@@ -239,6 +250,14 @@ try:
     }
     if status == "failed":
         record["error_class"] = _error_class(error_text, bool(payload.get("is_interrupt")))
+    # Every string field of the row goes through the redactor, not only `input_summary`: the others come from the sidecar
+    # and the payload and are identifiers, but a row must never hold a secret-shaped string whatever its source.
+    # `input_summary` (the only free text) was redacted above and is a marker if the redactor is broken or missing; the
+    # identifier fields are left as they are in that case, because a marker in `ts` or `status` would corrupt the row.
+    if _REDACTOR_OK:
+        for _key, _value in list(record.items()):
+            if isinstance(_value, str):
+                record[_key] = redact_text(_value)
 
     # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
     # prior per-ticket key, and reconciling this file's own former ticket_id-based branch with
