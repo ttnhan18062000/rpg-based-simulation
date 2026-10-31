@@ -91,43 +91,50 @@ pillar anchors compared: 810; moved by #769: 85; moved from in to out of toleran
 
 ## Already outside tolerance at the parent a25619971 (pre-existing reds, not #769's; no re-anchor under this ticket)
 
-| key | pillar | anchor | a25619971 | d914bace7 | moved by #769 |
-|---|---|---|---|---|---|
-| simq_routing_test_seed42_500t | COMBAT | 0.2789473684210526 | 0.11857707509881422 | 0.11857707509881422 | no |
-| simq_routing_test_seed42_500t | PROGRESSION | -0.306 | -0.40454545454545454 | -0.40454545454545454 | no |
-| simq_routing_test_seed42_500t | SOCIAL | 37.494 | 22.972 | 22.972 | no |
-| simq_routing_test_seed42_500t | INFORMATION | 57.15 | 2.13 | 2.13 | no |
-| simq_routing_test_seed123_500t | COGNITION | 0.0 | 1.1494252873563218 | 1.1494252873563218 | no |
-| urban_political_seed456_500t | COGNITION | 2.536 | 1.6025236593059937 | 1.6025236593059937 | no |
-| urban_political_seed456_500t | FACTION | 0.0 | -0.06938775510204082 | -0.06967213114754098 | yes |
-| urban_political_seed456_500t | ECONOMY | 0.37130801687763715 | 0.45217391304347826 | 0.45217391304347826 | no |
-| urban_political_seed456_500t | PROGRESSION | -0.08312342569269521 | 0.074 | 0.10441767068273092 | yes |
-| urban_political_seed456_500t | SOCIAL | 29.012 | 47.942 | 47.832 | yes |
-| urban_political_seed456_500t | INFORMATION | 51.752 | 30.26 | 30.2 | yes |
-| urban_political_seed456_1000t | COGNITION | 3.668108108108108 | 1.6025236593059937 | 1.6025236593059937 | no |
-| urban_political_seed456_1000t | COMBAT | 0.06597938144329897 | 0.19642857142857142 | 0.21188118811881188 | yes |
-| urban_political_seed456_1000t | FACTION | 0.0 | -0.06938775510204082 | -0.06967213114754098 | yes |
-| urban_political_seed456_1000t | ECONOMY | 0.27571115973741794 | 0.37209302325581395 | 0.4243614931237721 | yes |
-| urban_political_seed456_1000t | PROGRESSION | -0.11736334405144695 | 0.031423290203327174 | 0.059149722735674676 | yes |
-| urban_political_seed456_1000t | SOCIAL | 24.704 | 47.945 | 45.033 | yes |
-| urban_political_seed456_1000t | INFORMATION | 71.236 | 41.06 | 41.21 | yes |
-| wilderness_survival_seed123_200t | SOCIAL | 2.52 | 1.12 | 1.12 | no |
-| hero_guild_routing_seed42_500t | COGNITION | 2.1021021021021022 | 2.6506024096385543 | 2.6506024096385543 | no |
-| hero_guild_routing_seed42_500t | COMBAT | 0.21730382293762576 | 0.1111111111111111 | 0.1111111111111111 | no |
-| hero_guild_routing_seed42_500t | PROGRESSION | -0.10663983903420524 | -0.4789915966386555 | -0.4789915966386555 | no |
-| hero_guild_routing_seed42_500t | SOCIAL | 42.396 | 10.405063291139241 | 10.405063291139241 | no |
-| hero_guild_routing_seed42_500t | INFORMATION | 71.844 | 1.3775510204081634 | 1.3775510204081634 | no |
-| hero_guild_routing_seed123_500t | COGNITION | 0.0 | 1.6203703703703705 | 1.6203703703703705 | no |
-| frontier_marches_seed123_200t | FACTION | 0.0 | 0.07575757575757576 | 0.07575757575757576 | no |
-| hero_guild_routing_seed42_1000t | COGNITION | 2.1021021021021022 | 2.6506024096385543 | 2.6506024096385543 | no |
-| hero_guild_routing_seed42_1000t | COMBAT | 0.18209562563580875 | 0.09447236180904522 | 0.09447236180904522 | no |
-| hero_guild_routing_seed42_1000t | ECONOMY | 0.3486973947895792 | 0.2693467336683417 | 0.2693467336683417 | no |
-| hero_guild_routing_seed42_1000t | PROGRESSION | 0.1281437125748503 | -0.02814070351758794 | -0.02814070351758794 | no |
-| hero_guild_routing_seed42_1000t | SOCIAL | 36.068 | 14.022 | 14.022 | no |
-| hero_guild_routing_seed42_1000t | INFORMATION | 58.733564013840834 | 1.4593781344032097 | 1.4593781344032097 | no |
-| hero_guild_routing_seed42_1000t | NARRATIVE | 0.4894472361809045 | 0.6167002012072434 | 0.6167002012072434 | no |
-| simq_routing_test_seed42_1000t | PROGRESSION | -0.04953560371517028 | 0.02208835341365462 | 0.02208835341365462 | no |
-| simq_routing_test_seed42_1000t | SOCIAL | 39.919 | 26.789 | 26.789 | no |
-| simq_routing_test_seed42_1000t | INFORMATION | 69.855 | 2.4642857142857144 | 2.4642857142857144 | no |
-| generated_frontier_3_42_seed42_200t | AGENCY | 0.0 | 0.1044776119402985 | 0.1044776119402985 | no |
-| simq_scale_stress_seed42_seed42_200t | AGENCY | 0.0 | 0.07253886010362694 | 0.07253886010362694 | no |
+### Pre-existing red, not moved by #769
+
+| key | pillar | anchor | a25619971 | d914bace7 |
+|---|---|---|---|---|
+| simq_routing_test_seed42_500t | COMBAT | 0.2789473684210526 | 0.11857707509881422 | 0.11857707509881422 |
+| simq_routing_test_seed42_500t | PROGRESSION | -0.306 | -0.40454545454545454 | -0.40454545454545454 |
+| simq_routing_test_seed42_500t | SOCIAL | 37.494 | 22.972 | 22.972 |
+| simq_routing_test_seed42_500t | INFORMATION | 57.15 | 2.13 | 2.13 |
+| simq_routing_test_seed123_500t | COGNITION | 0.0 | 1.1494252873563218 | 1.1494252873563218 |
+| urban_political_seed456_500t | COGNITION | 2.536 | 1.6025236593059937 | 1.6025236593059937 |
+| urban_political_seed456_500t | ECONOMY | 0.37130801687763715 | 0.45217391304347826 | 0.45217391304347826 |
+| urban_political_seed456_1000t | COGNITION | 3.668108108108108 | 1.6025236593059937 | 1.6025236593059937 |
+| wilderness_survival_seed123_200t | SOCIAL | 2.52 | 1.12 | 1.12 |
+| hero_guild_routing_seed42_500t | COGNITION | 2.1021021021021022 | 2.6506024096385543 | 2.6506024096385543 |
+| hero_guild_routing_seed42_500t | COMBAT | 0.21730382293762576 | 0.1111111111111111 | 0.1111111111111111 |
+| hero_guild_routing_seed42_500t | PROGRESSION | -0.10663983903420524 | -0.4789915966386555 | -0.4789915966386555 |
+| hero_guild_routing_seed42_500t | SOCIAL | 42.396 | 10.405063291139241 | 10.405063291139241 |
+| hero_guild_routing_seed42_500t | INFORMATION | 71.844 | 1.3775510204081634 | 1.3775510204081634 |
+| hero_guild_routing_seed123_500t | COGNITION | 0.0 | 1.6203703703703705 | 1.6203703703703705 |
+| frontier_marches_seed123_200t | FACTION | 0.0 | 0.07575757575757576 | 0.07575757575757576 |
+| hero_guild_routing_seed42_1000t | COGNITION | 2.1021021021021022 | 2.6506024096385543 | 2.6506024096385543 |
+| hero_guild_routing_seed42_1000t | COMBAT | 0.18209562563580875 | 0.09447236180904522 | 0.09447236180904522 |
+| hero_guild_routing_seed42_1000t | ECONOMY | 0.3486973947895792 | 0.2693467336683417 | 0.2693467336683417 |
+| hero_guild_routing_seed42_1000t | PROGRESSION | 0.1281437125748503 | -0.02814070351758794 | -0.02814070351758794 |
+| hero_guild_routing_seed42_1000t | SOCIAL | 36.068 | 14.022 | 14.022 |
+| hero_guild_routing_seed42_1000t | INFORMATION | 58.733564013840834 | 1.4593781344032097 | 1.4593781344032097 |
+| hero_guild_routing_seed42_1000t | NARRATIVE | 0.4894472361809045 | 0.6167002012072434 | 0.6167002012072434 |
+| simq_routing_test_seed42_1000t | PROGRESSION | -0.04953560371517028 | 0.02208835341365462 | 0.02208835341365462 |
+| simq_routing_test_seed42_1000t | SOCIAL | 39.919 | 26.789 | 26.789 |
+| simq_routing_test_seed42_1000t | INFORMATION | 69.855 | 2.4642857142857144 | 2.4642857142857144 |
+| generated_frontier_3_42_seed42_200t | AGENCY | 0.0 | 0.1044776119402985 | 0.1044776119402985 |
+| simq_scale_stress_seed42_seed42_200t | AGENCY | 0.0 | 0.07253886010362694 | 0.07253886010362694 |
+
+### Pre-existing red, also moved by #769 (no re-anchor)
+
+| key | pillar | anchor | a25619971 | d914bace7 | delta (d914bace7 - parent) | parent - anchor | d914bace7 - anchor |
+|---|---|---|---|---|---|---|---|
+| urban_political_seed456_500t | FACTION | 0.0 | -0.06938775510204082 | -0.06967213114754098 | -0.0003 | -0.0694 | -0.0697 |
+| urban_political_seed456_500t | PROGRESSION | -0.08312342569269521 | 0.074 | 0.10441767068273092 | 0.0304 | 0.1571 | 0.1875 |
+| urban_political_seed456_500t | SOCIAL | 29.012 | 47.942 | 47.832 | -0.11 | 18.93 | 18.82 |
+| urban_political_seed456_500t | INFORMATION | 51.752 | 30.26 | 30.2 | -0.06 | -21.492 | -21.552 |
+| urban_political_seed456_1000t | COMBAT | 0.06597938144329897 | 0.19642857142857142 | 0.21188118811881188 | 0.0155 | 0.1304 | 0.1459 |
+| urban_political_seed456_1000t | FACTION | 0.0 | -0.06938775510204082 | -0.06967213114754098 | -0.0003 | -0.0694 | -0.0697 |
+| urban_political_seed456_1000t | ECONOMY | 0.27571115973741794 | 0.37209302325581395 | 0.4243614931237721 | 0.0523 | 0.0964 | 0.1487 |
+| urban_political_seed456_1000t | PROGRESSION | -0.11736334405144695 | 0.031423290203327174 | 0.059149722735674676 | 0.0277 | 0.1488 | 0.1765 |
+| urban_political_seed456_1000t | SOCIAL | 24.704 | 47.945 | 45.033 | -2.912 | 23.241 | 20.329 |
+| urban_political_seed456_1000t | INFORMATION | 71.236 | 41.06 | 41.21 | 0.15 | -30.176 | -30.026 |

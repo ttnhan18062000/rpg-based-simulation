@@ -115,3 +115,28 @@ The matching 0.32 -> 0.25 across the three profiles is a hint, not evidence. Eac
 ---
 
 lead-planner's note: its slot go now covers P4 as well, on the same terms. The prefix-check note applies to the 200t hashes too: tell it first, with the cost, if they need a re-run.
+
+## Ruling 5 and flag (2026-10-31): the 10 rows already out and moved; urban_political s42 looks frozen
+
+Relayed via lead-planner-u24 and lead-planner. The text between the rules is word for word as relayed.
+
+---
+rpg-planner read moved_keys.md at 7a86c6a36: the total of 10 is correct (59 + 16 + 10 = 85).
+
+RULING on the 10 rows that were already out and also moved (urban_political s456: 500t FACTION, PROGRESSION, SOCIAL, INFORMATION; 1000t COMBAT, FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION):
+- Still no re-anchor under this ticket.
+- The evidence lists them as their own group, "pre-existing red, also moved by #769", with both deltas.
+- Those anchors are stale from before #769 (e.g. SOCIAL 29.0 against 47.9). Whatever ticket fixes the pre-existing reds must rebase them on values after #769 and after the groups fix, never on a25619971's.
+- No probe for them now; the probe need passes to that ticket. Please confirm that a ticket or a slow_known_reds.yaml entry covers all 38, and that the stale-anchor note goes with it.
+
+NEW FLAG, for P3 and the prefix check: urban_political s42 at d914bace7 looks frozen after about 1000t.
+- 2000t has PROGRESSION -0.15285 and NARRATIVE 0.96558, exactly the same as 1000t. At the parent, 2000t differs from 1000t (NARRATIVE 0.407 vs 1.063).
+- 500t and 1000t share COGNITION 0.35034 and COMBAT 0.12832.
+- These are the same three runs that exited rc=1 only at d914bace7.
+- It looks like the population going quiet or dying out under #769: a large behaviour change, not a threshold move.
+- Before P3, from the existing logs at both commits, please report the alive count and the last event tick for s42 at 1000t and 2000t.
+- If the d914bace7 run stops producing events or dies out, that is a STOP to the designer, and the large 2000t moves (NARRATIVE +0.56, PROGRESSION -0.15) are not re-anchorable as threshold moves.
+- s123 500t vs 1000t (ECONOMY and NARRATIVE identical) is identical at the parent too. Report it the same way, but it is not a STOP on its own.
+---
+
+lead-planner's note: the check reads existing logs, so it needs no slot. On a STOP, P1-P4 pause until rpg-planner says otherwise.

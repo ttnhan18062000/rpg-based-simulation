@@ -40,8 +40,19 @@ print(f"\nkeys with both reports: {len(keys)-len(missing)} of {len(keys)}; missi
 print(f"pillar anchors compared: {len(rows)}; moved by #769: {n_moved}; moved from in to out of tolerance: {n_out}; already out before: {sum(1 for r in rows if r[6] is False)}")
 
 print("\n## Already outside tolerance at the parent a25619971 (pre-existing reds, not #769's; no re-anchor under this ticket)\n")
-print("| key | pillar | anchor | a25619971 | d914bace7 | moved by #769 |")
-print("|---|---|---|---|---|---|")
+print("### Pre-existing red, not moved by #769\n")
+print("| key | pillar | anchor | a25619971 | d914bace7 |")
+print("|---|---|---|---|---|")
 for key, pillar, st, an, sa, sb, oa, ob in rows:
-    if oa is False:
-        print(f"| {key} | {pillar} | {an} | {sa} | {sb} | {'yes' if st != 'same' else 'no'} |")
+    if oa is False and st == "same":
+        print(f"| {key} | {pillar} | {an} | {sa} | {sb} |")
+print("\n### Pre-existing red, also moved by #769 (no re-anchor)\n")
+print("| key | pillar | anchor | a25619971 | d914bace7 | delta (d914bace7 - parent) | parent - anchor | d914bace7 - anchor |")
+print("|---|---|---|---|---|---|---|---|")
+def f4(x): return None if x is None else round(x, 4)
+for key, pillar, st, an, sa, sb, oa, ob in rows:
+    if oa is False and st != "same":
+        d = None if (sa is None or sb is None) else sb - sa
+        pa = None if (sa is None or an is None) else sa - an
+        pb = None if (sb is None or an is None) else sb - an
+        print(f"| {key} | {pillar} | {an} | {sa} | {sb} | {f4(d)} | {f4(pa)} | {f4(pb)} |")
