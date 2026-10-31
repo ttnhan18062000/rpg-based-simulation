@@ -68,9 +68,27 @@ None.
 Line numbers in the draft are from origin/main b110ee4c2. `Un-require` and `5k LOC` each appear twice in the plan, so those two edits go by the draft's line number, 1361 and 1042.
 
 ## Implementation Notes
+Applied from the designer's revised draft (main-checkout `.claude/handover/drafts/sdlc_plan_review_fixes.md`, read as it stood on 10-31 after the owner decided OD-10, #715 6543854496), each Before string matched on its stated line, line numbers from origin/main `b110ee4c2`; `Un-require` went by line 1361 and `5k LOC` by line 1042. Nothing was approximated.
+
+Counts at landing (branch commit `29e1fdcc3`):
+- Test files naming `implement-ticket.js` or `implement-epic.js`: **61**, by `git grep -l -E 'implement-ticket\.js|implement-epic\.js' -- tests`. `~57` became `~61` at lines 1039, 1071 and 1094.
+- Codex line count at line 1042: **3,455 lines in 67 files** under `tools/` (glob `git ls-files | grep -i codex | grep -E '^(src|tools)/'`), plus **5,546 lines of tests** (same glob, `tests/`). The replay runner is 1,659 lines (`git ls-files | grep agent_replay | grep -v codex | grep -E '^(src|tools)/'`). Codex plus replay source is therefore 5,114, which keeps the "about 5.0k" at lines 1024 and 1073 true, so those were left. The implementer's earlier 3,455 + 1,659 reproduces; the planner's narrower glob (2,768) is not used.
+- CI lane check: `.github/workflows/test.yml` job "Agent orchestration / codex / replay" runs the seven `tests/agent_codex_*` directories, `tests/agent_orchestration`, `tests/agent_orchestration_claude_adapter`, `tests/agent_orchestration_codex_adapter`, `tests/agent_replay` and `tests/agent_replay_codex`, so the sentence "it also runs tests/agent_orchestration" is true. It was appended to the Recommendation cell of the Codex row (the table has no column named Disposition).
+
+Sweep figures: the evidence branch `rpg-ubuntu-simq-anchor-bisect-impl` still exists on the remote at `d2ed6c8c2` and the path is not on main, so the section 28a paragraph cites the branch as the draft says.
+
+Summary growth: `wc -w` goes from 1,084 to 1,520 words (about 436, counting table markup; the draft estimated about 350).
 
 ## Test Summary
+TESTS_PENDING
 
 ## Files Changed
+- `docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`
+- `docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md`
+- this ticket; `docs/REGISTRY.yaml`
 
 ## Completion Summary
+All draft edits applied (items A to D) as written, with the two counts recorded above. Lead-planner reviewed the matrix, sections 1-6, 27a, 28-28a, 32a, 37-38, 42 and 71-72; sections 62-70 and the rest remain unreviewed.
+
+Known gap: the section 28a sweep figures cite a branch that is not on main; if it is deleted before the figures are re-cited, the sentence stays and the figures go (ticket acceptance criterion 3).
+Known gap: the summary grew by about 436 words by `wc -w` (the draft said about 350); the table rows can be cut, the two plain statements not.

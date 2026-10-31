@@ -42,7 +42,7 @@ The Phase 1 code items (plan section 39) that change no credential or ruleset. T
 ## Acceptance Criteria
 1. Each of the four bypass forms now classifies as `ask` or `deny`, with a test; ordinary commands stay allowed, with a test.
 2. A token-shaped string in a tool input never reaches a shard or a transit bundle, with a test.
-3. A `.claude/settings.json` edit is shown to the owner directly first, and shape tests are updated.
+3. A `.claude/settings.json` edit is shown to the owner directly first, and shape tests are updated. Shown by the live test: a hand edit to the settings file or a skill file fires the ConfigChange hook, and so did one agent edit that landed; `CLAUDE.md` does not fire it.
 4. `tests/tools/` passes in a lead slot.
 
 ## Related Tickets
@@ -93,16 +93,34 @@ Already classified before: `git push origin main`, `gh pr merge` (merge), `gh ap
 - **Files covered, `handover_transit.py` export:** every file the bundle carries, by raw bytes, whatever its type: role notes (`.md`), drafts (`.md`, `.yaml`, `.json`, anything else) and memory files, including non-UTF-8 content. The manifest row records `redacted: N` and the hash of the stored file, so import still verifies; the local files are never changed. Not covered: file names and the manifest's own `worktree`/`branch` fields.
 - Redaction is on write only; existing rows and bundles are not rewritten. Tests build every fake token by concatenation, and the last test scans the new files with the repository's own `scan_for_secrets` after a positive control.
 
-**ConfigChange hook:** `tools/sessions/config_change_warning.py` (warn only, exit 0, fails open) with tests. The `.claude/settings.json` wiring waits for the owner's direct OK on the exact diff (sent to agent-working-planner). Search of `tests/` for shapes pinned to settings.json: `test_settings_json_hooks_wiring.py` pins PreToolUse = 8 and PostToolUse = 5 groups and a subset of event names; `test_bash_secret_scan_hook.py` pins 4 Bash PreToolUse groups; `test_monitoring_hook_subdirectory_cwd.py` and `test_settings_json_edit_write_hook_sidecar_scope.py` pin PreToolUse indexes. A new top-level `ConfigChange` key changes none of those. `tools/capability_envelope_baseline.py` lists hook entries in `registries/capability_envelope_registry.jsonl` (15 hooks): a new hook should be registered there after the edit.
+**ConfigChange hook:** `tools/sessions/config_change_warning.py`, wired in `.claude/settings.json` as one new top-level `ConfigChange` key at the start of `hooks` (the exact text of #715 6543054968, approved by the owner). Order of events: my own Edit of that file was refused by the auto-mode classifier (`[Self-Modification]`, no prompt reached the owner); the owner then allowed lead-planner to make the same edit in this worktree, uncommitted (#715 6543728270), and I compared it byte for byte with 6543054968 before committing it. The hook was first written to warn through `systemMessage`; the hooks documentation (hooks.md, "ConfigChange decision control") says ConfigChange discards `systemMessage` and `continue`, so the owner chose option (a) (#715 6543766327): change only the script. It now returns `{"terminalSequence": ...}` (OSC 9 and OSC 777 notifications plus a bell, all values stripped of control characters and `;`) and appends one JSON line per event to `tmp/config_change.log` (gitignored): time, `hook_event_name`, `source`, `file_path`, `session_id` and the sorted top-level key names, nothing else from the event. (`session_id` goes slightly past the owner's "source, path and time": it is an identifier, not a credential, and without it a line cannot be tied to the session that saw the change; lead-planner was told.) The log and the notification fail independently; the script always exits 0. The agent is not told: that would need new settings text and a fresh ask. Registered in `registries/capability_envelope_registry.jsonl` (`hooks` = `ConfigChange||<command>`, `reviewed: true`); nine older hooks were already outside that registry and are untouched.
+
+Search of `tests/` for shapes pinned to settings.json: `test_settings_json_hooks_wiring.py` pins PreToolUse = 8 and PostToolUse = 5 groups and a subset of event names; `test_bash_secret_scan_hook.py` pins 4 Bash PreToolUse groups; `test_monitoring_hook_subdirectory_cwd.py` and `test_settings_json_edit_write_hook_sidecar_scope.py` pin PreToolUse indexes. A new top-level `ConfigChange` key changes none of those. Four new wiring tests (one group, fail-open command, runs from the repo and prints the sequence, silent outside a git repo, registry row) are in `tests/tools/test_config_change_warning.py`; the wiring test sets `CONFIG_CHANGE_WARNING_LOG` so it writes no line into the real `tmp/`.
+
+**Live test (owner, 2026-10-31, commit `75961d563`; throwaway session `e7f09076` started in auto mode with `--session-id`, the implementer's session `0a8bb26e` also in the worktree; planner and lead-planner read `tmp/config_change.log` and the debug log).**
+- `.claude/settings.json` edited by hand: the event fired for the edit and for the restore (13:56:53, 13:57:07), `source` `project_settings`.
+- A skill file (`.claude/skills/api-design-principles/SKILL.md`) edited by hand: the event fired for the edit and the restore (13:57:15, 13:57:21), `source` `skills`.
+- `CLAUDE.md` edited by hand: no log line and no debug line, from any session. `CLAUDE.md` is **not covered**; it stays with TCK-20261031-GOVERNING-FILE-EDITS-VISIBLE-TO-OWNER.
+- An agent edit (the Edit tool, in the throwaway session): the edit landed at 13:58:09 with no refusal and no prompt visible in the transcript's tool results; the same session logged at 13:58:12 (debug: "Detected change") and again on the restore at 13:58:24. So on this one sample an agent edit that lands is covered.
+- Notification: the owner reports that the bell icon and sound appeared. The report is not per step, so it is not claimed per step here.
+- Field names from real events: `hook_event_name`, `source`, `file_path` and `session_id` are present as the script reads them. Real events also carry `cwd`, `prompt_id`, `scratchpad_dir`, `transcript_path` and (in the implementer's session) `agent_type`; the docs' example does not list all of them. The script reads only the four.
+- The implementer's session logged the same changes with its own `session_id` (and lagged on one: the skill change at 13:57:43), so every session in the worktree warns separately and duplicates are expected.
 
 ## Test Summary
-(to be filled by the implementer)
+TESTS_PENDING
 
 ## Files Changed
-(to be filled by the implementer)
+- `tools/sessions/classify.py`, `tools/sessions/config_change_warning.py` (new); `tools/sessions/guard.py` is unchanged (it calls `classify.py`)
+- `tools/agent-monitoring/secret_redact.py` (new), `tools/agent-monitoring/post_tool_hook.py`, `tools/handover_transit.py`
+- `.claude/settings.json` (one `ConfigChange` hook key, owner-approved text), `registries/capability_envelope_registry.jsonl` (one row)
+- `tests/tools/test_session_guard_payloads.py`, `tests/tools/test_config_change_warning.py`, `tests/tools/test_secret_redact.py` (new); the transit export is covered in `test_secret_redact.py`
+- this ticket and its three standard-tier artifacts; `docs/REGISTRY.yaml`; agent-monitoring shards
 
 ## Completion Summary
-In progress: the ConfigChange wiring waits for the owner's OK on the exact `.claude/settings.json` diff.
+Delivered: the guard classifies wrapper-prefixed commands, interpreter payloads, `gh api` writes and merges, and `--delete-branch` (tests in `tests/tools/test_session_guard_payloads.py`, ordinary commands stay allowed); secret-shaped strings are redacted from tool rows and the transit export (`tools/agent-monitoring/secret_redact.py`); and the ConfigChange hook is wired and notifies, verified by the owner's live test above. AC3 as shown: a hand edit to `.claude/settings.json` or a skill file fires the hook, one agent edit that landed also fired it (one sample, auto mode), and `CLAUDE.md` does not.
 
+Known gap: `CLAUDE.md` edits are not covered by the ConfigChange hook (no event); that stays with TCK-20261031-GOVERNING-FILE-EDITS-VISIBLE-TO-OWNER.
+Known gap: the ConfigChange warning reaches only sessions on a tree that has the hook, and only the user, as a terminal notification; the agent is not told. Every session in a worktree warns separately, so duplicates are expected and one session may lag. After this merges, a checkout or merge that changes a watched file also fires it, so expect some noise.
+Known gap: agent-edit coverage rests on one sample in auto mode; whether the Edit tool always fires the event, and what happens in other permission modes, is not shown.
 Known gap: JWTs and `sk-proj-` keys (an `sk-` key with a hyphen in its first 20 characters) are not redacted, because the shape list is `write_path_guard.py`'s and is shared with the Bash secret-scan hook; widening it changes what a blocking hook rejects (and a hyphen-tolerant `sk-` pattern with no word boundary would also match names like `task-some-long-hyphenated-name`), so it is its own decision.
 Known gap: typed text written by other tools into committed files (`record_events` and closure event summaries, `working_log.csv`) is not redacted; only tool rows and the handover transit export are covered.
