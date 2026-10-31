@@ -224,3 +224,46 @@ lead-planner's notes, same message:
 - Check 1 is against d914bace7, and it should still run before the groups fix: the designer asks for counts now. The re-anchor's order is separate.
 - Conflict in the record: ruling 6 sent 'COGNITION flips' to the designer with the re-anchor; this ruling takes COGNITION out, yet its step 4 still re-anchors COGNITION. Its reading: COGNITION re-anchors only after the re-measure clears.
 - Counts go to it for the relay. A pass-rule failure or the entity 10 preemption firing on retreat_pull alone is a STOP; no fix shape, as ruled.
+
+## rpg-designer ruling 2 (2026-10-31): #769 cleared; the stale retreat is a separate defect
+
+Relayed via rpg-planner, lead-planner-u24 and lead-planner. The text between the rules is as relayed.
+
+---
+#769 itself is CLEARED. Entity 18's ~950-tick stale retreat is a DEFECT, but in pre-existing retention code, not #769's. The trace comes first, and the re-anchor waits.
+
+#769 CLEARED:
+- Check 3: the retreat pull is gated on acting_threat_to, and the highest modified score wins.
+- Check 2: the parent's wave is a trajectory effect (entity 14 is dead at t452).
+- Check 1: after t452 retreat_pull changes no score. Its behaviour (a hurt entity under a present threat flees and lives) is intended. The retraction is noted.
+
+(a) DEFECT:
+- A retreat moves away from perceived threats (tactical contract section 4, GAP-T03). A retreat with no threat and no movement for ~950 ticks has no purpose left.
+- Recovering while hurt is fine, but it is RECOVER/REST or no project, never COMBAT_RETREAT. Idling at full hp is wrong under any label.
+- A retreat project should end when its threat is gone AND the entity is clear of it.
+- A death should close open projects. Count that only; it is not fixed here.
+
+(b) OWN TICKET, counts first: TCK-20261031-A-RETREAT-PROJECT-OUTLIVES-ITS-THREAT (seated by rpg-planner at 96edb1607; the defect is pre-existing, and #769 only changes who reaches it).
+- The s42 re-anchor waits for it. Anchoring on an entity parked by a defect would anchor the defect.
+- New sequence: groups-id fix + retention fix, then re-run s42 at 500/1000/2000t, then re-anchor.
+- If the owner wants #769's anchors sooner, that is an owner row through me. The designer leans no.
+- Ownership: the groups-id fix stays ubuntu's. The retention fix is src/ under rpg-planner's seat. Implementation routing is decided after the counts: ubuntu continues, or a u24 lane takes it.
+
+(c) TRACE FIRST: a short read-only probe on the ubuntu side, under your slot go. Four answers for the designer:
+1. Which path keeps proj_combat_retreat_42 on each tick from t63 to t1402. Candidates:
+   (i) a pending COMBAT_RETREAT committed intention, re-injected at _COMMITTED_INTENTION_BASE_UTILITY (intelligence.py ~1546; COMBAT_RETREAT is in _COMMITTED_INTENTION_ELIGIBLE_KINDS :107-111);
+   (ii) the best_candidate filter (intelligence.py ~1586): a candidate is skipped if its utility is below 20 or it has no target_id/target_pos. If nothing survives, best_candidate is None and the current project is kept;
+   or another path. Name the line.
+2. What ends it at t1403, and through which path.
+3. Width: across 3 worlds (crowded_frontier, frontier_living_world, urban_political) × s42-46, at a25619971 and d914bace7, count retreat projects still active N ticks after their last present threat, for N = 50, 200 and 1000, and how many distinct entities that covers. Also: is "no living retreat holder" at the parent true across all seeds, or only in s42?
+   This is 30 runs. If 2000t is too heavy on ubuntu, 1000t is acceptable for the width count; say which was used. If ubuntu can't take it, say so: the u24 host slot is free, and a u24 lane can run it with the same wrapper if the script is pushed.
+4. The count of dead entities with an open project of any kind (for the lifecycle note).
+No fix shape until the designer has read 1-4. Counts come to rpg-planner via me.
+---
+
+lead-planner's notes, same message:
+- Slot go: answers 1-2 (one short pair if existing logs can't show it) and the 30 runs for 3-4. Use 2000t: at 1000t the N=1000 count is nearly empty, so 1000t would understate it. Usual wrapper, sequential, setsid and resumable, a waiter, MemAvailable >= 3 GB.
+- Past timing suggests about 2 h. Finish or stop cleanly by 22:00, ahead of the 22:46 reading. If the first 6 runs project past that, stop and tell it; it then moves to u24 rather than down to 1000t.
+- Worlds in this set may run heavier than urban_political. Report the first 6 runs' timing and any hang.
+- The ticket file is on rpg-planner's seat branch at 96edb1607; a u24 ref unless pushed, so ask lead-planner if its text is needed.
+- The owner hasn't said go on the groups fix. lead-planner is telling the owner the sequence now includes the retention fix.
