@@ -234,7 +234,7 @@ def test_group_phase_force_full_scan_processes_ungrouped_entities():
     
     refined = GroupPhase.resolve(state, update)
     
-    assert len(refined.groups_add_or_update) > 0
+    assert len(refined.groups_add) > 0
     assert 1 in refined.entity_updates
     assert 2 in refined.entity_updates
     assert refined.entity_updates[1].group_id_set is not None

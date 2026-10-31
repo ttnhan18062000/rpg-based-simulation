@@ -50,7 +50,7 @@ state = AuthoritativeState(
 update = MilitaryConflictPhase.execute(state)
 new_state = ApplyPath.apply_generation(state, update)
 print(json.dumps({
-    "group_ids": [g.id for g in update.groups_add_or_update],
+    "group_ids": [g.id for g in update.groups_add],
     "expected_id": stable_int31("r2", "fa", tick),
     "state_group_ids": sorted(new_state.groups),
     "state_hash": CanonicalStateHasher.get_hash(new_state),

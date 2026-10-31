@@ -391,8 +391,8 @@ def test_military_conflict_squad_commitment_capped_at_five():
     guard_ids = [107, 106, 105, 104, 103, 102, 101]  # non-sequential order
     state = _make_war_state_with_guards(guard_ids)
     result = MilitaryConflictPhase.execute(state)
-    assert len(result.groups_add_or_update) == 1
-    group = result.groups_add_or_update[0]
+    assert len(result.groups_add) == 1
+    group = result.groups_add[0]
     assert len(group.member_ids) == 5
     expected_five = {101, 102, 103, 104, 105}
     assert group.member_ids == expected_five
@@ -405,8 +405,8 @@ def test_military_conflict_squad_commitment_no_truncation_at_five():
     guard_ids = [101, 102, 103, 104, 105]
     state = _make_war_state_with_guards(guard_ids)
     result = MilitaryConflictPhase.execute(state)
-    assert len(result.groups_add_or_update) == 1
-    group = result.groups_add_or_update[0]
+    assert len(result.groups_add) == 1
+    group = result.groups_add[0]
     assert group.member_ids == set(guard_ids)
 
 
@@ -415,4 +415,4 @@ def test_military_conflict_squad_commitment_empty_when_no_guards():
 
     state = _make_war_state_with_guards([])
     result = MilitaryConflictPhase.execute(state)
-    assert result.groups_add_or_update == []
+    assert result.groups_add == []
