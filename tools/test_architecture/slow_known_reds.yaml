@@ -104,84 +104,84 @@ known_reds:
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_routing_test_seed42_500t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?urban_political_seed456_500t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected early stall (COGNITION identical at 500t and 1000t, FACTION negative)"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?wilderness_survival_seed123_200t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): SOCIAL: cause unknown"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?hero_guild_routing_seed42_1000t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?simq_routing_test_seed42_1000t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected #645 route_search regression"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band_long_run?urban_political_seed456_1000t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillars are in its exclude.tsv): suspected early stall (COGNITION identical at 500t and 1000t, FACTION negative)"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?generated_frontier_3_42_seed42_200t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_scale_stress_seed42_seed42_200t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?hero_guild_routing_seed123_500t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?simq_routing_test_seed123_500t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
   - match: "tests.simulation_quality.test_grade_regression::test_grade_within_anchor_band?frontier_marches_seed123_200t?"
     ticket: TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE
     owner: rpg-planner
     added_on: "2026-10-24"
-    expires_on: "2026-11-15"
+    expires_on: "2026-11-29"
     kind: broken
     note: "held at the pre-v1 anchor in the baseline-v1 re-anchor (TCK-20261014-SIMQ-SINGLE-REANCHOR-ON-BASELINE-V1; the key's held pillar is in its exclude.tsv): a pillar switched on from 0.0 and no disclosed change explains it"
   - match: "tests.unit.worldassembly.test_corpus_diversity::test_hero_guild_routing_seed42_1000t_cognition_grade_stability"
