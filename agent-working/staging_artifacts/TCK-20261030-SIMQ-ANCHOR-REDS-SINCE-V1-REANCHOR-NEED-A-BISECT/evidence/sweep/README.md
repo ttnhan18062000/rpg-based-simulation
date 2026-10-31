@@ -8,4 +8,4 @@ Result: 85 of 810 pillar anchors moved between the two commits; 16 move from ins
 
 Exit codes: 7 of 162 runs exited rc=1 (checked in all 7 logs): simq_routing_test_seed123_500t and hero_guild_routing_seed123_500t at both commits (COGNITION C to A, identical at both), and urban_political_seed42_500t, _1000t and _2000t at d914bace7 only (COGNITION no-data to B, FACTION C to no-data). All are the evaluator's REGRESS verdict; a quality_report.json exists for each, and no log has a traceback.
 
-`moved_keys.md` now also ends with the 38 pillar anchors already outside tolerance at the parent a25619971 (pre-existing reds, not #769's; no re-anchor under this ticket). Of those 38, 11 (urban_political seed456 500t and 1000t) also move between the two commits while already out; they are not among the 16 in-to-out rows.
+`moved_keys.md` now also ends with the 38 pillar anchors already outside tolerance at the parent a25619971 (pre-existing reds, not #769's; no re-anchor under this ticket). Of those 38, 10 (urban_political seed456: 4 at 500t, 6 at 1000t) also move between the two commits while already out; they are not among the 16 in-to-out rows.
