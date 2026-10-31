@@ -1,0 +1,13 @@
+## P3 status flips, urban_political s42 500t, a25619971 vs d914bace7
+
+### FACTION (3 events -> 0, score -0.0863 -> no-data)
+Parent events: diplomatic_transition bandit_company/town_council NEUTRAL->TENSE at t417, and faction_trajectory_stagnant for both factions at t417 (all three are the pillar's only events).
+Mechanism (src/domains/faction/diplomatic_state_machine.py): NEUTRAL -> TENSE when pairwise tension > 0.4. Tension rises by 0.01 per hostile bond update between members of the two factions (FactionSentimentService.derive_from_bond_updates).
+Hostile bond updates between the two factions over 500t: parent 51, d914bace7 31. Pair tension: parent reaches 0.40 at t416 (TENSE at t417, 0.51 at t450); d914bace7 stays at 0.26 at t417 and ends at 0.31 (never above 0.4, so no transition and no stagnant event).
+Faction bond-update streams (all pairs) are identical for the first 21 updates; the first difference is parent (t171, entity 18 -> 15, merchant_league/bandit_company) against d914bace7 (t198, entity 29 -> 14). Entity 18 is the retreat entity of the t42 first difference: in the parent it is killed at t172 (entity_killed e18), in d914bace7 it retreats (retreat_pull at t42, t62, t182) and there is no entity_killed for it at t172. For the bandit_company/town_council pair alone the streams are identical until idx 9; parent (t265, e6 -> e15) against d914bace7 (t201, e13 <-> e15).
+Link to the retreat path: retreat_pull at t42 (entity 18) -> different survival/positions of entity 18 -> different hostile bond updates from t171 -> 31 instead of 51 pair bumps -> tension never passes 0.4. The intermediate links between t43 and t171 are not individually traced.
+
+### COGNITION (2 events -> 22, no-data -> 0.350)
+The 20 extra events are decision_divergence_detected for entity 6, ticks 275 to 294 (payload project_kind harvesting, concern_kind danger, concern_urgency 0.8); the parent has none.
+Entity 6 first differs from the parent at t180 (joins group 10009 in d914bace7, no group in the parent; the group-id formula is the one in the groups.py finding). At t270 the parent has entity 6 at (30,35) hp 83 in project proj_combat_engage_254; d914bace7 has it at (27,29) hp 100, current project empty, then harvesting from t274. The event fires while a danger concern (urgency 0.8) coexists with the harvesting project.
+No retreat_pull call touches entity 6 (retreat_pull calls in d914bace7 at 500t: entities 18 (t42, t62, t182), 20 (t120, t140), 30 (t130), 29 (t251), 26 (t274), 14 (t446)). Entity 6's path therefore differs through the group and position changes downstream of entity 18's retreat, not through its own retreat score. The link from entity 18's retreat (t42) to entity 6 joining group 10009 at t180 is not individually traced.

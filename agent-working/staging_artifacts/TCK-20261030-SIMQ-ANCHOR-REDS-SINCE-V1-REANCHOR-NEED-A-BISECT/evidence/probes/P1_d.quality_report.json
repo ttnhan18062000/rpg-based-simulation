@@ -1,0 +1,2083 @@
+{
+  "run_id": "urban_political_123_500_900229_b916c7bf",
+  "tick_count": 500,
+  "overall_score": 11.289951190821203,
+  "overall_grade": "S",
+  "overall_status": "ok",
+  "overall_reason": null,
+  "pillars_scored": 8,
+  "pillars_no_data": 2,
+  "generated_at": "2026-10-31T06:32:41.392637+00:00",
+  "pillars": {
+    "COGNITION": {
+      "status": "no-data",
+      "raw_score": 3.0,
+      "normalized_score": null,
+      "grade": null,
+      "event_count": 2,
+      "min_events": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "self_model_active"
+      ],
+      "worst_events": [],
+      "reason": "below_min_events"
+    },
+    "AGENCY": {
+      "status": "ok",
+      "raw_score": 7.0,
+      "normalized_score": 0.056,
+      "grade": "B",
+      "event_count": 3,
+      "min_events": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "navigation_active"
+      ],
+      "worst_events": []
+    },
+    "COMBAT": {
+      "status": "ok",
+      "raw_score": 45.0,
+      "normalized_score": 0.234375,
+      "grade": "B",
+      "event_count": 26,
+      "min_events": 3,
+      "negative_count": 3,
+      "loop_detected": true,
+      "loop_flags": [
+        "combat_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 89,
+          "event_id": "2977fb2f5a8c4d97af0ccc9999533fb1",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 17,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 139,
+          "event_id": "281ffa06485d4dc1aae173f5206594fc",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 15,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        },
+        {
+          "tick": 172,
+          "event_id": "59673c02c13a4f0e888a36b5a440834b",
+          "pillar": "COMBAT",
+          "delta": -1.0,
+          "reason": "entity killed in combat",
+          "event_type": "entity_killed",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "attrition"
+          ]
+        }
+      ]
+    },
+    "FACTION": {
+      "status": "no-data",
+      "raw_score": 0.0,
+      "normalized_score": null,
+      "grade": null,
+      "event_count": 0,
+      "min_events": 3,
+      "negative_count": 0,
+      "loop_detected": false,
+      "loop_flags": [],
+      "worst_events": [],
+      "reason": "below_min_events"
+    },
+    "ECONOMY": {
+      "status": "ok",
+      "raw_score": 212.0,
+      "normalized_score": 0.603988603988604,
+      "grade": "A",
+      "event_count": 25,
+      "min_events": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "gold_flow"
+      ],
+      "worst_events": []
+    },
+    "PROGRESSION": {
+      "status": "ok",
+      "raw_score": -73.0,
+      "normalized_score": -0.14717741935483872,
+      "grade": "C",
+      "event_count": 35,
+      "min_events": 3,
+      "negative_count": 22,
+      "loop_detected": true,
+      "loop_flags": [
+        "xp_plateau"
+      ],
+      "worst_events": [
+        {
+          "tick": 302,
+          "event_id": "2388bdb7191a4cb8be40776f7ab757de",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 14,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 302,
+          "event_id": "bdb93fb9421b48b097b7d75b7f69fe49",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 302,
+          "event_id": "3f010ebd48f6409c8c8790f51e43bb01",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 302,
+          "event_id": "7dd2c319c4314a11b42f6d2ec09bd4c5",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 22,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 303,
+          "event_id": "3dc0a010e0794294ae9fd199d4a3c0df",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 304,
+          "event_id": "2cda90e16c4e451e9be632a4e1f63357",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 13,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 304,
+          "event_id": "ff506586f6964359a513d6ad52928164",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 313,
+          "event_id": "3935c0fffa6a46f4b7c2d3ba07fcf00f",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 325,
+          "event_id": "41a072313a714100a358ba8f15a0b39c",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 330,
+          "event_id": "45d61708bb3542469a6d1c79951f70ca",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 336,
+          "event_id": "90eaccacbd3e42469cc54f8cbfe500a4",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 6,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 340,
+          "event_id": "aad05afc9ad94750871932f52f7b3ae9",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 7,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 342,
+          "event_id": "895ccaae30764a8fa5f1b32d8342d4d3",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 379,
+          "event_id": "bd5abb0c4e624eb58d94d27205077772",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 3,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 381,
+          "event_id": "7645ca33ea624da9a61384ed693184a5",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 8,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 390,
+          "event_id": "1655a82961cf4962a1addb74730c46c1",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 391,
+          "event_id": "f9866e59f70b4d858c00d369352008bd",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 391,
+          "event_id": "10abc290595b48ec9ca0bde929752c9b",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 1,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 394,
+          "event_id": "376f25bedc5a46c7a9930fc163b25383",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 440,
+          "event_id": "14f3d10f0bbd4958bcbc8d83dccb757c",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 496,
+          "event_id": "fc24d1ffe2cf488a83665544d8caf0cd",
+          "pillar": "PROGRESSION",
+          "delta": -10.0,
+          "reason": "entity's level/skills/gear/gold all flat for the stall window",
+          "event_type": "capability_growth_stalled",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "capability_growth_stalled"
+          ]
+        },
+        {
+          "tick": 51,
+          "event_id": "0a963930d51948d3b39e097d5451aaed",
+          "pillar": "PROGRESSION",
+          "delta": -8.0,
+          "reason": "XP gain rate dropped to zero after tick gate",
+          "event_type": "progression_plateau_detected",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "xp_plateau"
+          ]
+        }
+      ]
+    },
+    "SOCIAL": {
+      "status": "ok",
+      "raw_score": 29300.0,
+      "normalized_score": 58.6,
+      "grade": "S",
+      "event_count": 7738,
+      "min_events": 3,
+      "negative_count": 104,
+      "loop_detected": true,
+      "loop_flags": [
+        "cooperation_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 16,
+          "event_id": "ffeb4f2f0b184084bee45297bc03602c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 20,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 30,
+          "event_id": "5702dbc61e2542dfa490ae53066c85c3",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 37,
+          "event_id": "955392e42c014d80bb5ddd8cab7c5c4e",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 17,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 39,
+          "event_id": "1d5ca0c2d11d4ac484a85f538cdf87c7",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 15,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 40,
+          "event_id": "6fd3f79ad6fb4cd09cc15f99cbd94b13",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 42,
+          "event_id": "f28a72ea5549407abf8cb1addd541e19",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 42,
+          "event_id": "65c0bb3b81ac4269932177e8918e96a2",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 47,
+          "event_id": "9c18be700e6c4eb6adb6010fc0d095e6",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 47,
+          "event_id": "60bc187a267b414a960d0369061ac40c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 50,
+          "event_id": "5cbd0e0528094d3b8cfddd73d322d0b3",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 52,
+          "event_id": "39f4b2135b054dca8eaf10671b144e73",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 52,
+          "event_id": "b4d478f26ef1474bb49f35c8b493cf63",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 55,
+          "event_id": "41e9c84ad4024c099bfcd7a7828757e2",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 60,
+          "event_id": "90c52c5a72784859819e220a5c12efc4",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 62,
+          "event_id": "cf5e060f1c3e4ab79ede9876d98ee052",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 63,
+          "event_id": "688fd465e55f4043b2677cb1fb7aeec0",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 64,
+          "event_id": "1dfaaa9703c6466f9c37e209d6b8d904",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 15,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 65,
+          "event_id": "ddd0fc0a5496499298ff28b07f10324a",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 65,
+          "event_id": "b05dc17c23924d33ad079bf9475e1894",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 67,
+          "event_id": "1f66368100a2424282e1dbc67b07dcd2",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 74,
+          "event_id": "09bf64b5916842bf8978d0e0005ff802",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 15,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 75,
+          "event_id": "a8c142f9728b4b4ca1815a077d6b7c79",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 77,
+          "event_id": "58f841992f304a7d855843ae3c257f1d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 24,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 77,
+          "event_id": "cb24562bf9db4df8abf26639cb8972bc",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 7,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 85,
+          "event_id": "31356e215da74ce99e9697477af59ed3",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 87,
+          "event_id": "e8115a2c19c84f9b95c2e0ab90085bed",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 90,
+          "event_id": "a3d52477e36d4392ab9ee8e37f622fb5",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 91,
+          "event_id": "64ea29cdf0ab42e2b9ab826f3d32c902",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 92,
+          "event_id": "913f31fe73ff4f35b8a180b841dd78eb",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 17,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 94,
+          "event_id": "e178674a629b479398b455a75fa0ba46",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 95,
+          "event_id": "d93cb4eaeab34b81a5e428de1d65f455",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 97,
+          "event_id": "a55cdf97fa994d2c910a99a5a60c120c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 100,
+          "event_id": "95e3187fd2a74254a016e7e1396ec21d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 102,
+          "event_id": "be5ebdb9171d4e28a91491d15525b3ad",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 102,
+          "event_id": "810af7b53224444dae4a09e3c2f776d0",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 103,
+          "event_id": "2a37ef8908af4374ac13e02759412d45",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 103,
+          "event_id": "d273480aeea5405eb7531c8453da563d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 104,
+          "event_id": "810a294d859542c8b203f5faf00fee19",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 115,
+          "event_id": "83508b978475476e9f73a9137cb98ea7",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 3,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 116,
+          "event_id": "c3825b8030584f058e8afc927f7c12f9",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 122,
+          "event_id": "77f4cb7999444c9891684c2bc22b97db",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 123,
+          "event_id": "83d0d24bef4a4fa8b06486d5ea2e3623",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 125,
+          "event_id": "29a658c5c2b24baf803257a8aa5d229f",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 3,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 126,
+          "event_id": "1e5c1ac3c0674f9ca1f67cdf15ac6f91",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 127,
+          "event_id": "f7b44ab2246442afaff322dee0bddab9",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 128,
+          "event_id": "f9cb47ec668d4fd8bdb1c254197ee054",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 4,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 130,
+          "event_id": "0430fe512d5246b783ea80c9f674065d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 130,
+          "event_id": "7c474f14162e48f2a6a4e70d0608683f",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 130,
+          "event_id": "9f222fc09e034c3994400d7dbf930e10",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 132,
+          "event_id": "40dc4a997fdb45b9b58d1f19e1c9258c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 137,
+          "event_id": "1aae336c854a411f97c3b051459e9380",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 140,
+          "event_id": "7cf7869bcb884676a6413df369d516da",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 19,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 140,
+          "event_id": "e79897155264426c98f619db15b36046",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 140,
+          "event_id": "5a4ac4774a1a4cce990196f3ff34c7d2",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 150,
+          "event_id": "46b50a077e6548ae8a00a383040db184",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 3,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 151,
+          "event_id": "332d8186657d405f8649a85ff5c49c76",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 151,
+          "event_id": "e3b4cee7ff894692836cd3674c75d01b",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 162,
+          "event_id": "fecfd584235740748bf3b37f2d29618d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 163,
+          "event_id": "7870cf8008b64c85a1c84f7d51f4a679",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 24,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 165,
+          "event_id": "f6ed65b248844a1080545a0751f37156",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 172,
+          "event_id": "e7b11fa3fcd544eeb5801f417b3d20eb",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 175,
+          "event_id": "9ce068c2b63e4bf3bd885b30f36b3a41",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 175,
+          "event_id": "5e540aa54e2543cba9a137fe69930003",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 175,
+          "event_id": "6e09ed3115b346de827e787139a9d187",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 176,
+          "event_id": "2e843bb217b047c1bed6ffcfa8c9fe84",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 176,
+          "event_id": "76dc4f3b2d394e789f1bfeab4460e8bb",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 26,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 181,
+          "event_id": "bc6add803a03489792f9ec809e52fb0a",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 182,
+          "event_id": "db505807ed20444f8375b37a0df644a1",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 183,
+          "event_id": "cb70f6e8589641baba7e2471e0569432",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 185,
+          "event_id": "3f780db365e84034861e95a8b21cf9e4",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 185,
+          "event_id": "1c2c2de42ad04f04824e3842a5b93da0",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 186,
+          "event_id": "138de08d64294a798ddd9ac5aba6240d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 191,
+          "event_id": "ea7ddcc7ebb84bbcbe39f21dc3b72c10",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 192,
+          "event_id": "4f7f057000b240e08413b6f2e3b149af",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 193,
+          "event_id": "e6fa8af3fcc34303805c4a47bdf33f4c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 195,
+          "event_id": "30687f5c150a49ab9ef9b860b0651c5d",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 199,
+          "event_id": "41e2d99251264d63b2347a04f3251fba",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 204,
+          "event_id": "3442ac5ae51548cca57dd3951920d55a",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 8,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 207,
+          "event_id": "f52721b23b3245c6ab8cf94fbeb7c04b",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 209,
+          "event_id": "ab11733e30274567a475ef6a6abaf41c",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 209,
+          "event_id": "cc20a7a58af74f5a9aabecd5f7fc3b01",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 217,
+          "event_id": "9bcd36cfbb8c4b29a958770b0ad2721e",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 218,
+          "event_id": "102ed24486e34aa4b75c443fac2d8f35",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 225,
+          "event_id": "0d50b1f45f04429f83668836aa2f4855",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 27,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 228,
+          "event_id": "fe2fc0726452417fa4b6bde2d352dddf",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 234,
+          "event_id": "3ca9229a23924483a7eb1853296cf56a",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 244,
+          "event_id": "dd77392cb8bd4f62ad5c6bc45692c7af",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 263,
+          "event_id": "5b9c75067dc94ff6825a31131ac11845",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 269,
+          "event_id": "d137dcc42776462d842862ce365536ac",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 273,
+          "event_id": "f0fdc06ff4704a7c840f04b9bca08bca",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 279,
+          "event_id": "f8f2277ea7854f48972a929f80e90a9e",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 298,
+          "event_id": "a0641a8cd41e4f3cbae8fc27351e064a",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 306,
+          "event_id": "5f35ea84d38b4f36b845f9abfb2778c1",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 308,
+          "event_id": "ed1b59c8a9d4405fa60d8027d07dd8d4",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 316,
+          "event_id": "dd9d5c0401194365a3f33f6bc2ddac67",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 333,
+          "event_id": "53e31cea0edc4b28920ea5cc35e02a34",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 343,
+          "event_id": "b8611e9e5311487ebf8a23aa69abd5e6",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 368,
+          "event_id": "346f168dc4f3409cba5245a9977fbf77",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 378,
+          "event_id": "89d1e2dba0df4ba5a2a45739f13b0e83",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        },
+        {
+          "tick": 423,
+          "event_id": "31157f868c14499e85509a66fa1db4a3",
+          "pillar": "SOCIAL",
+          "delta": -1.0,
+          "reason": "contract offer expired without acceptance",
+          "event_type": "contract_expired_offer",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "offer_dead"
+          ]
+        }
+      ]
+    },
+    "INFORMATION": {
+      "status": "ok",
+      "raw_score": 1777.0,
+      "normalized_score": 3.611788617886179,
+      "grade": "S",
+      "event_count": 83,
+      "min_events": 3,
+      "negative_count": 22,
+      "loop_detected": true,
+      "loop_flags": [
+        "belief_active",
+        "subjective_divergence"
+      ],
+      "worst_events": [
+        {
+          "tick": 67,
+          "event_id": "8bc85a77664642ac9287cf1e2b6c9056",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 77,
+          "event_id": "4b4c886af37f4a448e6aee5f13acbe91",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 87,
+          "event_id": "d102729ffef247698f28b679a3a5ddb3",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 124,
+          "event_id": "de9734f2857740d8bab33ebb2a28c17e",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 24,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 201,
+          "event_id": "5ec65fad68064f8d8b28c22589cece79",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 246,
+          "event_id": "a577cf64512e4968880a910c1e260ab4",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 286,
+          "event_id": "3c69dcd545524bf8a64d25cd92cbddef",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 291,
+          "event_id": "76fa7a8f92f242c5b9a665e0b881b3b7",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 307,
+          "event_id": "52722166d6e84748a49563cd3ee2abc5",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 319,
+          "event_id": "6c27d05d2c204a74a8f03e2da6c4e641",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 367,
+          "event_id": "e753d0af9a634d7c91e8e8097784154a",
+          "pillar": "INFORMATION",
+          "delta": -2.0,
+          "reason": "lead certainty decayed to zero on active lead",
+          "event_type": "lead_certainty_updated",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "knowledge_rot"
+          ]
+        },
+        {
+          "tick": 67,
+          "event_id": "31876dc331f74fbb9e0520f14beae52d",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 5,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 77,
+          "event_id": "fabbaf3fc3ec42ba80f829efc77eb64e",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 10,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 87,
+          "event_id": "bc4eff0cf1ec43d6b7a945cad1eade50",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 9,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 124,
+          "event_id": "1c4d50e44c214570978a2e592b8f5744",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 24,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 201,
+          "event_id": "d3b9612798634cd9bbd4b95aa6241cec",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 28,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 246,
+          "event_id": "c9544162032d461c8711e5ca4624819d",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 2,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 286,
+          "event_id": "7c8e7edc54d24cd792793b7407a46713",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 12,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 291,
+          "event_id": "f942c703c7db40468d4a1352fcee7d67",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 11,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 307,
+          "event_id": "512b814902ff4cd999537755cf45de11",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 23,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 319,
+          "event_id": "7b3a438d90e94de0a10aa6059187cf00",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 29,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        },
+        {
+          "tick": 367,
+          "event_id": "ccf7d3d949c8446c8d1df34b4e40b31b",
+          "pillar": "INFORMATION",
+          "delta": -1.0,
+          "reason": "belief unchanged after information response received",
+          "event_type": "belief_stale",
+          "entity_id": 18,
+          "region_id": null,
+          "tags": [
+            "belief_pipeline_deaf"
+          ]
+        }
+      ]
+    },
+    "WORLD": {
+      "status": "ok",
+      "raw_score": 74.0,
+      "normalized_score": 0.185,
+      "grade": "B",
+      "event_count": 21,
+      "min_events": 3,
+      "negative_count": 0,
+      "loop_detected": true,
+      "loop_flags": [
+        "hazard_active"
+      ],
+      "worst_events": []
+    },
+    "NARRATIVE": {
+      "status": "ok",
+      "raw_score": 451.0,
+      "normalized_score": 1.1246882793017456,
+      "grade": "A",
+      "event_count": 78,
+      "min_events": 3,
+      "negative_count": 1,
+      "loop_detected": true,
+      "loop_flags": [
+        "emergence_active"
+      ],
+      "worst_events": [
+        {
+          "tick": 187,
+          "event_id": "4542a62773e54c8d9f1d813834b57f4c",
+          "pillar": "NARRATIVE",
+          "delta": -1.0,
+          "reason": "hero died but no chronicle entry or narrative event emitted",
+          "event_type": "hero_death_unrecorded",
+          "entity_id": 24,
+          "region_id": null,
+          "tags": [
+            "hero_death_unrecorded"
+          ]
+        }
+      ]
+    }
+  }
+}

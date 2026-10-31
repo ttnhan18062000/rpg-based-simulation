@@ -143,6 +143,9 @@ The pushed S2 backup `rpg-ubuntu-simq-anchor-bisect-impl` (7a86c6a36) contains a
 - Stale-anchor note: not worded here. rpg-planner ruling 6 gives the verbatim section to append to the end of TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE in the SimQ PR (see the ruling file); the 38 pre-existing reds are covered by that ticket's 12 whole-key slow_known_reds entries.
 - Freeze check from the existing sweep logs (`evidence/sweep/freeze_check.py`, output beside it): urban_political s42 at d914bace7 does not die out or stop producing events (alive 21 of 30 active in the last window of the 2000t run, about 2257 events per 100 ticks), but its kills, XP, combat and world-emergence events end by t452-552 (parent: t1809-1909) and its last resource_harvested is t298 (parent t473). Large behaviour change, not a threshold move; for rpg-planner to rule.
 
+### Probes P1-P4, repeat, prefix check (2026-10-31, rulings 4 to 6; files in `evidence/probes/`)
+P1 (urban_political s123 500t, first difference t75 entity 5), P2 (generated_frontier_3_42 s456 200t, t41 entity 19), P3 (urban_political s42 500t, t42 entity 18) and P4 (selfmodel_execution_probe s42 200t, t42 entity 18) each PASS the rule: every record before the first difference is identical for all entities, and the first difference is a COMBAT_RETREAT score changed by `retreat_pull` and nothing else. The P1 repeat at d914bace7 is byte-identical (probe logs and final state hash); quality_scores match with event_id excluded. The prefix check passes 8 of 8 from the sweep's own run directories. P3's FACTION and COGNITION flips are traced to the retreat path with the gaps stated in `P3_status_flips.txt`; the 2000t rows and the flips go to the designer (ruling 6).
+
 ## Test Summary
 ## Files Changed
 ## Completion Summary

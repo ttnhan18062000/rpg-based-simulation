@@ -1,0 +1,8 @@
+records: parent 15465, d914 15501; sc keys 464/491; st keys 15000/15000; rp calls parent 0, d914 9
+first sc difference (tick, entity): (42, 18) | first state difference: (43, 18)
+identical for every tick before 42 (all entities, sc and st)
+at (42, 18): differing scorers (kind, parent, d914, target_parent, target_d914):
+   ('GoalKind.COMBAT_RETREAT', 84.518796, 123.398796, 'town_center', 'town_center')
+   rp calls at this (tick, entity) in d914: [(84.51879572808227, 0.25, 123.39879572808228)] | in parent: None
+   entities with any sc difference at this tick: [18]
+VERDICT (b):  PASS: first difference is a COMBAT_RETREAT score changed by retreat_pull, nothing else

@@ -1,0 +1,10 @@
+## P3 (500t probe run) vs the sweep's urban_political_seed42_200t run, events up to t200 (event_id and run_id excluded)
+a25619971 events 2378 identical: True | metric windows identical: True
+d914bace7 events 2433 identical: True | metric windows identical: True
+
+## Repeat: P1_d (first) vs P1_d2 (repeat), d914bace7, urban_political_seed123_500t
+probe logs (out/P1_d.jsonl vs out/P1_d2.jsonl) byte for byte: True 352eb3f7d4f10d57 352eb3f7d4f10d57
+final state_hash: True 0bd536588c14d9c5 0bd536588c14d9c5
+quality_scores.jsonl with event_id excluded: True 8011
+quality_report pillars identical: False
+event_id differs between the two runs on 8011 of 8011 rows
