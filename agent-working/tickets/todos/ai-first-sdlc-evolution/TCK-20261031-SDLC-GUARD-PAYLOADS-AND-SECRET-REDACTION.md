@@ -102,4 +102,7 @@ Already classified before: `git push origin main`, `gh pr merge` (merge), `gh ap
 (to be filled by the implementer)
 
 ## Completion Summary
-(to be filled by the implementer)
+In progress: the ConfigChange wiring waits for the owner's OK on the exact `.claude/settings.json` diff.
+
+Known gap: JWTs and `sk-proj-` keys (an `sk-` key with a hyphen in its first 20 characters) are not redacted, because the shape list is `write_path_guard.py`'s and is shared with the Bash secret-scan hook; widening it changes what a blocking hook rejects (and a hyphen-tolerant `sk-` pattern with no word boundary would also match names like `task-some-long-hyphenated-name`), so it is its own decision.
+Known gap: typed text written by other tools into committed files (`record_events` and closure event summaries, `working_log.csv`) is not redacted; only tool rows and the handover transit export are covered.
