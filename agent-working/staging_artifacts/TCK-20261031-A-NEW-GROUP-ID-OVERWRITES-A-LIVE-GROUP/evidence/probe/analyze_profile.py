@@ -5,7 +5,7 @@ b, r = (json.loads(open(p).read().splitlines()[-1]) for p in sys.argv[1:3])
 init_b, init_r = set(b["initial_ids"]), set(r["initial_ids"]); both_init = init_b & init_r; ghosts = set(b["ghost_ids"])
 print("initial entity ids: base", len(init_b), "branch", len(init_r), "common", len(both_init), "| base ghost ids", len(ghosts), "initial on both", len(ghosts & both_init), "later-born", len(ghosts - init_b))
 for lab, d in (("base", b), ("branch", r)):
-    forms = d["forms"]; dis = d["dissolutions"]
+    forms = d["forms"]; dis = list(d["dissolutions"]) + [[x[0], x[1], x[2], None, ["defection_pass_left_le1_member"]] for x in d.get("dis_other", [])]
     by_g = [f for f in forms if set(f[2]) & ghosts]; by_gi = [f for f in forms if set(f[2]) & ghosts & both_init]
     print(f"\n=== {lab}: hash {d['state_hash'][:12]} formations {len(forms)} dissolutions {len(dis)} events {d['events']} alive {d['alive']}")
     print(f"(a) formations with a base-ghost member {len(by_g)}; with one that is an initial id on both trees {len(by_gi)}; distinct base-ghost entities forming {len(set().union(*[set(f[2]) & ghosts for f in forms]) if forms else set())}")
@@ -37,6 +37,9 @@ for lab, d in (("base", b), ("branch", r)):
         l = t - max(fs); bucket = "<=2" if l <= 2 else ("<=10" if l <= 10 else ">10")
         life[bucket][tuple(why)] += 1
     for bk in ("<=2", "<=10", ">10"): print(f"    groups ended with lifetime {bk} ticks, by reason: {dict(life[bk])}")
+    mi = d.get("mirror", {})
+    print(f"    mirror check: ticks {mi.get('ticks')}, mirror predicted {mi.get('predicted')} dissolutions, code made {mi.get('actual')}; predicted-not-made {mi.get('n_pred_not_actual')}, made-not-predicted {mi.get('n_actual_not_pred')}; examples {mi.get('pred_not_actual', [])[:5]} / {mi.get('actual_not_pred', [])[:5]}")
+    print(f"    dissolutions outside update_groups (defection pass): {len(d.get('dis_other', []))}; cooperation phase: calls {d.get('coop', {}).get('calls')}, dissolutions it made {d.get('coop', {}).get('dissolved')}, cohesion verdicts {d.get('coop', {}).get('statuses')}")
     pool = d["pool"]
     if pool:
         n = len(pool); win = 250

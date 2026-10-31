@@ -18,7 +18,7 @@ from src.engine.apply_plan import ApplyPlanBuilder
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.observability.event_extractor import EventExtractor
-X = dict(pool=[], dis=[], initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
+X = dict(mirror=dict(ticks=0, predicted=0, actual=0, pred_not_actual=[], actual_not_pred=[]), dis_other=[], coop=dict(calls=0, statuses={}, dissolved=0), pool=[], dis=[], initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
 def touch(name, n):
     t = X["touch"].setdefault(name, [0, 0]); t[0] += 1; t[1] += n
 ou = GroupSystem.update_groups
@@ -73,8 +73,19 @@ def ug(state, *a, **k):
             gr = state.groups.get(g)
             if gr is None or e.id not in gr.member_ids: ghost += 1
     X["pool"].append([state.tick, pool, grouped, ghost])
+    import src.core.dirty as _d
+    _w = P.S["work_relevant"]; rel = _d.get_relevant_group_ids(state, cu); P.S["work_relevant"] = _w
+    pred = {gid for gid in rel if gid in state.groups and state.groups[gid].dissolution_tick is None and _reasons(state, cu, state.groups[gid])}
     r = ou(state, *a, **k)
     for g in P.CUR["form"]: X["forms"].append([state.tick, g.id, sorted(g.member_ids)])
+    act = {row.id for row in r.groups_add_or_update if row.dissolution_tick is not None and state.groups.get(row.id) is not None and state.groups[row.id].dissolution_tick is None and row.dissolution_tick == state.tick}
+    mi = X["mirror"]; mi["ticks"] += 1; mi["predicted"] += len(pred); mi["actual"] += len(act)
+    for gid in sorted(pred - act):
+        if len(mi["pred_not_actual"]) < 20: mi["pred_not_actual"].append([state.tick, gid])
+    for gid in sorted(act - pred):
+        if len(mi["actual_not_pred"]) < 20: mi["actual_not_pred"].append([state.tick, gid])
+    mi["n_pred_not_actual"] = mi.get("n_pred_not_actual", 0) + len(pred - act); mi["n_actual_not_pred"] = mi.get("n_actual_not_pred", 0) + len(act - pred)
+    X.setdefault("ug_dis_ids", {})[state.tick] = act
     for row in list(r.groups_add_or_update):
         old = state.groups.get(row.id)
         if row.dissolution_tick is not None and old is not None and old.dissolution_tick is None and row.dissolution_tick == state.tick:
@@ -114,6 +125,34 @@ def ex(prior, current, update, mode=None, *a, **k):
     except TypeError: pass
     return r
 EventExtractor.extract = staticmethod(ex)
+from src.engine.pipeline_phases.groups import GroupPhase
+from src.domains.cooperation.phase import CooperationPhase
+orr = GroupPhase.resolve
+def rr(state, update):
+    res = orr(state, update)
+    ids = X.get("ug_dis_ids", {}).get(state.tick, set())
+    for row in res.groups_add_or_update:
+        old = state.groups.get(row.id)
+        if row.dissolution_tick is not None and old is not None and old.dissolution_tick is None and row.dissolution_tick == state.tick and row.id not in ids:
+            X["dis_other"].append([state.tick, row.id, sorted(old.member_ids), "GroupPhase.resolve (defection pass: check_defection left <=1 member)"])
+    return res
+GroupPhase.resolve = staticmethod(rr)
+from src.domains.cooperation.services import PartyCohesionService as _PCS
+_oev = _PCS.evaluate
+def _ev(g_id, st, *a, **k):
+    rep = _oev(g_id, st, *a, **k)
+    X["coop"]["statuses"][rep.status] = X["coop"]["statuses"].get(rep.status, 0) + 1
+    return rep
+_PCS.evaluate = staticmethod(_ev)
+_oco = CooperationPhase.execute
+def _co(state, update, *a, **k):
+    res = _oco(state, update, *a, **k)
+    X["coop"]["calls"] += 1
+    for row in res.groups_add_or_update:
+        old = state.groups.get(row.id)
+        if row.dissolution_tick is not None and old is not None and old.dissolution_tick is None: X["coop"]["dissolved"] += 1
+    return res
+CooperationPhase.execute = staticmethod(_co)
 world, seed, ticks = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 from tools.calibrate_simq import _load_profile_feature_flags, _resolve_profile, _run_engine
 flags = _load_profile_feature_flags(_resolve_profile(world))
@@ -137,5 +176,5 @@ sites = sorted([r for r in rows if any(s in r["file"].replace("\\", "/") for s i
 m = json.load(open(os.path.join(run_dir, "run_manifest.json")))
 out = {"k": "profile", "world": world, "seed": seed, "ticks": ticks, "state_hash": m["state_hash"], "elapsed": elapsed, "top_cum": top, "phases": phases, "sites": sites,
        "touch": X["touch"], "copies": X["copies"], "copied_records": X["copied_records"], "events": X["events"], "alive": X["alive"],
-       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "pool": X["pool"], "dissolutions": X["dis"], "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
+       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "mirror": X["mirror"], "dis_other": X["dis_other"], "coop": X["coop"], "pool": X["pool"], "dissolutions": X["dis"], "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
 with open(os.environ["PROBE_OUT"], "w") as fh: fh.write(json.dumps(out, default=str, separators=(",", ":")) + "\n")
