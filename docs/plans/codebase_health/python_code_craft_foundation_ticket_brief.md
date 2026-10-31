@@ -42,7 +42,7 @@ design, size and complexity thresholds (roadmap Section 6.1), naming, docstrings
 handling and module layout. Each rule states whether a tool enforces it or a reviewer judges it.
 It cites `docs/guidelines/design_patterns.md` and `docs/engine/architecture_reference.md` §9 and
 does not restate them. Also: add a row to `docs/guidelines/subsystem_ownership_lifecycle.md`, and
-register the roadmap in `docs/plans/plans_tracking.md`. Docs only.
+register the roadmap in `docs/plans/agent_infrastructure/plans_tracking.md`. Docs only.
 
 ## Concern 2: M2 — uv as the single dependency source
 
