@@ -8125,6 +8125,21 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SLOW-KNOWN-REDS-NOVEMBER-EXPIRIES.md
+  ticket_id: TCK-20261031-SLOW-KNOWN-REDS-NOVEMBER-EXPIRIES
+  title: 'Five slow_known_reds entries expiring 2026-11-15 are settled: three arena
+    entries retired, behavioral_5k renewed to 12-15, the hero_guild exact-id entry
+    renewed to 11-29'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/slow_known_reds.yaml
+  - tests/unit/tools/test_slow_regression_report.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
   ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
   title: 'Evolve the AI-first SDLC: separate authority, verifiable completion, evidence,
