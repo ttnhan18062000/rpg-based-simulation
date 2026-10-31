@@ -55,25 +55,30 @@ GROUP_ADD_ID_TAKEN = "group_add_id_taken"
 def resolve_group_adds(prior_groups: Any, update: StateUpdate) -> StateUpdate:
     """An add never replaces: a record whose id is already in the store (live or dissolved, or an earlier add this tick) is rejected.
 
-    The rejection is counted in ``rejections_delta`` and the rejected record's members lose the ``group_id_set`` that
-    pointed at it, so no entity is left pointing at a group it is not listed in. In-place updates are not touched.
+    The rejection is counted in ``rejections_delta`` and every ``group_id_set`` aimed at the rejected id is removed for the rejected
+    record's members (except members the same-tick winner of that id also lists), so no member's group_id is written for a rejected add. In-place updates are not touched.
     """
     if not update.groups_add:
         return update
     taken: Dict[int, Any] = dict(prior_groups)
+    added_now: set = set()
     accepted: List[Any] = []
     rejected: List[Any] = []
     for g in update.groups_add:
         if g.id in taken:
-            rejected.append((g, taken[g.id]))
+            rejected.append((g, taken[g.id], g.id in added_now))
         else:
             taken[g.id] = g
+            added_now.add(g.id)
             accepted.append(g)
     if not rejected:
         return update
     entity_updates = dict(update.entity_updates)
-    for g, holder in rejected:
-        for m_id in sorted(g.member_ids - set(holder.member_ids)):
+    for g, holder, holder_added_now in rejected:
+        # No member's group_id is written for a rejected add. The one exception is a member the record that WON this id in the same
+        # tick also lists: that write belongs to the winner (same id), not to the rejected record.
+        keep = set(holder.member_ids) if holder_added_now else set()
+        for m_id in sorted(g.member_ids - keep):
             eu = entity_updates.get(m_id)
             if eu is not None and eu.group_id_set == g.id:
                 entity_updates[m_id] = _dc_replace(eu, group_id_set=None)

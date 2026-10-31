@@ -248,3 +248,48 @@ def test_a_squad_add_over_a_live_formation_id_or_an_existing_squad_is_rejected()
     assert new.rejection_registry[GROUP_ADD_ID_TAKEN] == 2
     assert new.next_group_id == state.next_group_id
     assert _resolves(new) == []
+
+
+def test_a_state_that_carries_a_counter_keeps_it_when_squad_roles_change():
+    """The seed fires only when the counter is absent: rewriting a squad record's roles must not move a counter the state carries."""
+    squad = GroupRecord(id=1999999999, leader_id=7, member_ids={7, 8}, anchor=(0, 0), roles={7: "FACTION_SQUAD", 8: "FACTION_SQUAD"})
+    state = AuthoritativeState(tick=1, seed=1, groups={squad.id: squad})
+    assert state.next_group_id == GROUP_ID_BASE
+    rewritten = replace(squad, roles={7: "LEADER", 8: "VANGUARD"})
+    assert replace(state, groups={rewritten.id: rewritten}).next_group_id == GROUP_ID_BASE
+    assert AuthoritativeState(tick=1, seed=1, groups={rewritten.id: rewritten}, next_group_id=10050).next_group_id == 10050
+
+
+def test_a_rejected_add_writes_no_member_group_id_even_for_a_member_the_holder_lists():
+    holder = GroupRecord(id=10000, leader_id=1, member_ids={1, 2}, anchor=(0, 0), dissolution_tick=4)
+    entities = {1: _member(1, None, 1.0), 2: _member(2, None, 2.0), 3: _member(3, None, 3.0)}
+    state = AuthoritativeState(tick=5, seed=1, entities=entities, groups={holder.id: holder})
+    intruder = GroupRecord(id=10000, leader_id=1, member_ids={1, 3}, anchor=(0, 0))  # member 1 is also listed by the dissolved holder
+    new = ApplyPath.apply_generation(state, StateUpdate(groups_add=[intruder], entity_updates={
+        m: EntityUpdate(entity_id=m, group_id_set=10000) for m in (1, 3)}))
+    assert new.groups[10000] == holder
+    assert [new.entities[m].identity.group_id for m in (1, 2, 3)] == [None, None, None]
+
+
+def test_the_same_tick_winner_of_an_id_keeps_its_members_write_when_a_duplicate_is_rejected():
+    win = GroupRecord(id=10000, leader_id=1, member_ids={1, 2}, anchor=(0, 0))
+    dup = GroupRecord(id=10000, leader_id=2, member_ids={2, 3}, anchor=(0, 0))
+    state = AuthoritativeState(tick=5, seed=1, entities={i: _member(i, None, float(i)) for i in (1, 2, 3)})
+    new = ApplyPath.apply_generation(state, StateUpdate(groups_add=[win, dup], entity_updates={
+        m: EntityUpdate(entity_id=m, group_id_set=10000) for m in (1, 2, 3)}))
+    assert new.groups[10000].member_ids == {1, 2}
+    assert [new.entities[m].identity.group_id for m in (1, 2, 3)] == [10000, 10000, None]
+
+
+def test_a_rejected_squad_add_does_not_replace_the_holder_through_the_election_pass():
+    """The election and defection views must not let a taken-id add shadow the holder: the election row built from the add would be upserted as
+    an update and replace it. A dissolved holder is not touched by update_groups, so nothing else masks the shadow."""
+    holder = GroupRecord(id=10004, leader_id=11, member_ids={11, 12}, anchor=(0, 0), dissolution_tick=50)
+    entities = {i: _member(i, None, float(i)) for i in (11, 12)}
+    state = AuthoritativeState(tick=100, seed=1, entities=entities, groups={holder.id: holder})
+    squad = GroupRecord(id=10004, leader_id=8, member_ids={8, 9}, anchor=(0, 0), roles={8: "FACTION_SQUAD", 9: "FACTION_SQUAD"})
+    phased = GroupPhase.resolve(state, StateUpdate(groups_add=[squad]))
+    assert phased.groups_add_or_update == []  # no election copy of the rejected squad rides as an update
+    new = ApplyPath.apply_generation(state, phased)
+    assert new.groups[10004] == holder
+    assert new.rejection_registry[GROUP_ADD_ID_TAKEN] == 1

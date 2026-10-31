@@ -1500,11 +1500,11 @@ class AuthoritativeState:
         object.__setattr__(self, "entities", _readonly_mapping(self.entities))
         has_hostile = False
         has_contracts = False
-        # A state built with groups but without a counter (older data) seeds it past the highest
+        # Seed only when the counter is absent (older data / a hand-built state): past the highest
         # non-squad id; squads carry hash ids and are recognised by role for this seed only.
-        seed_gid = seeded_next_group_id(self.groups)
-        if self.next_group_id < seed_gid:
-            object.__setattr__(self, "next_group_id", seed_gid)
+        # A state that carries a counter keeps it, whatever the roles in `groups` later become.
+        if self.next_group_id is None:
+            object.__setattr__(self, "next_group_id", seeded_next_group_id(self.groups))
         if self.entities:
             int_e_keys = [k for k in self.entities.keys() if isinstance(k, int)]
             if int_e_keys and self.next_entity_id <= max(int_e_keys):
@@ -1553,7 +1553,7 @@ class AuthoritativeState:
     # Group id counter (TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP): only rises; decision
     # code reads it, ApplyPath advances it from StateUpdate.next_group_id_set. Squad records (hash
     # ids, FACTION_SQUAD role) never advance it.
-    next_group_id: int = 10000
+    next_group_id: Optional[int] = None  # None = absent (older data / hand-built state): seeded once in __post_init__
     next_item_instance_id: int = 1
 
     def to_readonly(self) -> AuthoritativeState:

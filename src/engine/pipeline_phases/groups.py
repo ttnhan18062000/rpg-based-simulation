@@ -59,6 +59,15 @@ class GroupPhase:
         id_sets = [v for v in (update.next_group_id_set, group_update.next_group_id_set) if v is not None]
         new_next_group_id = max(id_sets) if id_sets else None
 
+        # An add whose id is already taken (in the store, or by an earlier add) is rejected at apply; it must not shadow the holder in the
+        # election and defection views below, or a changed copy of it would be written as an update and replace the holder.
+        seen_add_ids = set(state.groups)
+        viewable_adds = []
+        for g in new_groups_added:
+            if g.id not in seen_add_ids:
+                seen_add_ids.add(g.id)
+                viewable_adds.append(g)
+
         # Merge group removals
         new_groups_remove = list(
             set(list(update.groups_remove) + list(group_update.groups_remove))
@@ -70,7 +79,7 @@ class GroupPhase:
         tick = state.tick
 
         # Build a combined view: groups already in state PLUS groups being added/updated
-        groups_being_updated = {g.id: g for g in new_groups_added}
+        groups_being_updated = {g.id: g for g in viewable_adds}
         groups_being_updated.update({g.id: g for g in new_groups_add})
         all_relevant_group_ids = (
             set(state.groups.keys()) | set(groups_being_updated.keys())
@@ -116,7 +125,7 @@ class GroupPhase:
         # --- E41D: Defection pass ---
         # Re-build the combined group view after the leadership pass has potentially
         # updated groups in new_groups_add.
-        groups_being_updated = {g.id: g for g in new_groups_added}
+        groups_being_updated = {g.id: g for g in viewable_adds}
         groups_being_updated.update({g.id: g for g in new_groups_add})
 
         # Merge side-effect entity updates from group logic (e.g. leadership changes)
