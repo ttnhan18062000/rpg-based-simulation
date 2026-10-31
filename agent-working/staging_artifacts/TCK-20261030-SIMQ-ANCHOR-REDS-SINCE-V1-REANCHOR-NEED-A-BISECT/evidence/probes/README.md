@@ -45,6 +45,8 @@ The first state difference follows the first score difference by one tick in P2,
 One table per probe (`P*_pillars.md`; scored events from `quality_scores.jsonl` with event_id excluded; the event_count columns are the pillar's own counts). Small-sample sensitivity the designer should see: P1 ECONOMY moves +0.107 (0.497 to 0.604) on 26 versus 25 scored events; P1 COMBAT 27 versus 26. Counts, P1 / P2 / P3 / P4 files: `P1_pillars.md`, `P2_pillars.md`, `P3_pillars.md`, `P4_pillars.md`.
 
 ## P3 status flips
+The faction trace (`probe3.py`, the two P3f runs) was run outside the slot go; its results serve ruling 4 if rpg-planner accepts them.
+
 `P3_status_flips.txt`: FACTION no-data (3 events to 0): pair tension between bandit_company and town_council never passes 0.4 at d914bace7 (0.31 at most; 31 hostile bond updates against 51), so there is no NEUTRAL-to-TENSE transition and no stagnant event; the two bond-update streams first differ at t171 (entity 18 acts in the parent, which kills it at t172). COGNITION from no-data (2 to 22 events): 20 `decision_divergence_detected` events for entity 6, t275-294, which fires with a harvesting project and a danger concern 0.8; entity 6 differs from t180 (group 10009), and no `retreat_pull` call touches it. The intermediate links are not individually traced (stated in the file). Whether FACTION's no-data fails evaluate_simq's grade check: it does (REGRESS at s42 500t, 1000t and 2000t at d914bace7, see the sweep README); the anchor is not moved to make that pass; it goes to the designer.
 
 ## Prefix check, from the sweep's own run directories (no re-run)
