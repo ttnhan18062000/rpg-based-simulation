@@ -18,7 +18,7 @@ from src.engine.apply_plan import ApplyPlanBuilder
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.observability.event_extractor import EventExtractor
-X = dict(mirror=dict(ticks=0, predicted=0, actual=0, pred_not_actual=[], actual_not_pred=[]), dis_other=[], coop=dict(calls=0, statuses={}, dissolved=0), pool=[], dis=[], initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
+X = dict(growth={}, policy=dict(changes=[], ticks={}, last=None), mirror=dict(ticks=0, predicted=0, actual=0, pred_not_actual=[], actual_not_pred=[]), dis_other=[], coop=dict(calls=0, statuses={}, dissolved=0), pool=[], dis=[], initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
 def touch(name, n):
     t = X["touch"].setdefault(name, [0, 0]); t[0] += 1; t[1] += n
 ou = GroupSystem.update_groups
@@ -47,18 +47,19 @@ def _reasons(state, cu, grp):
         if not _alive(state, cu, m) or not _active(state, cu, m): out.append("member_dead_or_inactive"); continue
         mp = _pos(state, cu, m); dx = mp[0] - grp.anchor[0]; dy = mp[1] - grp.anchor[1]
         dist = dx * dx + dy * dy > (grp.cohesion_radius * 2) ** 2
-        cinv = False
+        cinv = None
         if grp.contract_id and ldr:
             c = None
             if cu is not None and grp.leader_id in cu.entity_updates:
                 lu = cu.entity_updates[grp.leader_id]
                 if lu.strategic: c = next((x for x in lu.strategic.contracts_add_or_update if x.id == grp.contract_id), None)
             if not c: c = ldr.strategic.contracts.get(grp.contract_id)
-            if not c or c.status != ContractStatus.ACTIVE: cinv = True
-            elif c.expiry_tick != -1 and state.tick > c.expiry_tick: cinv = True
-        if dist and cinv: out.append("member_distance_and_contract")
+            if not c: cinv = "missing"
+            elif c.status != ContractStatus.ACTIVE: cinv = "not_active:" + str(getattr(c.status, "value", c.status))
+            elif c.expiry_tick != -1 and state.tick > c.expiry_tick: cinv = "expired"
+        if dist and cinv: out.append("member_distance_and_contract_" + cinv)
         elif dist: out.append("member_distance")
-        elif cinv: out.append("member_contract_invalid")
+        elif cinv: out.append("member_contract_" + cinv)
         else: kept += 1
     return out if kept < 2 and out else (["l170_fewer_than_2_members_no_cause_found"] if kept < 2 else [])
 def ug(state, *a, **k):
@@ -77,7 +78,10 @@ def ug(state, *a, **k):
     _w = P.S["work_relevant"]; rel = _d.get_relevant_group_ids(state, cu); P.S["work_relevant"] = _w
     pred = {gid for gid in rel if gid in state.groups and state.groups[gid].dissolution_tick is None and _reasons(state, cu, state.groups[gid])}
     r = ou(state, *a, **k)
-    for g in P.CUR["form"]: X["forms"].append([state.tick, g.id, sorted(g.member_ids)])
+    for g in P.CUR["form"]:
+        X["forms"].append([state.tick, g.id, sorted(g.member_ids)])
+        ld = state.entities.get(g.leader_id); c = ld.strategic.contracts.get(g.contract_id) if (ld is not None and g.contract_id) else None
+        X.setdefault("form_contract", []).append([state.tick, g.id, g.contract_id, None if c is None else str(getattr(c.status, "value", c.status)), None if c is None else c.expiry_tick, None if c is None else (c.expiry_tick != -1 and state.tick > c.expiry_tick)])
     act = {row.id for row in r.groups_add_or_update if row.dissolution_tick is not None and state.groups.get(row.id) is not None and state.groups[row.id].dissolution_tick is None and row.dissolution_tick == state.tick}
     mi = X["mirror"]; mi["ticks"] += 1; mi["predicted"] += len(pred); mi["actual"] += len(act)
     for gid in sorted(pred - act):
@@ -99,10 +103,32 @@ def ag(prior, update, *a, **k):
     init = set(X["initial_ids"])
     for i in new.entities:
         if i not in init and i not in X["born"]: X["born"][i] = new.tick
+    if new.tick in GROWTH_TICKS: X["growth"][str(new.tick)] = _growth(new)
     if new.tick % 250 == 0: X["alive"][str(new.tick)] = sum(1 for e in new.entities.values() if e.combat.alive)
     X["alive"]["last"] = [new.tick, sum(1 for e in new.entities.values() if e.combat.alive)] if new.tick % 250 == 0 else X["alive"].get("last")
     return new
 ApplyPath.apply_generation = staticmethod(ag)
+import dataclasses as _dc
+GROWTH_TICKS = {int(x) for x in os.environ.get("GROWTH_TICKS", "500,1000,2000").split(",")}
+def _growth(state):
+    ents = [e for e in state.entities.values() if e.combat.alive]
+    out = dict(living=len(ents), canon_json_bytes={}, entries={}, named={})
+    for e in ents:
+        cd = e.to_canonical_dict()
+        for k, v in cd.items(): out["canon_json_bytes"][k] = out["canon_json_bytes"].get(k, 0) + len(json.dumps(v, default=str, sort_keys=True))
+        for comp in ("strategic", "social", "self_model", "cognition"):
+            c = getattr(e, comp, None)
+            if c is None or not _dc.is_dataclass(c): continue
+            for f in _dc.fields(c):
+                v = getattr(c, f.name, None)
+                if isinstance(v, (dict, list, tuple, set, frozenset)): out["entries"][comp + "." + f.name] = out["entries"].get(comp + "." + f.name, 0) + len(v)
+        for nm, v in (("strategic.contracts", e.strategic.contracts), ("social.trust_history", e.social.trust_history), ("social.grudge_history", e.social.grudge_history),
+                      ("social.fear_history", e.social.fear_history), ("social.familiarity_history", e.social.familiarity_history), ("social.salience_history", e.social.salience_history),
+                      ("social.bonds", e.social.bonds), ("social.betrayal_records", e.social.betrayal_records), ("strategic.turning_points", e.strategic.turning_points),
+                      ("strategic.beliefs", e.strategic.beliefs), ("strategic.source_trust", e.strategic.source_trust), ("strategic.hypotheses", e.strategic.hypotheses),
+                      ("strategic.committed_intentions", e.strategic.committed_intentions)):
+            out["named"][nm] = out["named"].get(nm, 0) + len(v)
+    return out
 ob = ApplyPlanBuilder.build_plan
 def bp(prior, update, *a, **k):
     touch("build_plan", len(prior.groups))
@@ -153,13 +179,24 @@ def _co(state, update, *a, **k):
         if row.dissolution_tick is not None and old is not None and old.dissolution_tick is None: X["coop"]["dissolved"] += 1
     return res
 CooperationPhase.execute = staticmethod(_co)
+from src.engine.kernel import Kernel as _K
+_otk2 = _K.tick_once
+def _tk2(self, *a, **k):
+    r = _otk2(self, *a, **k)
+    pol = getattr(self, "_current_policy", None)
+    cur = [getattr(pol, "replay_richness", None), getattr(pol, "replay_allowed", None), getattr(pol, "name", None) or str(getattr(self, "_current_mode", None))]
+    t = X["policy"]["ticks"]; key = "/".join(str(x) for x in cur); t[key] = t.get(key, 0) + 1
+    if X["policy"]["last"] != cur:
+        X["policy"]["changes"].append([getattr(self._state, "tick", None), X["policy"]["last"], cur]); X["policy"]["last"] = cur
+    return r
+_K.tick_once = _tk2
 world, seed, ticks = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 from tools.calibrate_simq import _load_profile_feature_flags, _resolve_profile, _run_engine
 flags = _load_profile_feature_flags(_resolve_profile(world))
 NOPROF = bool(os.environ.get("NOPROF"))
 pr = cProfile.Profile()
 if not NOPROF: pr.enable()
-run_dir, elapsed, run_id = _run_engine(world, seed, ticks, extra_flags=flags, audit_mode=True)
+run_dir, elapsed, run_id = _run_engine(world, seed, ticks, extra_flags=flags, audit_mode=(os.environ.get("AUDIT", "1") != "0"))
 if not NOPROF: pr.disable()
 prefix = os.environ.get("PROF_OUT", "")
 if not NOPROF: pr.dump_stats(prefix + ".prof")
@@ -176,5 +213,5 @@ sites = sorted([r for r in rows if any(s in r["file"].replace("\\", "/") for s i
 m = json.load(open(os.path.join(run_dir, "run_manifest.json")))
 out = {"k": "profile", "world": world, "seed": seed, "ticks": ticks, "state_hash": m["state_hash"], "elapsed": elapsed, "top_cum": top, "phases": phases, "sites": sites,
        "touch": X["touch"], "copies": X["copies"], "copied_records": X["copied_records"], "events": X["events"], "alive": X["alive"],
-       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "mirror": X["mirror"], "dis_other": X["dis_other"], "coop": X["coop"], "pool": X["pool"], "dissolutions": X["dis"], "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
+       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "growth": X["growth"], "form_contract": X.get("form_contract", []), "policy": X["policy"], "audit_mode": os.environ.get("AUDIT", "1") != "0", "mirror": X["mirror"], "dis_other": X["dis_other"], "coop": X["coop"], "pool": X["pool"], "dissolutions": X["dis"], "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
 with open(os.environ["PROBE_OUT"], "w") as fh: fh.write(json.dumps(out, default=str, separators=(",", ":")) + "\n")

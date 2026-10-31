@@ -49,3 +49,24 @@ for lab, d in (("base", b), ("branch", r)):
             fw = sum(1 for f in forms if t0 <= f[0] <= t1)
             print(f"    t{t0}-{t1}: pool {sum(x[1] for x in seg)/len(seg):.1f} grouped {sum(x[2] for x in seg)/len(seg):.1f} ghost {sum(x[3] for x in seg)/len(seg):.2f} formations {fw}")
         print(f"    totals: pool-ticks {sum(x[1] for x in pool)}, ghost-ticks {sum(x[3] for x in pool)} (entity-ticks excluded from the pool by a ghost group_id)")
+
+# ---- additions: contract-invalid split, formation-time contract facts, per-entity growth, policy ----
+for lab, d in (("base", b), ("branch", r)):
+    print(f"\n=== {lab}: audit_mode {d.get('audit_mode')} policy ticks {d.get('policy', {}).get('ticks')} policy changes {d.get('policy', {}).get('changes')}")
+    why = collections.Counter(tuple(x[4]) for x in d["dissolutions"])
+    print("  end reasons (all dissolutions):", dict(why))
+    fc = d.get("form_contract", [])
+    st = collections.Counter((x[3], x[5]) for x in fc)
+    print(f"  at formation ({len(fc)} groups): (contract status, already past expiry_tick) counts {dict(st)}; contract missing at formation {sum(1 for x in fc if x[3] is None)}")
+    exp = [x[4] for x in fc if x[4] is not None]
+    print(f"  expiry_tick values at formation: -1 (none) {sum(1 for e in exp if e == -1)}, finite {sum(1 for e in exp if e != -1)}")
+ga, gb = b.get("growth", {}), r.get("growth", {})
+for t in sorted(set(ga) | set(gb), key=int):
+    xa, xb = ga.get(t), gb.get(t)
+    if not xa or not xb: continue
+    print(f"\n=== per-entity growth at t{t}: living base {xa['living']} branch {xb['living']}")
+    for nm in sorted(set(xa["named"]) | set(xb["named"])): print(f"  named {nm}: base {xa['named'].get(nm, 0)} branch {xb['named'].get(nm, 0)}")
+    ent = sorted(set(xa["entries"]) | set(xb["entries"]), key=lambda k: -(xb["entries"].get(k, 0) - xa["entries"].get(k, 0)))[:12]
+    for k in ent: print(f"  entries {k}: base {xa['entries'].get(k, 0)} branch {xb['entries'].get(k, 0)}")
+    for k in sorted(set(xa["canon_json_bytes"]) | set(xb["canon_json_bytes"]), key=lambda k: -(xb["canon_json_bytes"].get(k, 0) - xa["canon_json_bytes"].get(k, 0)))[:8]:
+        print(f"  canonical json bytes {k}: base {xa['canon_json_bytes'].get(k, 0)} branch {xb['canon_json_bytes'].get(k, 0)}")
