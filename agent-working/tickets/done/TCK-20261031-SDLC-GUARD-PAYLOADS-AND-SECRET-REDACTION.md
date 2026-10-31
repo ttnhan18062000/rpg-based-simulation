@@ -110,6 +110,7 @@ Search of `tests/` for shapes pinned to settings.json: `test_settings_json_hooks
 
 ## Test Summary
 Full `tests/tools` at `f5b9469fe` (lead-planner slot, `-n 2`, cores 4-5, 3G cap, 21:07-21:14, 6 min 42 s): 5430 passed, 56 skipped, 1 xfailed, 1 failed. The failure was `test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`: the registry was stale until the two tickets of this batch were closed and `docs/REGISTRY.yaml` regenerated; after the close and regeneration, `test_generate_registry.py` and `tests/docs` were rerun: 160 passed, 2 skipped, 1 xfailed. `tests/docs` at the same commit: 91 passed, 2 skipped, 1 xfailed.
+After the planner's classifier review (wrappers `sudo`/`stdbuf`/`watch`, subshell and brace grouping, `gh -R/--repo`) and the sync with origin/main `67c54f794`, at `566492e50`: the guard payload, session guard and classify tests, `test_secret_redact`, `test_config_change_warning`, the settings-wiring and capability-envelope tests, `test_generate_registry` and `tests/docs` together: 622 passed, 3 skipped, 1 xfailed in 20 s (`-n 1`, cores 4-5, lead-planner's release). CI runs the full Tools lanes on the PR.
 Scoped runs during the work: the guard payload, classify and redaction tests, and the ConfigChange, settings-wiring and capability-envelope tests (33 passed, 1 skipped before the session-id change; 14 passed in `test_config_change_warning.py` after it).
 Live test of the ConfigChange hook by the owner: see Implementation Notes.
 
