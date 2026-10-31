@@ -3,9 +3,10 @@ from typing import Tuple
 from src.ai.goals.base import GoalScorer, GoalScore, NeedAccess
 from src.ai.goals.opening_steps import first_open_step
 from src.core.items import food_hunger_recovery
-from src.engine.appraisal import can_eat_item, can_use_inn_meal
+from src.engine.appraisal import can_eat_item
+from src.engine.service_admission import admits
 from src.ai.goals.ways import inn_in_reach
-from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull
+from src.engine.need_pull import hunger_pull, retreat_pull, sleep_pull, step_travel_tiles
 from src.engine.sleep_debt import SLEEP_DEBT
 from src.engine.starvation import STARVING_LINE
 from src.engine.way_in_range import way_in_range
@@ -93,6 +94,8 @@ class SleepScorer(GoalScorer):
         from src.engine.spatial_query import SpatialQueryService
         best_bldg = SpatialQueryService.nearest_building(state, entity.navigation.position, "inn")
         # A bed is a way only within reach and inside the subject's range; otherwise it rests where it stands (no target), which is always open.
+        if best_bldg and not admits(entity, "REST"):
+            best_bldg = None  # a bed the inn would not deliver to this subject (the payment law) is not a way
         if best_bldg and (_travel_tiles(entity, best_bldg.position) > SLEEP_DEBT.bed_reach or not way_in_range(entity, best_bldg.position)):
             best_bldg = None
         # SURV-07: the pull grows with the sleep debt the subject will have on arrival at the inn (no inn: no walk).
@@ -109,7 +112,9 @@ def _hunger_without_open_way(entity: EntityState, state: AuthoritativeState, uti
     step = first_open_step(entity, state)
     if step is None or step.target_pos is None:
         return GoalScore(kind=GoalKind.HUNGER, utility=utility, need_access=access, no_open_step=True)
-    pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], _travel_tiles(entity, step.target_pos))
+    # Standing Needs Escalate over the whole step: the walk to it, what is spent at it (a shift) and the walk on to the meal it is for (one sum, need_pull).
+    travel = step_travel_tiles(entity.navigation.position, step.target_pos, step.ticks_at_target, step.onward_pos)
+    pull = hunger_pull(utility, entity.biological.hunger, need_rates(entity)[0], travel)
     return GoalScore(
         kind=GoalKind.HUNGER, utility=_hunger_escalated_unless_threatened(entity, state, utility, pull), target_id=step.target_id,
         target_pos=step.target_pos, target_entity_id=step.target_entity_id, need_access=access, opening_step=step.kind)
@@ -128,7 +133,7 @@ class EatScorer(GoalScorer):
         # Decision 27: with no inn within reach there is nothing for the pull to point at, so it goes to the step that opens a way
         # (forage); with no step the goal keeps the hunger value and says `no_open_step`. (Free meals stay on: an inn within reach is a
         # way to eat whether or not the subject can pay, for every kind, a recorded flaw until the animals' own ways exist: owner decision 44.)
-        if best_bldg is None or not can_use_inn_meal(entity):  # decision 44: a diet without prepared food has no inn meal
+        if best_bldg is None or not admits(entity, "EAT"):  # the one admission rule: diet (decision 44) and the payment law
             return _hunger_without_open_way(entity, state, utility, NeedAccess.NO_WAY_WITHIN_REACH)
         # SURV-07: the pull grows with the hunger the subject will have on arrival at the inn.
         rate = need_rates(entity)[0]

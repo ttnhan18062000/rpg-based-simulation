@@ -17,10 +17,8 @@ from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
 from src.core.skills import SKILL_REGISTRY
 from src.engine.rpg_depth import WoundService
 from src.cognition.common_knowledge import combat_capability_against
-from src.content_semantics.faction import are_entities_hostile
-from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
-from src.engine.tactical_threat import hostile_acts_on, safety_retreat_warranted
+from src.engine.tactical_threat import hostile_acts_on, perceived_threats, safety_retreat_warranted
 from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
@@ -90,19 +88,6 @@ def _target_still_perceived(entity: "EntityState", target: "EntityState") -> boo
         return bool(get_perception_gate().can_perceive(entity, get_entity_signals(target), {"distance": float(dist)}).perceived)
     except (AttributeError, KeyError, TypeError, ValueError, RuntimeError):
         return True  # gate failure: permissive, as the hostile list does
-
-
-def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
-    """Perceived LIVING neighbors the entity's appraisal counts as hostile (same predicate as
-    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw. A dead body is in the neighbour view but is not a threat."""
-    sx, sy = entity.navigation.position
-    return [
-        n for n in neighbors
-        if n.combat.alive and are_entities_hostile(entity, n, RelationContext(
-            distance=abs(n.navigation.position[0] - sx) + abs(n.navigation.position[1] - sy),
-            combat_engaged=True,
-        ))
-    ]
 
 
 def _panic_holds(entity: "EntityState", threats: List["EntityState"], tick: int) -> bool:
@@ -212,7 +197,7 @@ class TacticalDecisionSystem:
             social_context=entity.social
         )
         
-        threats = _perceived_threats(entity, neighbors)
+        threats = perceived_threats(entity, neighbors)
         panic_destination = retreat_destination(state, entity, threats) if (emotion.is_fleeing and threats) else None
         # A flight with no destination is not flight (designer ruling, V3): a panic that resolves to the subject's own tile is not taken, and the tick
         # falls through the existing order (in-place survival, then the arrival at a building). A real tactical hostile keeps the old freeze, so the

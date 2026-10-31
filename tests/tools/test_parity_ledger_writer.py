@@ -593,3 +593,107 @@ class TestEntryLocalWrites:
         a2 = {**a, "v2_evidence": "changed"}
         write_entry("substrate.yaml", a2, ledger_dir=ledger_dir, db_path=tmp_path / "p.db")
         assert yaml.safe_load((ledger_dir / "substrate.yaml").read_text()) == [a2]
+
+
+class TestFieldLevelSplice:
+    """`_splice_entry` keeps the bytes of every top-level key whose value did not change."""
+
+    NOTE = (
+        "A long hand-wrapped note that yaml.safe_dump would fold differently, so a re-dump of this\n"
+        "    field changes its bytes even though the parsed value is the same."
+    )
+    FIRST = (
+        "- id: PROG-124\n"
+        "  text: first entry\n"
+        "  status: verified\n"
+    )
+    TARGET = (
+        "- id: PROG-125\n"
+        "  text: \"quoted text\"   # trailing comment stays with its key\n"
+        "  status: divergent\n"
+        "  v2_evidence: old.py\n"
+        "  divergence_note: >-\n"
+        "    A long hand-wrapped note that yaml.safe_dump would fold differently, so a re-dump of this\n"
+        "    field changes its bytes even though the parsed value is the same.\n"
+        "  tags:\n"
+        "  - a\n"
+        "  - b\n"
+    )
+    LAST = (
+        "# gap comment\n"
+        "- id: PROG-126\n"
+        "  text: last entry\n"
+    )
+
+    def _splice(self, doc, entry_id, **changes):
+        text = doc
+        entries = yaml.safe_load(text)
+        old = next(e for e in entries if e["id"] == entry_id)
+        new = {**old, **changes}
+        for key in [k for k, v in changes.items() if v is plw_DROP]:
+            new.pop(key)
+        return plw._splice_entry(text, entries, new), new
+
+    def test_editing_one_field_leaves_every_other_line_byte_identical(self):
+        text = self.FIRST + self.TARGET + self.LAST
+        after, new = self._splice(text, "PROG-125", v2_evidence="new.py")
+        diff = [l for l in difflib.ndiff(text.splitlines(), after.splitlines()) if l[0] in "+-"]
+        assert diff == ["- " + "  v2_evidence: old.py", "+ " + "  v2_evidence: new.py"]
+        assert yaml.safe_load(after)[1] == new
+
+    def test_value_preserving_rewrite_of_one_field_changes_only_that_field(self):
+        text = self.FIRST + self.TARGET
+        entries = yaml.safe_load(text)
+        new = {**entries[1], "tags": ["a", "b"], "v2_evidence": "old.py "}
+        after = plw._splice_entry(text, entries, new)
+        changed = [l for l in difflib.ndiff(text.splitlines(), after.splitlines()) if l[0] in "+-"]
+        assert all("v2_evidence" in l for l in changed) and changed
+
+    def test_changing_the_long_note_redumps_that_field_only(self):
+        text = self.FIRST + self.TARGET + self.LAST
+        after, new = self._splice(text, "PROG-125", divergence_note="short now")
+        assert "  v2_evidence: old.py\n" in after and "quoted text\"   # trailing comment" in after
+        assert "hand-wrapped" not in after
+        assert yaml.safe_load(after)[1] == new
+
+    def test_add_a_key_appends_it_and_keeps_the_rest(self):
+        text = self.FIRST + self.TARGET
+        after, new = self._splice(text, "PROG-125", priority="P1")
+        assert after.startswith(text) and yaml.safe_load(after)[1] == new
+
+    def test_remove_a_key_drops_only_its_lines(self):
+        text = self.FIRST + self.TARGET
+        after, new = self._splice(text, "PROG-125", v2_evidence=plw_DROP)
+        assert after == text.replace("  v2_evidence: old.py\n", "")
+        assert yaml.safe_load(after)[1] == new
+
+    def test_removing_the_first_key_moves_the_dash_to_the_next_key(self):
+        text = self.TARGET
+        entries = yaml.safe_load(text)
+        new = {k: v for k, v in entries[0].items() if k != "id"}
+        # removing `id` breaks upsert-by-id, so exercise the helper directly
+        block = plw._field_splice_block(text.splitlines(keepends=True), entries[0], new)
+        assert block[0].startswith("- text:") and yaml.safe_load("".join(block)) == [new]
+
+    def test_first_and_last_entries_and_gap_comments(self):
+        text = self.FIRST + self.TARGET + self.LAST
+        for entry_id in ("PROG-124", "PROG-126"):
+            after, new = self._splice(text, entry_id, text="edited")
+            assert sum(1 for a, b in zip(text.splitlines(), after.splitlines()) if a != b) == 1
+            assert "# gap comment" in after and yaml.safe_load(after)[[e["id"] for e in yaml.safe_load(text)].index(entry_id)] == new
+
+    def test_entry_followed_by_blank_and_comment_lines(self):
+        text = self.TARGET + "\n# trailing comment\n"
+        after, _ = self._splice(text, "PROG-125", v2_evidence="new.py")
+        assert after.endswith("\n# trailing comment\n") and "divergence_note: >-" in after
+
+    def test_a_shape_the_field_splice_cannot_handle_falls_back_and_parses(self):
+        # a quoted scalar whose continuation line looks like a key defeats the segment split
+        text = "- id: X-1\n  note: \"first\n  fake: second\"\n  status: verified\n"
+        entries = yaml.safe_load(text)
+        new = {**entries[0], "status": "missing"}
+        after = plw._splice_entry(text, entries, new)
+        assert yaml.safe_load(after) == [new]
+
+
+plw_DROP = object()

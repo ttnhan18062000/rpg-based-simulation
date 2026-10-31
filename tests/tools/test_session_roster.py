@@ -94,17 +94,17 @@ def test_real_registry_validates():
     assert validate(REAL_ROOT) == []
 
 
-def test_real_registry_has_seventeen_seats_three_unstaffed():
+def test_real_registry_has_thirty_two_seats_two_unstaffed():
     # Changed from twelve seats / five unstaffed: on the owner's request of 2026-10-09
     # (TCK-20261009-REGISTER-OTHER-HOST-SEATS) the asset and perf planner/implementer seats were registered and the
     # codebase planner/implementer seats marked staffed; those sessions run on host ubuntu. Asset and perf have
     # no designer seat (their planners take dispatch from the user). lead-planner is the lead domain's only seat, and
     # no role accepts dispatch from it (owner: advisory and sequencing only).
     roster = load_roster(REAL_ROOT)
-    assert len(roster.roles) == 32  # +3 rpg -ubuntu twins (TCK-20261025-RPG-UBUNTU-SEATS); +4 architecture seats (#715); +5 host-suffixed -u24 twins (#620); agent-working-planner staffed, agent-working-designer unstaffed (owner 2026-10-18)
+    assert len(roster.roles) == 32  # +3 rpg -ubuntu twins (TCK-20261025-RPG-UBUNTU-SEATS); +4 architecture seats (#715); +5 host-suffixed -u24 twins (#620); agent-working-planner and agent-working-designer staffed (owner 2026-10-30)
     assert not any("lead-planner" in r.accepts_dispatch_from for r in roster.roles)
     assert {r.role for r in roster.roles if r.seat_status == "unstaffed"} == {
-        "agent-working-designer", "testing-designer", "codebase-designer",
+        "testing-designer", "codebase-designer",
     }
     assert {(r.domain, r.function) for r in roster.roles} == {
         (d, f) for d in ("rpg", "agent-working", "testing", "codebase") for f in ("designer", "planner", "implementer")
