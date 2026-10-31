@@ -104,7 +104,7 @@ Order:
 
 Count: 2 controls + at most 5 bisect + 2 mechanism = at most 9 runs. Wall time per run: not yet measured. The 500t sibling took 49 s, so 200t is estimated at 25 to 60 s plus checkout and import, about 1.5 to 2 min each; estimate 15 to 20 min for the whole plan. The first control run gives the real figure, and the estimate is replaced by it.
 Slot ask: one heavy slot of about 30 min, sequential, after the perf overnight window.
-This PR carries the known-red entry in `tools/test_architecture/slow_known_reds.yaml` (taken from rpg-planner-ubuntu's seat branch 1d3448c4d; the only diff against origin/main is that one entry). The PR body must name lead-planner-u24 as the testing-domain reviewer for that file (authorised by the u24 owner, #715 6519647030).
+This PR carries the known-red entry in `tools/test_architecture/slow_known_reds.yaml` (taken from rpg-planner-ubuntu's seat branch 1d3448c4d; the only diff against origin/main is that one entry). The PR body must name lead-planner-u24 as the testing-domain reviewer for that file (authorised by the u24 owner, #715 6519647030; reviewer named in #715 6520942711).
 Compensating control (AC6): at close, one more run on the then-current main.
 
 
@@ -126,6 +126,11 @@ Every run: world urban_political, seed 42, 200 ticks, PYTHONHASHSEED=0, audit_mo
 **Mechanism (urban_political seed 42, 200t, parent vs d914bace7):** the WORLD pillar counts `hazard_drain_applied` 17 to 12, `region_trauma_delta` 3 to 2, `ecology_cycle_completed` 3 to 3 (23 to 17). The run trajectories first differ at tick 84 (SOCIAL: entity 18 `contract_expired_offer`, `group_expelled` for entities 18 and 30). Entity 3 takes no hazard drain after tick 111 (5 fewer, parent last at 189). Entity 18 is killed at tick 172 in the parent and survives in d914bace7, so `entity_killed` 2 to 1, `combat_resolved` 3 to 2, and the tick-172 `bandit_road` trauma delta is gone. Other pillars move too: SOCIAL 2032 to 2080 events, COMBAT 14 to 12, ECONOMY 15 to 13, NARRATIVE 35 to 30, PROGRESSION 7 to 6, COGNITION 5623 to 5662. That reads as the intended behaviour change (a wounded entity now retreats earlier from an acting hostile, so fewer entities stay in hazard regions and fewer die), not noise: both arms ran under audit_mode and are repeatable (controls 1 and 7 give identical numbers at two different commits). The WORLD inputs behind 0.32 to 0.25 are the 6 lost events: 5 hazard drains and 1 trauma delta. The ruling re-anchor or fix is rpg-planner's.
 
 AC6 re-measure at close on the then-current main is still to do. Run data: the per-commit archives under `/data/vboxuser/Work/simq_bisect/<sha>/` (each holding its one run dir) are removed after this record; the `.out` files are kept.
+
+### Trace pair (run 2026-10-31, rpg-planner ruling 2 option b, ruling file in this ticket's staging dir)
+Full chain, probe and key rows: `agent-working/staging_artifacts/TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT/evidence/trace/chain.md`.
+- (i) Shown. At tick 42 entity 18's inputs are identical in a25619971 and d914bace7 except COMBAT_RETREAT: 84.5188 against 123.3988, because `CombatRetreatScorer.score` (`src/ai/goals/scorers.py:238-239`) calls `retreat_pull` (`src/engine/need_pull.py`) when `acting_threat_to` is true. 123.40 beats REGION_STABILIZATION (100) and 84.52 does not, so from tick 43 the target is (25,25) `combat_retreat` against (70,50) `stabilize`.
+- (ii) Shown to the first group-objective difference. t84: group 10006 (leader 18, members 18 and 30) dissolves in d914bace7 because 18 is about 20.5 tiles (distance squared 421) from 30, over the (2 x radius 5)^2 cohesion limit; in the parent 18 is about 5 tiles away. t123: the new (3,28) group takes id `10000 + len(state.groups) + len(groups_add_or_update)`, 10006 in the parent and 10007 in d914bace7, so the directive is `group_obj_10006_3` against `group_obj_10007_3` from t124. Not traced: whether entity 3's later position change (t148) follows from that id difference. The id formula can collide with a record dissolved in the same tick (both commits); not touched.
 
 ## Test Summary
 ## Files Changed

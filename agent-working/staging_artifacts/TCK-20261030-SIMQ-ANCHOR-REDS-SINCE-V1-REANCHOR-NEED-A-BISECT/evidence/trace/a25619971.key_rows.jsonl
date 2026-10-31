@@ -1,0 +1,20 @@
+{"k": "group_upd", "tick": 39, "gid": 10006, "leader": 26, "members": [23, 26], "dissolved": null, "n_state_groups": 3, "is_new": true}
+{"k": "e18_tick", "tick": 41, "pos": [82.0, 52.0], "target": [80.0, 45.0], "project": "", "proj_kind": null}
+{"k": "scores", "tick": 42, "e": 18, "pos": [82.0, 52.0], "hp": 20, "maxhp": 80, "nav": {"target": [80.0, 45.0], "path": null}, "scores": [["GoalKind.COMBAT_ENGAGE", 67.9277, "17"], ["GoalKind.COMBAT_RETREAT", 84.5188, "town_center"], ["GoalKind.FATIGUE", 2.1, null], ["GoalKind.GUILD", 25.0, "20000"], ["GoalKind.HARVESTING", 4.9076, "10003"], ["GoalKind.HUNGER", 2.1, null], ["GoalKind.OCCUPATION_CHANGE", 0.0, null], ["GoalKind.RECOVER", 60.0, "20006"], ["GoalKind.REGION_STABILIZATION", 100.0, "bandit_road"], ["GoalKind.RESOLVE_BLOCKER", 80.0, "block_no_partner_18_3"], ["GoalKind.SOCIAL", 10.0, null], ["GoalKind.SOCIAL_CONTRACT", 0.0, null], ["GoalKind.TOWN_RETURN", 54.6, "town_center"], ["GoalKind.ADVENTURE_ROUTE", 0.0, null]]}
+{"k": "e18_tick", "tick": 42, "pos": [82.0, 52.0], "target": [80.0, 45.0], "project": "", "proj_kind": null}
+{"k": "e18_tick", "tick": 43, "pos": [82.0, 52.0], "target": [70.0, 50.0], "project": "project_stabilize_bandit_road_t42", "proj_kind": "stabilize"}
+{"k": "e18_tick", "tick": 44, "pos": [82.0, 52.0], "target": [70.0, 50.0], "project": "project_stabilize_bandit_road_t42", "proj_kind": "stabilize"}
+{"k": "e18_tick", "tick": 52, "pos": [82.0, 52.0], "target": [70.0, 50.0], "project": "project_stabilize_bandit_road_t42", "proj_kind": "stabilize"}
+{"k": "g6_pos", "tick": 78, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 52.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 79, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 51.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 80, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 50.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 81, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 49.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 82, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 48.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 83, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 49.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 84, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 50.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 85, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 51.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "g6_pos", "tick": 86, "radius": 5.0, "members": [18, 30], "pos": {"18": [82.0, 52.0], "30": [83.0, 45.0]}, "alive": {"18": true, "30": true}, "leader": 18}
+{"k": "group_upd", "tick": 104, "gid": 10005, "leader": 19, "members": [12, 19], "dissolved": null, "n_state_groups": 4, "is_new": true}
+{"k": "group_upd", "tick": 105, "gid": 10005, "leader": 12, "members": [12, 19], "dissolved": 105, "n_state_groups": 5, "is_new": false}
+{"k": "group_upd", "tick": 123, "gid": 10006, "leader": 25, "members": [5, 25], "dissolved": 123, "n_state_groups": 5, "is_new": false}
+{"k": "done", "run_id": "urban_political_42_200_705325_64d57750", "run_dir": "data/runs/urban_political_42_200_705325_64d57750"}
