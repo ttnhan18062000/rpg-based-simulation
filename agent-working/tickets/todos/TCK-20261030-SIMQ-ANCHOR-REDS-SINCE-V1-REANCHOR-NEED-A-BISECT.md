@@ -139,6 +139,10 @@ Full chain, probe and key rows: `agent-working/staging_artifacts/TCK-20261030-SI
 ### PR note (2026-10-31, rpg-planner ruling)
 The pushed S2 backup `rpg-ubuntu-simq-anchor-bisect-impl` (7a86c6a36) contains a mistaken merge of origin/main (069ed8c91, whose subject names TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED). The pushed history is not rewritten. The PR for this ticket is cut at close from a fresh branch off origin/main, carrying only this ticket's content (ticket, staging evidence, the known-red entry), with no B subject.
 
+### Stale anchors and the freeze check (2026-10-31)
+- The 38 pillar anchors already outside tolerance at a25619971 are pre-existing reds, not #769's; 10 of them (urban_political seed456) also move under #769. Whatever ticket fixes the pre-existing reds must rebase them on values after #769 and after the groups fix, never on a25619971's (rpg-planner ruling 5). No re-anchor of any of them happens under this ticket. They are not all covered by a ticket or a slow_known_reds.yaml entry yet.
+- Freeze check from the existing sweep logs (`evidence/sweep/freeze_check.py`, output beside it): urban_political s42 at d914bace7 does not die out or stop producing events (alive 21 of 30 active in the last window of the 2000t run, about 2257 events per 100 ticks), but its kills, XP, combat and world-emergence events end by t452-552 (parent: t1809-1909) and its last resource_harvested is t298 (parent t473). Large behaviour change, not a threshold move; for rpg-planner to rule.
+
 ## Test Summary
 ## Files Changed
 ## Completion Summary
