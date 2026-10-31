@@ -7942,6 +7942,19 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-ADVENTURE-SCORER-LOADS-THE-COGNITION-PACKAGE-IN-OFF-MODE.md
+  ticket_id: TCK-20261031-ADVENTURE-SCORER-LOADS-THE-COGNITION-PACKAGE-IN-OFF-MODE
+  title: The adventure scorer loads the cognition observability package in an OFF-mode
+    process
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-31'
+  related_code_areas:
+  - src/ai/goals/adventure_scorer.py:10,184; src/observability/cognition/decision_trace_writer.py:50-61;
+    src/engine/kernel.py:252-272
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
   ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
   title: Append rpg-planner's binding note about the capacity trim's tie rule to the
