@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE
-phase: open
+phase: done
 date: 2026-10-31
 tags: [planning, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [planning, documentation]
 Apply lead-planner's review fixes to the AI-first SDLC plan and add an evidence section to its summary
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -80,7 +80,7 @@ Sweep figures: the evidence branch `rpg-ubuntu-simq-anchor-bisect-impl` still ex
 Summary growth: `wc -w` goes from 1,084 to 1,520 words (about 436, counting table markup; the draft estimated about 350).
 
 ## Test Summary
-TESTS_PENDING
+`tests/docs` at `f5b9469fe` (lead-planner slot): 91 passed, 2 skipped, 1 xfailed. The same full `tests/tools` run as the guard ticket (above) covers the registry tests: 5430 passed, 1 failed (registry drift, fixed by the regeneration at close; rerun recorded in the guard ticket).
 
 ## Files Changed
 - `docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`

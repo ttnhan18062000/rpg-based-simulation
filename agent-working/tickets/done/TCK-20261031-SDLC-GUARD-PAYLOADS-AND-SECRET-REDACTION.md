@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
-phase: open
+phase: done
 date: 2026-10-31
 tags: [ai, governance, security]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, security]
 The guard inspects interpreter payloads and asks on `gh api` writes and merges, and secret-shaped strings are redacted from tool rows and the transit export.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -107,7 +107,9 @@ Search of `tests/` for shapes pinned to settings.json: `test_settings_json_hooks
 - The implementer's session logged the same changes with its own `session_id` (and lagged on one: the skill change at 13:57:43), so every session in the worktree warns separately and duplicates are expected.
 
 ## Test Summary
-TESTS_PENDING
+Full `tests/tools` at `f5b9469fe` (lead-planner slot, `-n 2`, cores 4-5, 3G cap, 21:07-21:14, 6 min 42 s): 5430 passed, 56 skipped, 1 xfailed, 1 failed. The failure was `test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`: the registry was stale until the two tickets of this batch were closed and `docs/REGISTRY.yaml` regenerated; after the close and regeneration, `test_generate_registry.py` and `tests/docs` were rerun: 160 passed, 2 skipped, 1 xfailed. `tests/docs` at the same commit: 91 passed, 2 skipped, 1 xfailed.
+Scoped runs during the work: the guard payload, classify and redaction tests, and the ConfigChange, settings-wiring and capability-envelope tests (33 passed, 1 skipped before the session-id change; 14 passed in `test_config_change_warning.py` after it).
+Live test of the ConfigChange hook by the owner: see Implementation Notes.
 
 ## Files Changed
 - `tools/sessions/classify.py`, `tools/sessions/config_change_warning.py` (new); `tools/sessions/guard.py` is unchanged (it calls `classify.py`)

@@ -7994,6 +7994,26 @@
   - tracking
   - documentation
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION.md
+  ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
+  title: The guard inspects interpreter payloads and asks on `gh api` writes and merges,
+    and secret-shaped strings are redacted from tool rows and the transit export.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/sessions/guard.py, tools/sessions/classify.py
+  - tools/agent-monitoring/post_tool_hook.py, tools/handover_transit.py
+  - .claude/settings.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/test_plan.md
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
   ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
   title: The hand/batch path is recorded as the official delivery model, `owner_directed`
@@ -8030,6 +8050,19 @@
   - governance
   - delivery
   - planning
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE.md
+  ticket_id: TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE
+  title: Apply lead-planner's review fixes to the AI-first SDLC plan and add an evidence
+    section to its summary
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - planning
+  - documentation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
   ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
@@ -8111,23 +8144,6 @@
   - ai
   - governance
   - delivery
-- type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION.md
-  ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
-  title: The guard inspects interpreter payloads and asks on `gh api` writes and merges,
-    and secret-shaped strings are redacted from tool rows and the transit export.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-31'
-  related_code_areas:
-  - tools/sessions/guard.py, tools/sessions/classify.py
-  - tools/agent-monitoring/post_tool_hook.py, tools/handover_transit.py
-  - .claude/settings.json
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - security
 - type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL.md
   ticket_id: TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL
