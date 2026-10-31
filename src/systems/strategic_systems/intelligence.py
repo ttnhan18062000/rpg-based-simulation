@@ -925,7 +925,6 @@ class StrategicIntelligenceSystem:
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             strat_up = ent_upd.strategic or StrategicUpdate()
 
-            # first-seen merge in cap order: a later tie at the cap drops the higher id
             new_concerns = merge_concerns_in_cap_order(strat_up.concerns_add_or_update, concerns)
             
             # Law 194: Enforce Strategic Bandwidth for concerns
