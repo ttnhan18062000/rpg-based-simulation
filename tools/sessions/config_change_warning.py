@@ -19,7 +19,8 @@ What reaches whom (code.claude.com/docs/en/hooks.md, "ConfigChange decision cont
 Input (stdin JSON): `hook_event_name` "ConfigChange", `source` (user_settings, project_settings, local_settings,
 policy_settings or skills) and optionally `file_path`. Output: `{"terminalSequence": "..."}` on stdout, an OSC 9
 notification, an OSC 777 notification and a bell, all control characters stripped from the values put into them. Log:
-one JSON line per event in `<repo>/tmp/config_change.log` (gitignored): time, hook_event_name, source, file_path and the
+one JSON line per event in `<repo>/tmp/config_change.log` (gitignored): time, hook_event_name, source, file_path, session_id
+(an identifier, so a line can be tied to the session that saw the change; several sessions in one worktree each log) and the
 sorted top-level key names of the event, nothing else from it. The log and the notification fail independently. Always
 exits 0 and never blocks (fail open: an advisory must never break a session).
 
@@ -61,6 +62,7 @@ def log_line(payload: dict, now: datetime | None = None) -> str:
             "hook_event_name": _clean(payload.get("hook_event_name"), "", 40),
             "source": _clean(payload.get("source"), "", 40),
             "file_path": _clean(payload.get("file_path"), "", 300),
+            "session_id": _clean(payload.get("session_id"), "", 80),
             "keys": sorted(_clean(key, "?", 60) for key in payload),
         },
         sort_keys=True,

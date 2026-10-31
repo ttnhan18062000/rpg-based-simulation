@@ -44,14 +44,15 @@ def test_control_characters_in_the_event_never_reach_the_sequence(tmp_path):
     assert seq.count("\x1b") == 2 and seq.count(";") == 4  # OSC 9 has one separator, OSC 777 has three
 
 
-def test_one_log_line_holds_only_time_event_source_path_and_sorted_key_names(tmp_path):
+def test_one_log_line_holds_only_time_event_source_path_session_id_and_sorted_key_names(tmp_path):
     log = tmp_path / "sub" / "c.log"
     _run(json.dumps({**_EVENT, "secret_value": "hunter2"}), log)
     _run(json.dumps(_EVENT), log)
     lines = log.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     row = json.loads(lines[0])
-    assert set(row) == {"time", "hook_event_name", "source", "file_path", "keys"}
+    assert set(row) == {"time", "hook_event_name", "source", "file_path", "session_id", "keys"}
+    assert row["session_id"] == "s"
     assert row["source"] == "project_settings" and row["file_path"] == ".claude/settings.json"
     assert row["keys"] == sorted(row["keys"]) and "secret_value" in row["keys"]
     assert "hunter2" not in lines[0]
