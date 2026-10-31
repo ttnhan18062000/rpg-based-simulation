@@ -1939,6 +1939,7 @@ mechanisms:
         is the INTENDED design (opportunistic enforcement) or a real gap (should be unconditional)
         is a design question, not settled here -- see
         `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`.
+        **Note, added 2026-10-31 (TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED, divergence 2.144, Stabilized):** when concerns tie at the capacity trim, the kept set is ordered by (urgency desc, concern id) with ids compared as strings, so the trim no longer follows the process hash seed. The id key exists for determinism only and carries no meaning about which concern matters more.
 
   # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
 
