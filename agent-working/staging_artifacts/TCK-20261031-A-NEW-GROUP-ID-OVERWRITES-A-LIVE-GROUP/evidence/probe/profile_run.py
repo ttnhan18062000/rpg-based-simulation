@@ -117,17 +117,20 @@ EventExtractor.extract = staticmethod(ex)
 world, seed, ticks = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 from tools.calibrate_simq import _load_profile_feature_flags, _resolve_profile, _run_engine
 flags = _load_profile_feature_flags(_resolve_profile(world))
-pr = cProfile.Profile(); pr.enable()
+NOPROF = bool(os.environ.get("NOPROF"))
+pr = cProfile.Profile()
+if not NOPROF: pr.enable()
 run_dir, elapsed, run_id = _run_engine(world, seed, ticks, extra_flags=flags, audit_mode=True)
-pr.disable()
-prefix = os.environ["PROF_OUT"]; pr.dump_stats(prefix + ".prof")
-ps = pstats.Stats(pr)
+if not NOPROF: pr.disable()
+prefix = os.environ.get("PROF_OUT", "")
+if not NOPROF: pr.dump_stats(prefix + ".prof")
+ps = pstats.Stats(pr) if not NOPROF else None
 SITES = ("replay/fingerprint.py", "engine/checkpoint.py", "engine/executor.py", "core/dirty.py", "engine/apply_plan.py", "engine/apply.py",
          "world_systems/groups.py", "pipeline_phases/groups.py", "cooperation/phase.py")
 def rec(k, v):
     cc, nc, tt, ct = v[0], v[1], v[2], v[3]
     return {"file": k[0], "line": k[1], "func": k[2], "calls": nc, "own_s": round(tt, 4), "cum_s": round(ct, 4), "cum_per_call_us": round(ct / max(nc, 1) * 1e6, 2)}
-rows = [rec(k, v) for k, v in ps.stats.items()]
+rows = [rec(k, v) for k, v in ps.stats.items()] if ps else []
 top = sorted(rows, key=lambda r: -r["cum_s"])[:40]
 phases = sorted([r for r in rows if "phase" in r["func"].lower() or r["func"] in ("tick_once", "execute", "resolve", "apply_generation", "build_plan")], key=lambda r: -r["cum_s"])[:40]
 sites = sorted([r for r in rows if any(s in r["file"].replace("\\", "/") for s in SITES)], key=lambda r: -r["cum_s"])[:80]
