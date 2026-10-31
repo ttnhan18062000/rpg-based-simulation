@@ -5760,6 +5760,82 @@
   - determinism
   - engine
 - type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_AUDIT.md
+  title: AI-First SDLC — Architecture Discovery and Audit
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md
+  title: 'AI-First SDLC: Architecture Evolution Plan'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md
+  title: 'AI-First SDLC: Decision Summary and Evidence Refresh'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - audit
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/HANDOVER_SDLC_EVOLUTION_TO_UBUNTU.md
+  title: 'Handover: AI-first SDLC evolution work, from agent-working-designer-u24
+    to ubuntu''s agent-working-designer'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/SDLC_BASELINES_FROZEN.md
+  title: 'AI-First SDLC: Frozen Baselines'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/SDLC_DECISION_RECORD.md
+  title: 'AI-First SDLC: Decision Record'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/agent_infrastructure/agent_working_direction.md
   title: Agent-Working Direction — Observable, Self-Diagnosing, Adaptable Delivery
   status: active
@@ -5843,6 +5919,17 @@
   - governance
   - security
   - mcp
+- type: doc
+  path: docs/plans/agent_infrastructure/plans_tracking.md
+  title: Plans Tracking — Quick Overview
+  status: active
+  layer: architecture
+  authority: P2
+  audience: developer
+  tags:
+  - planning
+  - tracking
+  - documentation
 - type: doc
   path: docs/plans/agent_infrastructure/session_layer_working_process.md
   title: Session-Layer Working Process — Roles, Launch, Routing, Batches, Worktrees
@@ -6890,17 +6977,6 @@
   - determinism
   - performance
 - type: doc
-  path: docs/plans/plans_tracking.md
-  title: Plans Tracking — Quick Overview
-  status: active
-  layer: architecture
-  authority: P2
-  audience: developer
-  tags:
-  - planning
-  - tracking
-  - documentation
-- type: doc
   path: docs/plans/render-and-art/07_manual_art_experiment_execution_plan.md
   title: Detailed Plan 07 — Manual Pixel-Art Experiment Execution
   status: active
@@ -7404,6 +7480,16 @@
   - platform
   - observability
 - type: doc
+  path: docs/runbooks/records/2026-10-28-alloy-log-shipping.md
+  title: Log shipping moved from Promtail to Grafana Alloy (2026-10-28)
+  status: active
+  layer: platform
+  authority: P2
+  audience: agent
+  tags:
+  - platform
+  - observability
+- type: doc
   path: docs/runbooks/redis-down.md
   title: 'Runbook: RedisDown (cause alert)'
   status: active
@@ -7880,6 +7966,573 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
+  ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
+  title: Append rpg-planner's binding note about the capacity trim's tie rule to the
+    cognition_capacity_fatigue entry in registries/mechanisms.yaml.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-N14-KNOWN-V3-ENTRY-RENEWED-TO-1130.md
+  ticket_id: TCK-20261031-N14-KNOWN-V3-ENTRY-RENEWED-TO-1130
+  title: The N14 known V3 gate entry is renewed from 2026-11-05 to 2026-11-30, with
+    nothing else changed
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_known.yaml
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-PLANS-TRACKING-AUDITED-REFRESH.md
+  ticket_id: TCK-20261031-PLANS-TRACKING-AUDITED-REFRESH
+  title: Move plans_tracking.md to docs/plans/agent_infrastructure/ and refresh it
+    with an audited count of the plans on main
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/gate_checks/planning_doc_staleness_check.py
+  artifact_files: []
+  tags:
+  - planning
+  - tracking
+  - documentation
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION.md
+  ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
+  title: The guard inspects interpreter payloads and asks on `gh api` writes and merges,
+    and secret-shaped strings are redacted from tool rows and the transit export.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/sessions/guard.py, tools/sessions/classify.py
+  - tools/agent-monitoring/post_tool_hook.py, tools/handover_transit.py
+  - .claude/settings.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION/test_plan.md
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
+  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
+  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
+    closes require a `path_note`, and the baseline table is frozen.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/record_hand_orchestrated_closure.py
+  - docs/agent-monitoring/schema.md
+  - docs/plans/agent_infrastructure/session_layer_working_process.md
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/test_plan.md
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND.md
+  ticket_id: TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND
+  title: The AI-first SDLC plan, audit, decision summary and handover are committed
+    under docs/plans/agent_infrastructure/.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - docs/plans/agent_infrastructure/
+  - docs/REGISTRY.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE.md
+  ticket_id: TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE
+  title: Apply lead-planner's review fixes to the AI-first SDLC plan and add an evidence
+    section to its summary
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - planning
+  - documentation
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS.md
+  ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
+  title: 'Research stage R0: candidate tasks and the disposition review are recorded,
+    and baselines are frozen as git tags.'
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS/test_plan.md
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
+  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
+  title: The ruleset is exported as the rollback point, and the tools that assume
+    the owner's login are listed.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SLOW-KNOWN-REDS-HELD-ROWS-EXPIRY-REDATED-TO-1129.md
+  ticket_id: TCK-20261031-SLOW-KNOWN-REDS-HELD-ROWS-EXPIRY-REDATED-TO-1129
+  title: The 12 whole-key SimQ held-row slow_known_reds entries are re-dated from
+    2026-11-15 to 2026-11-29, with nothing else changed
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/slow_known_reds.yaml
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SLOW-KNOWN-REDS-NOVEMBER-EXPIRIES.md
+  ticket_id: TCK-20261031-SLOW-KNOWN-REDS-NOVEMBER-EXPIRIES
+  title: 'Five slow_known_reds entries expiring 2026-11-15 are settled: three arena
+    entries retired, behavioral_5k renewed to 12-15, the hero_guild exact-id entry
+    renewed to 11-29'
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/slow_known_reds.yaml
+  - tests/unit/tools/test_slow_regression_report.py
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
+  ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
+  title: 'Evolve the AI-first SDLC: separate authority, verifiable completion, evidence,
+    simplification, context reliability, and a small evaluation track.'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-CONTEXT-AND-SESSION-RELIABILITY.md
+  ticket_id: TCK-20261031-SDLC-CONTEXT-AND-SESSION-RELIABILITY
+  title: Agents can trust the freshness and authority of search, graph and handover
+    context.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/knowledge_search.py, tools/search_mcp.py, tools/hybrid_retrieval.py
+  - tools/sessions/session_start_hook.py, tools/graphify_*
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS.md
+  ticket_id: TCK-20261031-SDLC-E6B-THROWAWAY-REPO-GITHUB-BEHAVIOURS
+  title: The GitHub behaviours the merge and credential design depends on are tested
+    on a throwaway public repo.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL.md
+  ticket_id: TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL
+  title: Agents authenticate as a machine user on both hosts, and owner credentials
+    are gone from both hosts and revoked.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/ per the inventory
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
+  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION.md
+  ticket_id: TCK-20261031-SDLC-RULESET-M1-AND-TAG-PROTECTION
+  title: The production ruleset is set per OD-3 (M1), and a tag ruleset protects the
+    frozen baselines.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas: []
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - security
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU.md
+  ticket_id: TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU
+  title: The roster marks `agent-working-designer` as staffed on host ubuntu, ending
+    the planner's interim hold on the seat.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-30'
+  related_code_areas:
+  - registries/session_roles.yaml
+  - tools/sessions/generate_agents.py, tools/sessions/card.py
+  - tests/tools/test_session_u24_twins.py, tests/tools/test_session_roster.py
+  - .claude/agents/session-agent-working-designer.md
+  artifact_files: []
+  tags:
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE.md
+  ticket_id: TCK-20261030-CORPUS-GRADE-GUARD-AVERAGES-A-NO-DATA-SCORE
+  title: The urban_political seed123 500t COGNITION grade guard averages a None score
+    when its anchor is no-data, and crashes with a TypeError. Average only when the
+    score tolerance applies.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - regression
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261030-PARITY-WRITER-KEEPS-UNEDITED-FIELD-BYTES.md
+  ticket_id: TCK-20261030-PARITY-WRITER-KEEPS-UNEDITED-FIELD-BYTES
+  title: '`parity_ledger_writer.py` keeps the bytes of the fields an edit did not
+    change, and agent-working owns the file.'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - _splice_entry
+  - tests/tools/test_parity_ledger_writer.py
+  - registries/session_roles.yaml
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT.md
+  ticket_id: TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT
+  title: 'A SimQ grade-stability test went red on main after the v1 re-anchor: urban_political_selfmodel_probe
+    seed42 200t WORLD is 0.25 against anchor 0.32. Bisect it to the commit and mechanism
+    that moved the score.'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  - tools/test_architecture/slow_known_reds.yaml
+  - src/ (whatever the bisect names)
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - regression
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
+  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
+  title: 'Parity-ledger paydown, child 1b: resolve the world_dynamics.yaml entries
+    that have no proving test, by status change or a new test'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - docs/parity_ledger/world_dynamics.yaml, tests/**, codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/draft_table.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/final_table.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/rpg_planner_table_rulings_2026-10-29.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO.md
+  ticket_id: TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO
+  title: A subject that starts broke never takes paid work when hungry, so it earns
+    no wage in 5000 ticks, and removing the free meal (D73) starves it
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - src/ai/goals/ways.py (work_in_reach, first_open_step), src/ai/goals/scorers.py
+    (EatScorer opening_step, work scorer)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/investigation.md
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/plan.md
+  - agent-working/stored_artifacts/TCK-20261029-A-BROKE-HUNGRY-SUBJECT-NEVER-EARNS-SO-THE-FREE-MEAL-CANNOT-GO/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY.md
+  ticket_id: TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY
+  title: 'One admission rule for ways, scorers and services: a way is open to a subject
+    iff the service would actually deliver it now (working title ONE-ADMISSION-RULE-FOR-WAYS-SCORERS-AND-SERVICES;
+    the id is kept because the owner''s dispatch go, #715 6485905808, names it)'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-29'
+  related_code_areas:
+  - src/ai/goals/ways.py, src/engine/appraisal.py, src/observability/starvation_record.py,
+    src/ai/goals/scorers.py, src/engine/building_services.py, src/engine/domain/core_actions.py,
+    src/engine/service_prices.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY/investigation.md
+  - agent-working/stored_artifacts/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY/plan.md
+  - agent-working/stored_artifacts/TCK-20261029-A-PRICED-WAY-IS-OPEN-ONLY-TO-A-SUBJECT-THAT-CAN-PAY/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED.md
+  ticket_id: TCK-20261029-EVENT-EMIT-ORDER-FOLLOWS-PYTHONHASHSEED
+  title: Within one tick, the emit order of progression and equipment events follows
+    the process hash seed. Sort at the emit loops.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - src/observability/event_shapers.py
+  - tests/unit/observability/
+  artifact_files: []
+  tags:
+  - determinism
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS.md
+  ticket_id: TCK-20261029-OBSERVABILITY-PHASE-TESTS-SHARE-FIXED-REPO-RUN-DIRS
+  title: Four observability integration tests write to fixed, cwd-relative directories
+    under tests/. One errored on teardown in CI. Move them to tmp_path.
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - tests/integration/observability/test_phase23_behavior_timeline_episode_artifacts.py
+  - tests/integration/observability/test_phase24_behavior_metric_artifacts.py
+  - tests/integration/observability/test_phase25_postrun_behavior_analysis.py
+  - tests/integration/observability/test_phase26_behavior_scorecard_artifacts.py
+  - tests/integration/observability/test_event_recorder_live_publish.py
+  artifact_files: []
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-PR-RENDER-KNOWN-GAPS-MISSES-GAPS-STATED-WITHOUT-FAIL.md
+  ticket_id: TCK-20261029-PR-RENDER-KNOWN-GAPS-MISSES-GAPS-STATED-WITHOUT-FAIL
+  title: '`pr_render.py` writes "Known gaps: none stated" when a ticket does state
+    gaps but not with the word `FAIL`, and gives no way to put them in that line.'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - extract_known_gaps
+  - tools/delivery/pr_template_spec.json
+  - tests/tools/test_delivery_pr_render.py
+  - .github/workflows/pr-body-lint.yml
+  artifact_files: []
+  tags:
+  - delivery
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED.md
+  ticket_id: TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED
+  title: Set ordering that reaches durable state or decisions follows the process
+    hash seed. Audit every consumer, then sort.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-29'
+  related_code_areas:
+  - src/core/updates.py
+  - src/domains/combat_engagement/learning.py
+  - src/engine/tactical.py
+  - src/progression/leveling.py
+  - src/engine/patches.py
+  - src/engine/apply.py
+  - src/core/state.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/plan.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/rpg_planner_ruling_2026-10-29.md
+  - agent-working/stored_artifacts/TCK-20261029-STATE-SET-ORDER-FOLLOWS-PYTHONHASHSEED/test_plan.md
+  tags:
+  - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS
+  title: Characterization tests that pin the event stream of EventExtractor.extract
+    before src/observability/event_extractor.py is split
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - src/observability/event_recorder.py
+  - src/observability/event_shapers.py
+  - src/domains/optimization/feature_flags.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-CHARACTERIZATION-TESTS/test_plan.md
+  tags:
+  - observability
+  - testing
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN.md
+  ticket_id: TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN
+  title: Split EventExtractor.extract into one function per event domain in src/observability/extraction/,
+    with the emitted event stream byte-identical
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_extractor.py
+  - codebase/baselines/code_health_exceptions.jsonl
+  - codebase/structure/package_registry.jsonl
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-EVENT-EXTRACTOR-SPLIT-BY-DOMAIN/test_plan.md
+  tags:
+  - observability
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN.md
+  ticket_id: TCK-20261028-EVENT-RECORDER-NEVER-GIVEN-THE-RUN-ID-SO-EVENTS-SAY-UNKNOWN-RUN
+  title: The kernel resolves the run id but never passes it to EventRecorder, so every
+    event envelope says `unknown_run`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/engine/kernel.py
+  - src/observability/event_recorder.py
+  - src/observability/events.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
+  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
+  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
+    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
+    entry with evidence'
+  tier: standard
+  ticket_type: chore
+  date: '2026-10-28'
+  related_code_areas:
+  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A/test_plan.md
+  tags:
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY.md
+  ticket_id: TCK-20261028-OBSERVABILITY-GUIDE-NAMES-EVENT-FIELD-CATEGORY-NOT-EVENT-CATEGORY
+  title: docs/guides/observability.md calls the event-log field `category`, but simulation_events.jsonl
+    writes `event_category`
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/observability/event_recorder.py
+  - src/observability/events.py
+  artifact_files: []
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT.md
+  ticket_id: TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT
+  title: Parity ledger INFRA-430 and INFRA-431 state the perf benchmark schema version
+    and the legacy-tripwire list as they were, not as the code holds them now (#626)
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-28'
+  related_code_areas:
+  - src/perf/benchmark_record.py, tools/perf/baseline_lifecycle.py, tests/unit/perf/test_benchmark_record.py,
+    tests/unit/perf/test_baseline_lifecycle.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-INFRA-430-431-PERF-SCHEMA-DRIFT/test_plan.md
+  tags:
+  - benchmarking
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS.md
+  ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS
+  title: 'Parity-ledger paydown, child 1: world_dynamics.yaml reaches 0 P0 test_path
+    errors'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-28'
+  related_code_areas:
+  - docs/parity_ledger/world_dynamics.yaml, codebase/gates/parity_ledger_schema.py,
+    codebase/baselines/parity_ledger_schema_baseline.json
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS/plan.md
+  - agent-working/stored_artifacts/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS/test_plan.md
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261028-QUALITY-HUB-WRITES-A-SCORE-LINE-FOR-A-REDELIVERED-EVENT.md
+  ticket_id: TCK-20261028-QUALITY-HUB-WRITES-A-SCORE-LINE-FOR-A-REDELIVERED-EVENT
+  title: QualityHub persists a score record before the accumulator's event_id dedupe,
+    so a redelivered event writes a duplicate quality_scores line
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-28'
+  related_code_areas:
+  - src/simulation_quality/quality_hub.py
+  - src/simulation_quality/pillar_accumulator.py
+  artifact_files: []
+  tags: []
+- type: ticket
   path: agent-working/tickets/done/TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3.md
   ticket_id: TCK-20261028-RE-RECORD-BASELINE-V1-UNDER-FLAT-SHA256-V3
   title: 'Re-record baseline v1 under the proof digest scheme `flat-sha256-v3` (after
@@ -7912,19 +8565,38 @@
   - ai
   - governance
 - type: ticket
-  path: agent-working/tickets/todos/TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A.md
-  ticket_id: TCK-20261028-N15-KNOWN-V3-STARVATIONS-RECHECK-ON-THE-GATE-AFTER-STEP-A
-  title: 'N15 known V3 starvations (crowded_frontier/46 raider 38, frontier_living_world/44
-    worker 2): re-check on the gate after HUNGER step A, then retire or keep the known-red
-    entry with evidence'
+  path: agent-working/tickets/todos/TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE.md
+  ticket_id: TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE
+  title: A low-hp subject near a hostile that neither engages nor acts gets a no-op
+    PANIC_RETREAT every 10th tick, and its step toward food one tile away is refused,
+    so it starves (gate V3, frontier_living_world s43 merchant 38)
   tier: standard
-  ticket_type: chore
+  ticket_type: repair
   date: '2026-10-28'
   related_code_areas:
-  - tools/test_architecture/ (gate harness and known file, read only except the entry)
+  - src/engine/tactical.py (:214-229 panic, :536-544 low-hp retreat, _destination_or_hold,
+    retreat_destination)
+  - src/engine/candidate_selector.py (movement_target)
   artifact_files: []
-  tags:
-  - benchmarking
+  tags: []
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED.md
+  ticket_id: TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED
+  title: Strategic winner lookup takes the first project of the kind in dict order
+    (often a dead record), so the live SUSPENDED sibling is never resumed, a duplicate
+    is created over the cap and the trim evicts the entity's own suspended project
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-27'
+  related_code_areas:
+  - src/systems/strategic_systems/intelligence.py (~1610-1612, ~1773)
+  - src/core/strategic.py (is_live_project, has_project_capacity, live_projects_in_the_trim)
+  - src/engine/pipeline_phases/capacity_enforcement.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/investigation.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/plan.md
+  - agent-working/stored_artifacts/TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED/test_plan.md
+  tags: []
 - type: ticket
   path: agent-working/tickets/done/TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR.md
   ticket_id: TCK-20261027-CRAFT-UNKNOWN-RECIPE-RAISES-KEYERROR
@@ -9069,6 +9741,29 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
+  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
+  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
+    Promtail
+  tier: standard
+  ticket_type: refactor
+  date: '2026-10-21'
+  related_code_areas:
+  - compose.yaml
+  - docker/promtail-config.yml
+  - docker/prometheus.yml
+  - docker/grafana/provisioning/alerting/rules-base.yaml
+  - docker/grafana/provisioning/datasources/datasource.yml
+  - tests/logging/test_loki_cardinality.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/drafts_other_owners.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/investigation.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/plan.md
+  - agent-working/stored_artifacts/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING/test_plan.md
+  tags:
+  - observability
+  - platform
+- type: ticket
   path: agent-working/tickets/done/TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT.md
   ticket_id: TCK-20261021-ROLE-CARD-FOLDS-SCATTERED-OWNED-FILES-TO-A-COUNT
   title: Role cards show a role's single files in a folder it doesn't otherwise own
@@ -9246,25 +9941,6 @@
     §4.2, the hard-law monitor in src
   artifact_files: []
   tags: []
-- type: ticket
-  path: agent-working/tickets/todos/TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING.md
-  ticket_id: TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING
-  title: Ship container logs to Loki with Grafana Alloy instead of the deprecated
-    Promtail
-  tier: standard
-  ticket_type: refactor
-  date: '2026-10-21'
-  related_code_areas:
-  - compose.yaml
-  - docker/promtail-config.yml
-  - docker/prometheus.yml
-  - docker/grafana/provisioning/alerting/rules-base.yaml
-  - docker/grafana/provisioning/datasources/datasource.yml
-  - tests/logging/test_loki_cardinality.py
-  artifact_files: []
-  tags:
-  - observability
-  - platform
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE.md
   ticket_id: TCK-20261021-SHOULD-A-PRESENT-ATTACKER-PUSH-THE-COLLAPSE-LINE
@@ -9898,6 +10574,27 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
+  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
+  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
+    run their tests in parallel with pytest-xdist inside the job, after an audit shows
+    the tests are safe to parallelise. No jobs are added.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - integration
+  - tests/conftest.py (resource budget, run-dir creation)
+  - tools/ci_junit_summary.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/test_plan.md
+  tags:
+  - testing
+  - workflows
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL.md
   ticket_id: TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL
   title: test_observe_world_cleans_up_its_own_run_dir runs in the serial step of Tools
@@ -10295,24 +10992,6 @@
   tags:
   - architecture
   - testing
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
-  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
-  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
-    run their tests in parallel with pytest-xdist inside the job, after an audit shows
-    the tests are safe to parallelise. No jobs are added.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-19'
-  related_code_areas:
-  - integration
-  - tests/conftest.py (resource budget, run-dir creation)
-  - tools/ci_junit_summary.py
-  artifact_files: []
-  tags:
-  - testing
-  - workflows
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
@@ -10987,6 +11666,20 @@
   - delivery
   - security
 - type: ticket
+  path: agent-working/tickets/done/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
+  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
+  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
+    API request trace in Tempo, running locally'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-18'
+  related_code_areas:
+  - compose.yaml
+  artifact_files: []
+  tags:
+  - platform
+  - observability
+- type: ticket
   path: agent-working/tickets/done/devops-step3-operate-local/TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL.md
   ticket_id: TCK-20261018-EPIC-DEVOPS-STEP3-OPERATE-LOCAL
   title: 'DevOps step 3 (host ubuntu): a measured Locust API load test, one SLO alert
@@ -11040,7 +11733,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
+  path: agent-working/tickets/todos/devops-api-dashboard-trace/TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF.md
   ticket_id: TCK-20261018-API-DASHBOARD-AND-TRACE-PROOF
   title: 'Grafana: one provisioned API dashboard (rate, errors, latency percentiles
     by route, backend logs, trace links), and the step-2 end-to-end local proof'
@@ -11049,20 +11742,6 @@
   date: '2026-10-18'
   related_code_areas:
   - docker/grafana/dashboards/api.json
-  artifact_files: []
-  tags:
-  - platform
-  - observability
-- type: ticket
-  path: agent-working/tickets/todos/devops-step2-observability-local/TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL.md
-  ticket_id: TCK-20261018-EPIC-DEVOPS-STEP2-OBSERVABILITY-LOCAL
-  title: 'DevOps step 2 (host ubuntu): one API dashboard (metrics and logs) and one
-    API request trace in Tempo, running locally'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-18'
-  related_code_areas:
-  - compose.yaml
   artifact_files: []
   tags:
   - platform
