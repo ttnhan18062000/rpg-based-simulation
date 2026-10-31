@@ -4315,3 +4315,30 @@
   test_path: tests/integration/campaigns/test_mid_episode_grief_trigger.py::test_observability_off_and_on_give_the_same_authoritative_outcome
   divergence_note: 'Divergence 2.134: the owed triggers are derived from state and drained by a typed watermark instead of a kernel list built in the observability phase.'
   support_boundary: null
+- id: SOC-278
+  text: 'A group id is never re-issued: a new GroupRecord takes the next free id from
+    AuthoritativeState.next_group_id (starts at 10000, only rises; decision code reads
+    it, ApplyPath advances it from StateUpdate.next_group_id_set; the allocator steps
+    past every id in the store, in the tick''s update and handed out earlier in the
+    call). New records travel in StateUpdate.groups_add; groups_add_or_update carries
+    only in-place updates. Apply rejects an add whose id is already taken (live or
+    dissolved, or added earlier in the tick): the row is dropped, rejection_registry[''group_add_id_taken'']
+    counts it, and the group_id_set writes aimed at that id are removed, so no member
+    points at a group that does not list it. A state built with groups and no counter
+    seeds it from the highest non-squad id; the counter joins the canonical data and
+    the replay fingerprint only once it differs from 10000.'
+  status: divergent
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (next_group_id, seeded_next_group_id); src/core/updates.py
+    (groups_add, next_group_id_set); src/systems/world_systems/groups.py (allocator);
+    src/engine/apply_plan.py (resolve_group_adds, GROUP_ADD_ID_TAKEN); src/engine/apply.py;
+    src/engine/pipeline_phases/groups.py; src/engine/military_conflict.py (squad adds);
+    src/engine/checkpoint.py and src/replay/fingerprint.py (counter). Divergence 2.146.
+    (TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP)
+  proof_type: parity
+  test_path: tests/unit/social/test_group_id_allocation.py::test_formation_over_a_gap_does_not_overwrite_a_live_group
+  divergence_note: 'Divergence 2.146: the new-group id comes from a typed, only-rising
+    counter instead of a count of the store plus the tick''s update rows, and an add
+    over a taken id is a counted rejection instead of a silent replace.'
+  support_boundary: null

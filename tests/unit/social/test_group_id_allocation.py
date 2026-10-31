@@ -233,3 +233,18 @@ def test_every_reader_of_the_update_list_also_reads_the_add_list():
         and str(p.relative_to(src)) not in update_only
     ]
     assert missing == []
+
+
+def test_a_squad_add_over_a_live_formation_id_or_an_existing_squad_is_rejected():
+    """Squad records (FACTION_SQUAD role, hash ids) enter through groups_add too, so a squad id landing on any taken id is rejected, not replacing."""
+    live = GroupRecord(id=10004, leader_id=11, member_ids={11, 12}, anchor=(0, 0))
+    old_squad = GroupRecord(id=777, leader_id=5, member_ids={5, 6}, anchor=(0, 0), roles={5: "FACTION_SQUAD", 6: "FACTION_SQUAD"})
+    entities = {i: _member(i, g, 1.0 + i) for i, g in ((11, 10004), (12, 10004), (5, 777), (6, 777))}
+    state = AuthoritativeState(tick=3, seed=1, entities=entities, groups={10004: live, 777: old_squad})
+    over_live = GroupRecord(id=10004, leader_id=8, member_ids={8, 9}, anchor=(0, 0), roles={8: "FACTION_SQUAD", 9: "FACTION_SQUAD"})
+    over_squad = replace(over_live, id=777)
+    new = ApplyPath.apply_generation(state, StateUpdate(groups_add=[over_live, over_squad]))
+    assert new.groups[10004] == live and new.groups[777] == old_squad
+    assert new.rejection_registry[GROUP_ADD_ID_TAKEN] == 2
+    assert new.next_group_id == state.next_group_id
+    assert _resolves(new) == []
