@@ -8079,6 +8079,19 @@
   - governance
   - delivery
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SLOW-KNOWN-REDS-HELD-ROWS-EXPIRY-REDATED-TO-1129.md
+  ticket_id: TCK-20261031-SLOW-KNOWN-REDS-HELD-ROWS-EXPIRY-REDATED-TO-1129
+  title: The 12 whole-key SimQ held-row slow_known_reds entries are re-dated from
+    2026-11-15 to 2026-11-29, with nothing else changed
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/slow_known_reds.yaml
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
   ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
   title: 'Evolve the AI-first SDLC: separate authority, verifiable completion, evidence,
@@ -8217,6 +8230,25 @@
   tags:
   - ai
   - process-improvement
+- type: ticket
+  path: agent-working/tickets/todos/TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT.md
+  ticket_id: TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT
+  title: 'A SimQ grade-stability test went red on main after the v1 re-anchor: urban_political_selfmodel_probe
+    seed42 200t WORLD is 0.25 against anchor 0.32. Bisect it to the commit and mechanism
+    that moved the score.'
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-30'
+  related_code_areas:
+  - tests/unit/worldassembly/test_corpus_diversity.py
+  - tests/simulation_quality/fixtures/grade_anchors.json
+  - tools/test_architecture/slow_known_reds.yaml
+  - src/ (whatever the bisect names)
+  artifact_files: []
+  tags:
+  - simulation-quality
+  - regression
+  - determinism
 - type: ticket
   path: agent-working/tickets/done/TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES.md
   ticket_id: TCK-20261028-PARITY-PAYDOWN-WORLD-DYNAMICS-STATUS-CHANGES
