@@ -7966,6 +7966,20 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/todos/TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED.md
+  ticket_id: TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED
+  title: Find what moves the ubuntu VM's speed, then re-record idle_100_local and
+    movement_100_local as v0002
+  tier: standard
+  ticket_type: chore
+  date: '2026-11-01'
+  related_code_areas:
+  - tools/perf/rerun_baselines.py, tools/perf/quiet_gate.py
+  - tests/perf/baselines/
+  artifact_files: []
+  tags:
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
   ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
   title: Append rpg-planner's binding note about the capacity trim's tie rule to the
