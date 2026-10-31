@@ -114,7 +114,11 @@ that's a gap in the safety net itself, not a one-off null result.
   itself, rather than a CLI override). Check before assuming either.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated)_
+Triage 2026-10-31 (testing-planner, owner go #715 6543261623). The ticket stays OPEN: the investigation was never delivered, and its recommendation is a design decision. Read from code and docs only, nothing run:
+- **Root cause of the second acceptance criterion:** in tools/calibrate_simq.py, `entity_count` is used only in the generic fallback (the `if state is None` branch at about line 227). When `--name` resolves to a compiled world, `_load_world_state` returns that world's own population and the flag is ignored. So this applies to every compiled world, not one profile. It is silent: the run banner still prints `entities=<flag>`.
+- **Correction to the Request Summary:** "~10 entities" is the flag's default, not the size of compiled worlds. frontier_living_world is 46 entities, and docs/simulation_quality/corpus_tier_taxonomy.md lists 11-56 for the others. The blindness claim may still hold at that scale, but no longer on the stated evidence.
+- **Not a new finding:** TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION already measured a real-content ceiling of 68 entities, and found the only uncapped generation path was dead code with a bug. Start from that.
+- **Still owed:** the can/cannot-detect statement and the scale-tier recommendation. Cross-check D77 (TCK-20261014-SIMQ-PILLARS-COMPUTED-FROM-TYPED-RECORDS-WITH-SEED-SPREAD-D77) first. Dispatching this standard work is a separate owner ask.
 
 ## Test Summary
 _(none yet)_

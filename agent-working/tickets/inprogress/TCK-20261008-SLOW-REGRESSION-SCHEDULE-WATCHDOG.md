@@ -88,4 +88,9 @@ None.
 _(not started)_
 
 ## Completion Summary
-_(not started)_
+Still OPEN on AC4 only. Checked 2026-10-31 under owner go #715 6543261623:
+- Half of AC4 is met: watchdog run 41179224307 on main ran Decide=success, Dispatch=skipped. Its summary text was not read (not available through the API).
+- The other half is unproven: all 111 runs since 2026-10-08 are `schedule`, and there is no `workflow_dispatch` of the watchdog. Slow regression's last `workflow_dispatch` runs (2026-10-06, 2026-10-13) are not shown to be the watchdog's, so no filled slot is on record.
+- To finish: a manual `workflow_dispatch` of the watchdog, which AC4 accepts. It proves the decision output only. If it decides `skip`, the GITHUB_TOKEN dispatch step stays unproven until a real dropped slot; say so when closing. Running it is a separate owner ask.
+- Observation, not in scope: 111 runs in about 23 days against about 550 hourly slots, so the watchdog's own schedule is dropped often too.
+
