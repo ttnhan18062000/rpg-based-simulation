@@ -7955,6 +7955,19 @@
   tags:
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-N14-KNOWN-V3-ENTRY-RENEWED-TO-1130.md
+  ticket_id: TCK-20261031-N14-KNOWN-V3-ENTRY-RENEWED-TO-1130
+  title: The N14 known V3 gate entry is renewed from 2026-11-05 to 2026-11-30, with
+    nothing else changed
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/test_architecture/rpg_gate_known.yaml
+  artifact_files: []
+  tags:
+  - testing
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND.md
   ticket_id: TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND
   title: The AI-first SDLC plan, audit, decision summary and handover are committed
