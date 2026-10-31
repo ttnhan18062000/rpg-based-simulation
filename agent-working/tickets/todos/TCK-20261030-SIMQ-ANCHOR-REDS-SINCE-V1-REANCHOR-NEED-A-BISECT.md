@@ -146,6 +146,9 @@ The pushed S2 backup `rpg-ubuntu-simq-anchor-bisect-impl` (7a86c6a36) contains a
 ### Probes P1-P4, repeat, prefix check (2026-10-31, rulings 4 to 6; files in `evidence/probes/`)
 P1 (urban_political s123 500t, first difference t75 entity 5), P2 (generated_frontier_3_42 s456 200t, t41 entity 19), P3 (urban_political s42 500t, t42 entity 18) and P4 (selfmodel_execution_probe s42 200t, t42 entity 18) each PASS the rule: every record before the first difference is identical for all entities, and the first difference is a COMBAT_RETREAT score changed by `retreat_pull` and nothing else. The P1 repeat at d914bace7 is byte-identical (probe logs and final state hash); quality_scores match with event_id excluded. The prefix check passes 8 of 8 from the sweep's own run directories. P3's FACTION and COGNITION flips are traced to the retreat path with the gaps stated in `P3_status_flips.txt`; the 2000t rows and the flips go to the designer (ruling 6).
 
+### Designer's bounded check (2026-10-31; files in `evidence/designer_check/`)
+Check 1 does not meet the pass rule: at d914bace7 s42 2000t, entity 18 holds proj_combat_retreat_42 as its current project over t63-1402, with 950 retreat-active ticks after t452 and none with a threat present (742 with hp at or above 0.5, 208 below); the project ends at t1402. Checks 2 and 3 are answered (entity 14 dead since t452 and pair tension 0.31 at d914bace7; entity 10's choice is plain maximum of the modified scores). Reported to rpg-planner as a STOP; no fix shape.
+
 ## Test Summary
 ## Files Changed
 ## Completion Summary

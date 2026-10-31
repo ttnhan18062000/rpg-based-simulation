@@ -169,3 +169,58 @@ lead-planner's notes, same message:
 - Slot: its go for P1-P4 and the P1 repeat stands and the hold is lifted. Start when B's re-check has finished, because the slot is one run at a time.
 - Do not edit the expiry until the owner's answer arrives with a #715 id.
 - The designer packet goes to rpg-designer via rpg-planner when P3 is in. Send it to lead-planner for the relay.
+
+## Ruling 7 (2026-10-31): the state-hash question and the probe results
+
+Relayed via lead-planner-u24 and lead-planner. The text between the rules is word for word as relayed.
+
+---
+STATE-HASH QUESTION: accepted, with a stated limit. With no per-tick state hash, the prefix check is full event-stream equality up to the prefix tick (event_id excluded). The binding confirmation is that the longer run's first difference is the same record as the probe's. The evidence must say, in those words, that state equality inside the prefix is inferred from the event stream, not hashed. For the repeat test, the equal final hash 0bd536588c14d9c5 stands as the binding check. A per-tick state hash in the probe wrapper is not required for this ticket.
+
+1. P3f is accepted as measured; any further probe is a fresh ask.
+2. Your PASS reading is correct: rule (a)+(b) shows where each path starts, and does not link the pull to each moved pillar. Re-anchor reasons per row should read "path starts at retreat_pull, tX entity N" and claim no more. P1's ECONOMY gap from t111 to t435 stays recorded as untraced. That is enough for the four in-tolerance rows outside s42 (P1, P2, P4), once the post-groups-fix sweep confirms they are still moved.
+3. The P1 arbiter oddity (entity 10 gets proj_combat_retreat_110 with no top-score flip) is recorded and passed to the designer as observed. No trace unless the designer asks.
+4. The order is unchanged: (B)'s re-check, then the groups fix plus a fresh sweep, then re-probe only the rows whose values change, then re-anchor. The s42 rows wait for the designer's ruling.
+---
+
+lead-planner's note: check the prefix evidence meets the "same record" confirmation; reading existing logs needs no slot.
+
+## rpg-designer ruling (2026-10-31): the #769 s42 rows
+
+Relayed via rpg-planner, lead-planner-u24 and lead-planner as "verbatim substance". The text between the rules is as relayed.
+
+---
+The missing second wave is PROVISIONALLY INTENDED, and one bounded check must pass before any re-anchor.
+
+WHY INTENDED (in kind):
+- The first difference is #769's purpose working: entity 18's retreat wins at t42, and it survives t172.
+- The rest follows in the expected direction for "wounded people flee instead of dying": deaths 7 to 4, alive 16 to 21, hostile bond updates 51 to 31, tension never reaches TENSE.
+- FACTION 3 to 0 and the missing t1666 wave follow from that split. A wave that forms after 900 quiet ticks is emergent, so its absence on a different trajectory does not by itself show suppression.
+
+THE CHECK. #769 is wrong if retreat outlives the threat. The counts come first and go to the designer through rpg-planner. No fix shape until the designer has read them.
+1. At d914bace7, s42 2000t, after t452: for each entity, count the ticks where COMBAT_RETREAT is the winning or active project, or retreat_pull adds to a score. Split them by (a) whether a threat is present (decision 32's adjacent hostile, or a perceived acting hostile), and (b) whether the hp ratio is above or below the retreat line.
+   PASS: about 0 retreat-active ticks with no present threat AND hp above the line, and no entity whose retreat project never ends.
+2. Name what started the parent's t1666 wave: which engagement, which pair, and what precondition (tension, a group, a world_emergence_event?). Show whether that precondition exists at d914bace7, and why it doesn't fire there.
+   "The combatants are dead, disbanded, or tension is below the line" confirms trajectory. "They were retreating with no threat" is the defect.
+3. P1 entity 10 (proj_combat_retreat_110 chosen over resolve_blocker with no top-score flip): name the code path that chose it (threat preemption, interruption resistance, or something else).
+   A preemption that bypasses the score is fine only if it requires a present threat (2.76 already gates the cautious branch on one). If it fires on retreat_pull alone, that is the suppression path and a STOP.
+This needs new 2000t probe runs at both commits, which under your rule is a fresh ask. Scope is exactly 1-3, read-only, one host slot.
+
+COGNITION 2 to 22 (entity 6, group 10009) is NOT part of this ruling. Re-measure it after TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP. If the 20 decision_divergence events at t275-294 survive that fix, it becomes its own counts-first ticket: a possible oscillation between a project and a concern, a cognition question.
+
+RE-ANCHOR ORDER:
+1. The groups-id fix.
+2. The check above passes.
+3. Re-run s42 at 500/1000/2000t.
+4. Re-anchor COMBAT, PROGRESSION, NARRATIVE, FACTION and COGNITION on the new numbers.
+The re-anchor note must say the movement is #769's retreat trajectory, citing this designer ruling of 2026-10-31, and that it is not a grader change.
+
+Grader finding (pillars crossing tolerance on a one-event swing at about 25 events; proposal: a minimum-count floor or a count-scaled tolerance): I'm holding it on u24 as a finding for testing-planner. It does not block #769.
+---
+
+lead-planner's notes, same message:
+- Slot go: one instrumented urban_political s42 2000t pair, a25619971 and d914bace7, usual wrapper, sequential, MemAvailable >= 3 GB, plus one P1 re-read or short P1 re-run if entity 10's path isn't in the existing logs. Nothing else. About 4 instrumented minutes per run on past timing; tell it if it projects past 30 min or hangs.
+- Don't start until it has said the groups-fix implementation isn't using the slot; right now it isn't, the owner hasn't said go. One heavy run at a time.
+- Check 1 is against d914bace7, and it should still run before the groups fix: the designer asks for counts now. The re-anchor's order is separate.
+- Conflict in the record: ruling 6 sent 'COGNITION flips' to the designer with the re-anchor; this ruling takes COGNITION out, yet its step 4 still re-anchors COGNITION. Its reading: COGNITION re-anchors only after the re-measure clears.
+- Counts go to it for the relay. A pass-rule failure or the entity 10 preemption firing on retreat_pull alone is a STOP; no fix shape, as ruled.
