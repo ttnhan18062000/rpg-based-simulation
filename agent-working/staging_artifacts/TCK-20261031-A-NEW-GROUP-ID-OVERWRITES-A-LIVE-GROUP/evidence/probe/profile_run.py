@@ -18,13 +18,67 @@ from src.engine.apply_plan import ApplyPlanBuilder
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
 from src.observability.event_extractor import EventExtractor
-X = dict(initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
+X = dict(pool=[], dis=[], initial_ids=None, born={}, forms=[], events=0, alive={}, touch={}, copies=0, copied_records=0)
 def touch(name, n):
     t = X["touch"].setdefault(name, [0, 0]); t[0] += 1; t[1] += n
 ou = GroupSystem.update_groups
+from src.core.strategic import ContractStatus
+def _eff(cu, e_id):
+    return cu.entity_updates.get(e_id) if cu is not None else None
+def _alive(state, cu, e_id):
+    u = _eff(cu, e_id)
+    if u is not None and u.combat and u.combat.alive_set is False: return False
+    e = state.entities.get(e_id); return e.combat.alive if e else False
+def _active(state, cu, e_id):
+    u = _eff(cu, e_id)
+    if u is not None and u.active is False: return False
+    e = state.entities.get(e_id); return e.lifecycle.active if e else False
+def _pos(state, cu, e_id):
+    u = _eff(cu, e_id)
+    if u is not None and u.new_position: return u.new_position
+    e = state.entities.get(e_id); return e.navigation.position if e else (0.0, 0.0)
+def _reasons(state, cu, grp):
+    """Mirror of groups.py l.95-170 on the pre-state: which branch ends this group. Read-only."""
+    ldr = state.entities.get(grp.leader_id)
+    if ldr is None or not _alive(state, cu, grp.leader_id) or not _active(state, cu, grp.leader_id): return ["l110_leader_dead_inactive_or_missing"]
+    out = []; kept = 1
+    for m in sorted(grp.member_ids):
+        if m == grp.leader_id: continue
+        if not _alive(state, cu, m) or not _active(state, cu, m): out.append("member_dead_or_inactive"); continue
+        mp = _pos(state, cu, m); dx = mp[0] - grp.anchor[0]; dy = mp[1] - grp.anchor[1]
+        dist = dx * dx + dy * dy > (grp.cohesion_radius * 2) ** 2
+        cinv = False
+        if grp.contract_id and ldr:
+            c = None
+            if cu is not None and grp.leader_id in cu.entity_updates:
+                lu = cu.entity_updates[grp.leader_id]
+                if lu.strategic: c = next((x for x in lu.strategic.contracts_add_or_update if x.id == grp.contract_id), None)
+            if not c: c = ldr.strategic.contracts.get(grp.contract_id)
+            if not c or c.status != ContractStatus.ACTIVE: cinv = True
+            elif c.expiry_tick != -1 and state.tick > c.expiry_tick: cinv = True
+        if dist and cinv: out.append("member_distance_and_contract")
+        elif dist: out.append("member_distance")
+        elif cinv: out.append("member_contract_invalid")
+        else: kept += 1
+    return out if kept < 2 and out else (["l170_fewer_than_2_members_no_cause_found"] if kept < 2 else [])
 def ug(state, *a, **k):
+    cu = a[0] if a else k.get("current_update")
+    pool = grouped = ghost = 0
+    for e in state.entities.values():
+        if not e.combat.alive: continue
+        g = e.identity.group_id
+        if g is None or g < 0: pool += 1
+        else:
+            grouped += 1
+            gr = state.groups.get(g)
+            if gr is None or e.id not in gr.member_ids: ghost += 1
+    X["pool"].append([state.tick, pool, grouped, ghost])
     r = ou(state, *a, **k)
     for g in P.CUR["form"]: X["forms"].append([state.tick, g.id, sorted(g.member_ids)])
+    for row in list(r.groups_add_or_update):
+        old = state.groups.get(row.id)
+        if row.dissolution_tick is not None and old is not None and old.dissolution_tick is None and row.dissolution_tick == state.tick:
+            X["dis"].append([state.tick, row.id, sorted(old.member_ids), old.last_updated_tick, sorted(set(_reasons(state, cu, old))) or ["unclassified"]])
     return r
 GroupSystem.update_groups = staticmethod(ug)
 oa = ApplyPath.apply_generation
@@ -75,9 +129,10 @@ def rec(k, v):
     return {"file": k[0], "line": k[1], "func": k[2], "calls": nc, "own_s": round(tt, 4), "cum_s": round(ct, 4), "cum_per_call_us": round(ct / max(nc, 1) * 1e6, 2)}
 rows = [rec(k, v) for k, v in ps.stats.items()]
 top = sorted(rows, key=lambda r: -r["cum_s"])[:40]
+phases = sorted([r for r in rows if "phase" in r["func"].lower() or r["func"] in ("tick_once", "execute", "resolve", "apply_generation", "build_plan")], key=lambda r: -r["cum_s"])[:40]
 sites = sorted([r for r in rows if any(s in r["file"].replace("\\", "/") for s in SITES)], key=lambda r: -r["cum_s"])[:80]
 m = json.load(open(os.path.join(run_dir, "run_manifest.json")))
-out = {"k": "profile", "world": world, "seed": seed, "ticks": ticks, "state_hash": m["state_hash"], "elapsed": elapsed, "top_cum": top, "sites": sites,
+out = {"k": "profile", "world": world, "seed": seed, "ticks": ticks, "state_hash": m["state_hash"], "elapsed": elapsed, "top_cum": top, "phases": phases, "sites": sites,
        "touch": X["touch"], "copies": X["copies"], "copied_records": X["copied_records"], "events": X["events"], "alive": X["alive"],
-       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
+       "initial_ids": X["initial_ids"], "born": {str(k): v for k, v in X["born"].items()}, "pool": X["pool"], "dissolutions": X["dis"], "formations_n": len(X["forms"]), "forms": X["forms"], "ghost_ids": sorted(P.S["ghost_any"]), "ghost_persist_ids": sorted(P.S["ghost_persist"]), "probe": P.summary()}
 with open(os.environ["PROBE_OUT"], "w") as fh: fh.write(json.dumps(out, default=str, separators=(",", ":")) + "\n")
