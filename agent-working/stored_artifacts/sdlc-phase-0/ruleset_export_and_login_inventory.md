@@ -28,7 +28,7 @@ Comparison recipe: `gh api repos/{owner}/{repo}/rulesets/14220945`, drop `curren
 
 ## 3. Tools that assume the owner login or an admin-only endpoint
 
-Method: read each caller's code for the `gh` verbs and API paths it uses. "Under a write-role machine user" is a prediction from those paths, **unverified** unless a row says otherwise: no tool was run under another identity.
+Method: searched `tools/`, `.github/`, `.claude/hooks`, `.claude/workflows` and `.mcp.json` for `gh` calls (`grep -rnE "(^|[^a-z])gh( |$)|GH_TOKEN|gh api" tools .github .claude .mcp.json`, then each hit read), then read each caller's code for the `gh` verbs and API paths it uses. "Under a write-role machine user" is a prediction from those paths, **unverified** unless a row says otherwise: no tool was run under another identity.
 
 | Tool | What it calls | Admin or owner-only? | Behaviour under a write-role machine user |
 |---|---|---|---|
@@ -41,9 +41,12 @@ Method: read each caller's code for the `gh` verbs and API paths it uses. "Under
 | `tools/test_architecture/slow_regression_gate.py`, `slow_regression_watchdog.py` | `gh run list`, `gh run view`, `gh workflow run slow-regression.yml` | `workflow run` is a write on Actions | The watchdog dispatches a run: needs write access to Actions. Runs in CI with the workflow's own token (`actions: write`), not a person's login. Unverified for a person-held machine user. |
 | `tools/test_architecture/slow_regression_report.py` | Issue and comment reads and writes through `gh`; filters comments by a fixed bot login | Writes issues | Runs in CI with the workflow token. Its comparison against a fixed bot login assumes the author identity of its own comments; a machine user posting by hand would not match. |
 | `.github/workflows/slow-regression-watchdog.yml` | `gh api .../commits/main`, `gh workflow run` with `${{ github.token }}` | No person's login | Independent of any person's credential. |
+| `.github/workflows/rpg-gate-report.yml`, `.github/workflows/slow-regression.yml` | `gh` with `${{ github.token }}` under job-level `permissions` (`contents`, `actions: read`, and `issues` where a rolling issue is written) | No person's login | Independent of any person's credential. |
 | `.github/workflows/deploy-docs.yml` | Comment only (Pages not enabled) | No | Not applicable. |
-| GitHub MCP server (`.mcp.json`, `github`) | Runs a container that takes its credential from an environment file the launcher supplies | Scope set by whichever credential the file holds | Behaviour is the credential's scope. Contents were not read. It failed to connect in this session; cause not investigated. |
+| GitHub MCP server (`.mcp.json`, `github`) | Runs a container that takes its credential from an environment file the launcher supplies | Scope set by whichever credential the file holds | Behaviour is the credential's scope. Contents were not read. |
 | `gh pr create`, `gh pr merge` (agents' own commands) | Not tool code; the permission rules allow `gh pr create`, ask on `gh pr merge` | Merge needs the Admin role today (ruleset bypass) | A write-role user could open a PR; merging under the same ruleset is the owner's call. Unverified. |
+
+Checked, no row needed (they name `gh`, none calls GitHub): `tools/agent-monitoring/bash_command_mix.py` and `tools/agent-monitoring/real_token_usage.py` only group recorded shell commands by their first words; `tools/sessions/classify.py` classifies a shell command string (`gh pr create`, `gh pr merge`, `gh api`) into an authority action and runs nothing; `tools/ci_junit_summary.py` only mentions a `gh api` URL in a comment; `.github/workflows/test.yml` only mentions `gh workflow run` in a comment about a manual noise measurement; `tools/sessions/disk_headroom.py` only prints that `gh` is unavailable; `.claude/settings.json` holds permission rules that name `gh` commands (a governing file, read only, not a call).
 
 Not found in tool code: any use of the ruleset endpoints, the repository's collaborators endpoint, or any admin-only path. Nothing here reads the ruleset except this record.
 

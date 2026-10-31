@@ -62,7 +62,8 @@ def _optional_field_errors(record: dict) -> list[str]:
     reason = record.get("path_reason")
     if reason is not None and reason not in PATH_REASONS:
         errors.append(f"path_reason must be one of {PATH_REASONS}")
-    if reason in PATH_REASONS_NEEDING_NOTE and not record.get("path_note"):
+    note = record.get("path_note")
+    if reason in PATH_REASONS_NEEDING_NOTE and not (note.strip() if isinstance(note, str) else note):
         errors.append(f"path_reason {reason!r} requires a non-empty path_note")
     if record.get("path_note") is not None and not isinstance(record["path_note"], str):
         errors.append("path_note must be a string or null")

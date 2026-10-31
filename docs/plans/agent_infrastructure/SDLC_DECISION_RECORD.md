@@ -59,7 +59,7 @@ All of these read undecided as of 2026-10-31 (A and B both say so). Nothing belo
 | OD-20 | Promotion of an experimental result |
 | OD-21 | Practical threshold and budget per stage |
 
-## Where the plan's wording is wider than the comments
+## Where the plan's wording differs from the comments
 
 - OD-2 and OD-10: the plan's table says the owner's credentials "leave agent-reachable storage"; comment A says "off both hosts". This record uses the comment's words.
 - OD-14: the plan recommends "Suspend" publishing; comment A says "safe rollback, agents never regain the owner token". This record uses the comment's words.

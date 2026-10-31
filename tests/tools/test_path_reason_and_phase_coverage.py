@@ -105,13 +105,19 @@ def test_only_other_and_owner_directed_need_a_note():
 
 
 @pytest.mark.parametrize("reason", sorted(PATH_REASONS_NEEDING_NOTE))
-@pytest.mark.parametrize("note", [None, ""])
+@pytest.mark.parametrize("note", [None, "", "  ", "\n\t"])
 def test_run_validator_refuses_a_noted_reason_without_a_note(reason, note):
     run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note="why")
     run = {**run, "path_note": note}
     assert any("requires a non-empty path_note" in e for e in validate_run(run))
     run.pop("path_note")
     assert any("requires a non-empty path_note" in e for e in validate_run(run))
+
+
+@pytest.mark.parametrize("reason", sorted(PATH_REASONS_NEEDING_NOTE))
+def test_a_non_string_note_is_reported_not_a_crash(reason):
+    run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note="why")
+    assert any("path_note must be a string" in e for e in validate_run({**run, "path_note": 5}))
 
 
 @pytest.mark.parametrize("reason", sorted(set(PATH_REASONS) - set(PATH_REASONS_NEEDING_NOTE)))

@@ -71,7 +71,7 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 - Old rows are not re-validated: the only readers/checkers over stored rows are `validate.py::check_path_record` (checks that `path_reason` is a known value, not the note), `path_report.py` and the retro generator; none asks for a note. Test: `test_an_old_owner_directed_row_without_a_note_is_still_read_by_the_shard_validator`.
 - `docs/agent-monitoring/schema.md` defines every `path_reason` value; `monitoring-schema.yaml` is aligned.
 - `session_layer_working_process.md` section 7.1 records the hand/batch model as official (OD-1, #715 6529263880) and states what it does not decide (OD-5).
-- `SDLC_DECISION_RECORD.md`: decided = exactly what #715 6529263880 and 6529808776 say; every other OD reads undecided. Where the plan's wording is wider than the comments, the comment's words are used (listed in the record).
+- `SDLC_DECISION_RECORD.md`: decided = exactly what #715 6529263880 and 6529808776 say; every other OD reads undecided. Where the plan's wording differs from the comments, the comment's words are used (listed in the record).
 - `SDLC_BASELINES_FROZEN.md`: section 46 as written at `1ccaba303`, each row with ref and SHA; nothing re-measured; the ubuntu pre-2026-10-30 timings statement (#715 6527003378).
 - CLAUDE.md was not edited. Its closure example shows `--path-reason` alternatives with no `--path-note`; reported to the planner.
 
