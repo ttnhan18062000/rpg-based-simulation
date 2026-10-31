@@ -1406,6 +1406,69 @@ def test_registry_reason_entry_absent_read_only_when_fresh_registry_lacks_it(tmp
     assert check_registry_entry_regenerated("TCK-FAKE", regenerate=False).reason == "entry_absent"
 
 
+# TCK-20261031-REGISTRY-CHECK-NAMES-AN-UNSTAGED-CLOSING-TICKET: generate_registry indexes `git ls-files` only, so a done/
+# ticket git neither tracks nor stages is missing from any registry; the read-only check names that cause and the order.
+
+
+def _git_repo_with_done_ticket(tmp_path, ticket_id="TCK-FAKE"):
+    for cmd in (["git", "init", "-q"], ["git", "config", "user.email", "t@example.com"], ["git", "config", "user.name", "T"]):
+        subprocess.run(cmd, cwd=tmp_path, check=True)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "REGISTRY.yaml").write_text("[]\n", encoding="utf-8")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    ticket = tmp_path / TICKETS / "done" / f"{ticket_id}.md"
+    _write_ticket(ticket, ticket_id)
+    return ticket.relative_to(tmp_path).as_posix()
+
+
+def test_registry_reason_ticket_not_staged_names_the_working_order(tmp_path, monkeypatch):
+    rel = _git_repo_with_done_ticket(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert result[0] == "FAIL" and result.reason == "ticket_not_staged"
+    assert f"git add {rel}" in result[1]
+    assert result[1].index("git add " + rel) < result[1].index("make docs-registry") < result[1].index("git add docs/REGISTRY.yaml")
+
+
+def test_a_staged_ticket_keeps_the_stale_on_disk_class(tmp_path, monkeypatch):
+    rel = _git_repo_with_done_ticket(tmp_path)
+    subprocess.run(["git", "add", rel], cwd=tmp_path, check=True)
+    monkeypatch.chdir(tmp_path)
+
+    result = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert result[0] == "FAIL" and result.reason == "registry_stale_on_disk"
+
+
+def test_a_staged_ticket_and_a_regenerated_registry_pass(tmp_path, monkeypatch):
+    from generate_registry import generate_registry
+
+    rel = _git_repo_with_done_ticket(tmp_path)
+    subprocess.run(["git", "add", rel], cwd=tmp_path, check=True)
+    generate_registry(tmp_path, tmp_path / "docs" / "REGISTRY.yaml")
+    monkeypatch.chdir(tmp_path)
+
+    assert check_registry_entry_regenerated("TCK-FAKE", regenerate=False)[0] == "PASS"
+
+
+def test_outside_a_git_checkout_the_read_only_check_is_unchanged(tmp_path, monkeypatch):
+    # not a git top level: indexable_paths is None, so the stale-on-disk class still applies (see test_registry_reason_stale_on_disk)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "REGISTRY.yaml").write_text("[]\n", encoding="utf-8")
+    (tmp_path / TICKETS / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / TICKETS / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    assert check_registry_entry_regenerated("TCK-FAKE", regenerate=False).reason == "registry_stale_on_disk"
+
+
+def test_regenerate_true_still_passes_for_an_untracked_ticket(tmp_path, monkeypatch):
+    _git_repo_with_done_ticket(tmp_path)  # untracked: the formal pipeline names it via include=
+    monkeypatch.chdir(tmp_path)
+
+    assert check_registry_entry_regenerated("TCK-FAKE", regenerate=True)[0] == "PASS"
+
+
 def test_migration_reasons(tmp_path, monkeypatch):
     _scaffold_finalize_repo(tmp_path)
     monkeypatch.chdir(tmp_path)
