@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20261025-PERF-RECORD-IDENTITY-PINS-INSTALLED-RUNTIME-DEPENDENCIES
-phase: open
+phase: done
 date: 2026-10-25
 tags: [performance, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism]
 A benchmark record's identity pins the installed runtime dependency set; then re-record idle_100_local and movement_100_local as v0002
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -57,6 +57,8 @@ Owner decision (2026-10-25, option A, #715 issuecomment-6387497480):
 - Run constraints: foreground, one at a time, `systemd-run --user --scope -p MemoryMax=3G -p MemorySwapMax=0`, and check loadavg1 < 1.5 and >= 2.5 GB available before each run.
 - In the PR, state host, CPU, both fingerprints (v0001 = unknown, v0002 = value) and the run IDs.
 
+**Part 2 moved:** Part 2 moved to TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED by the owner's option 1, #715 issuecomment-6546382922.
+
 ## Out of Scope
 - The `_concurrent` references, `mixed_200_*`, `strategic_100_*` and the simq corpus references. They are not re-recorded here; their next re-record picks the field up.
 - Changing the tripwire threshold (owner-final, PERF-M2-T06).
@@ -65,22 +67,22 @@ Owner decision (2026-10-25, option A, #715 issuecomment-6387497480):
 - The CI paired tripwire: both arms run under head's environment, so their fingerprints match by construction. No CI change.
 
 ## Acceptance Criteria
-- [ ] `Runtime` has `dependency_fingerprint` (default `UNKNOWN`) and `dependency_count`. A real capture fills both, and the fingerprint is stable across two captures in one environment.
-- [ ] A unit test with a fake metadata provider shows four cases:
+- [x] `Runtime` has `dependency_fingerprint` (default `UNKNOWN`) and `dependency_count`. A real capture fills both, and the fingerprint is stable across two captures in one environment. Tests: `tests/unit/perf/test_dependency_fingerprint.py::test_the_real_environment_gives_a_stable_nonempty_fingerprint`, `::test_it_is_stable_for_one_environment`.
+- [x] A unit test with a fake metadata provider shows four cases: Tests: `tests/unit/perf/test_dependency_fingerprint.py` (`test_changing_the_version_of_a_closure_package_changes_it`, `test_a_package_outside_the_closure_does_not_change_it`, `test_an_uninstalled_required_package_is_a_missing_line_and_changes_it`, `test_a_requested_extras_requirements_are_included`).
   - changing the version of a runtime-closure package changes the fingerprint;
   - adding, removing or bumping a package outside the closure (a dev-only or extra-only package not requested) does not;
   - an uninstalled required package yields a `MISSING` line;
   - a requested extra's requirements are included.
-- [ ] `compare()` on two records differing only in `dependency_fingerprint` returns `INCONCLUSIVE`, with `check == "blocking_fields"` (T06's `Outcome.check`) and a reason naming `identity.runtime.dependency_fingerprint`.
-- [ ] An old record without the field loads. Compared against a fingerprinted head, it is `INCONCLUSIVE`, not PASS.
-- [ ] Schema MINOR bump; `benchmark_identity_schema.md` documents the field and the closure method; pinned version asserts are updated.
-- [ ] `rerun_baselines.py record` and `measure` refuse a non-virtualenv interpreter with a clear error (unit test), and each record summary prints the interpreter and the candidate's `dependency_fingerprint`.
-- [ ] `Runtime.cpu_affinity` is recorded, blocking, documented (field table, JSON schema, section 4 table, 1.5 history clause with the host-fields note); unit tests: an affinity difference is `INCONCLUSIVE` with `check == "blocking_fields"`, an old record without the field loads as `unknown`, the range helper is canonical.
-- [ ] `record`'s quiet window is the pinned/unpinned gate above (memory >= 3 GB, no swap activity), refuses before run 1 or stops the series naming the check, and prints and stores the readings per run; unit-tested with injected `/proc` readers and no real sleep.
-- [ ] The in-run swap check stops a pinned series on any `pswpin`/`pswpout` change (naming the run and the pages) and refuses on unreadable counters; a pinned run also needs loadavg1 < 1.5; `--max-probe-ms` makes a pinned run wait for a quiet before-probe and records both probes; all unit-tested with injected readers.
-- [ ] The in-run foreign-load check stops a pinned series at a share >= 10 % (no candidate), records every run's share, skips unpinned runs and refuses a pinned series whose cgroup file is missing or unreadable or whose cgroup is not a `run-*.scope`; unit-tested with injected `/proc` and cgroup readers.
-- [ ] `idle_100_local.v0002.json` and `movement_100_local.v0002.json` exist with a non-`UNKNOWN` fingerprint, recorded under the run constraints above. The owner's promotion approval is recorded in the PR (and on #715) before merge.
-- [ ] The nightly lane (`tests/perf/test_perf_regression_baseline.py -m 'perf and slow' -k idle_100_local` and `-k movement_100_local`) runs against v0002 on the same host, and the PR reports the outcome.
+- [x] `compare()` on two records differing only in `dependency_fingerprint` returns `INCONCLUSIVE`, with `check == "blocking_fields"` (T06's `Outcome.check`) and a reason naming `identity.runtime.dependency_fingerprint`. Test: `tests/unit/perf/test_benchmark_record.py::test_a_dependency_fingerprint_mismatch_is_inconclusive_through_the_blocking_fields_check`.
+- [x] An old record without the field loads. Compared against a fingerprinted head, it is `INCONCLUSIVE`, not PASS. Test: `tests/unit/perf/test_benchmark_record.py::test_a_record_without_the_dependency_fields_loads_and_is_inconclusive_against_a_fingerprinted_head`.
+- [x] Schema MINOR bump; `benchmark_identity_schema.md` documents the field and the closure method; pinned version asserts are updated. Pinned asserts: `tests/unit/perf/test_benchmark_record.py` (`schema_version == SCHEMA_VERSION == "1.5"`), `tests/unit/perf/test_memory_pass.py`; doc `docs/performance/benchmark_identity_schema.md`.
+- [x] `rerun_baselines.py record` and `measure` refuse a non-virtualenv interpreter with a clear error (unit test), and each record summary prints the interpreter and the candidate's `dependency_fingerprint`. Tests: `tests/unit/perf/test_rerun_baselines.py::test_record_and_measure_refuse_a_system_interpreter`, `::test_the_summary_names_the_interpreter_and_the_fingerprint`.
+- [x] `Runtime.cpu_affinity` is recorded, blocking, documented (field table, JSON schema, section 4 table, 1.5 history clause with the host-fields note); unit tests: an affinity difference is `INCONCLUSIVE` with `check == "blocking_fields"`, an old record without the field loads as `unknown`, the range helper is canonical. Tests: `tests/unit/perf/test_benchmark_record.py::test_a_cpu_affinity_difference_is_inconclusive_through_the_blocking_fields_check`, `::test_a_record_without_cpu_affinity_loads_as_unknown_and_is_inconclusive_against_a_pinned_head`, `tests/unit/perf/test_cpu_affinity.py::test_ranges_are_canonical_and_sorted`.
+- [x] `record`'s quiet window is the pinned/unpinned gate above (memory >= 3 GB, no swap activity), refuses before run 1 or stops the series naming the check, and prints and stores the readings per run; unit-tested with injected `/proc` readers and no real sleep. Tests: `tests/unit/perf/test_quiet_gate.py` (`test_a_pinned_run_needs_its_cpus_quiet_and_the_host_load_below_the_bound`, `test_memory_below_three_gb_fails_whatever_the_cpus_do`, `test_any_swap_activity_over_the_sample_fails`), `tests/unit/perf/test_rerun_baselines.py::test_record_refuses_to_start_a_run_outside_the_quiet_window`.
+- [x] The in-run swap check stops a pinned series on any `pswpin`/`pswpout` change (naming the run and the pages) and refuses on unreadable counters; a pinned run also needs loadavg1 < 1.5; `--max-probe-ms` makes a pinned run wait for a quiet before-probe and records both probes; all unit-tested with injected readers. Tests: `tests/unit/perf/test_quiet_gate.py` (`test_the_swap_counters_are_read_at_the_start_and_end_of_a_pinned_run_and_any_move_stops_it`, `test_unreadable_swap_counters_refuse_a_pinned_series`, `test_a_series_whose_run_swapped_is_stopped_naming_the_run_and_the_pages`, `test_a_pinned_run_waits_while_the_before_probe_is_above_the_limit`, `test_both_probes_and_the_limit_are_recorded_as_data`).
+- [x] The in-run foreign-load check stops a pinned series at a share >= 10 % (no candidate), records every run's share, skips unpinned runs and refuses a pinned series whose cgroup file is missing or unreadable or whose cgroup is not a `run-*.scope`; unit-tested with injected `/proc` and cgroup readers. Tests: `tests/unit/perf/test_quiet_gate.py` (`test_a_foreign_share_of_ten_percent_stops_the_series_and_writes_no_candidate`, `test_a_pinned_series_under_the_foreign_share_threshold_completes_and_records_each_share`, `test_an_unpinned_process_skips_the_in_run_check_and_reads_no_cgroup`, `test_a_pinned_process_with_an_unreadable_cgroup_refuses_rather_than_skips`, `test_a_pinned_run_outside_its_own_transient_scope_is_refused`).
+- [ ] **MOVED, not done:** `idle_100_local.v0002.json` and `movement_100_local.v0002.json` exist with a non-`UNKNOWN` fingerprint, recorded under the run constraints above. The owner's promotion approval is recorded in the PR (and on #715) before merge. Moved to TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED by the owner's option 1, #715 issuecomment-6546382922.
+- [ ] **MOVED, not done:** The nightly lane (`tests/perf/test_perf_regression_baseline.py -m 'perf and slow' -k idle_100_local` and `-k movement_100_local`) runs against v0002 on the same host, and the PR reports the outcome. Moved to TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED by the owner's option 1, #715 issuecomment-6546382922.
 
 ## Related Tickets
 - TCK-20261010-PERF-M2-T02B-RECORD (BenchmarkRecord)
@@ -184,7 +186,10 @@ Pinned `movement_100_local` series A: run 1 completed (wall_s 8.82, probe 40.73 
 Run ids (`data/runs`, removed by id): idle: run_1793464834_5169_1669360_55113761, run_1793464865_5169_1669529_aa95829c, run_1793464879_5169_1669654_4207b16d, run_1793464933_5169_1669745_9b09f6fe, run_1793464944_5169_1669849_ba35ac8e; movement A runs 1 and 2: run_1793465016_5169_1670056_ed137173, run_1793465031_5169_1670113_8a3ff95c. Evidence under `reports/perf/record_1031/`. Part 2 acceptance criteria stay unticked; the ticket status is unchanged.
 
 ## Test Summary
+`pytest tests/unit/perf tests/perf -m "not slow"` plus the parity-ledger and index tests (`tests/tools/test_parity_*`): 574 passed, 48 deselected (2026-11-01, head after the INFRA-430 edit). `.venv/bin/python -m codebase.health check`: OK. The AC-to-test map is in the Acceptance Criteria above. The CI lanes (unit-infra, perf-cert-arena) are left to CI on the PR.
 
 ## Files Changed
+`src/perf/benchmark_record.py`, `src/perf/cpu_affinity.py`, `src/perf/dependency_fingerprint.py`, `tools/perf/quiet_gate.py`, `tools/perf/rerun_baselines.py`, `tools/perf/hash_callsite_inventory.py`, `tools/perf/wall_clock_inventory.py`, `tests/unit/perf/*` (fingerprint, cpu_affinity, quiet_gate, rerun_baselines, benchmark_record, memory_pass, conftest), `docs/performance/benchmark_identity_schema.md`, `docs/performance/baseline_invalidation_ledger.md` (new INCONCLUSIVE row), `docs/parity_ledger/infrastructure.yaml` (INFRA-430, 1.4 -> 1.5; rpg's file, needs an rpg OK in the PR), `docs/REGISTRY.yaml`, the follow-up ticket TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED. Nothing under `tests/perf/baselines/`.
 
 ## Completion Summary
+Part 1 shipped (dependency fingerprint, schema 1.5, venv guard, pinned quiet-window and in-run gates). Part 2 (v0002 records, nightly lane) moved to TCK-20261101-PERF-V0002-RECORD-AFTER-FINDING-WHAT-MOVES-HOST-SPEED by the owner's option 1, #715 issuecomment-6546382922: the 2026-10-31 re-record did not produce a usable v0002 (idle NOISY at 33.45 %, movement stopped by the in-run swap check). Both scenarios stay on v0001, so the tripwire reads INCONCLUSIVE against a fingerprinted head until v0002 exists; the PR states this plainly. No promotion, no push.
