@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P2
 audience: agent
 ticket_id: TCK-20261031-PLANS-TRACKING-AUDITED-REFRESH
-phase: open
+phase: done
 date: 2026-10-31
 tags: [planning, tracking, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [planning, tracking, documentation]
 Move plans_tracking.md to docs/plans/agent_infrastructure/ and refresh it with an audited count of the plans on main
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -82,7 +82,31 @@ Two live references outside agent-working's files name the old path, at lines 45
 - `docs/plans/codebase_health/python_code_craft_foundation_ticket_brief.md` is held by codebase-planner, whose seat is not running. Lead-planner's word (citing #715 6543261623): change the path on line 45 in this PR, and nothing else in that file. Name the line in the PR body so that codebase-planner sees it at its next start.
 
 ## Test Summary
+Audit script outputs, run at origin/main `96f623a62` (`docs/plans/` is byte-identical at the branch base `6445ea7b8`):
+
+```
+relative links: 83 broken: 0
+rows: 59 files in Files-collapsed column: 200 markdown files outside archive excluding the file: 200
+single-file rows checked against frontmatter: 42 matching: 42
+```
+
+- Coverage (AC1): a spec grouping every non-archive Markdown file under `docs/plans/` into one row was checked by script from the tree: 200 files outside the archive excluding the tracking file (201 including it), each matched by exactly one row, 59 rows. The Files-collapsed column sums to 200.
+- Frontmatter (AC3): all 42 single-file rows match their file's `status` and `authority` by script. Every multi-file row (11 packages) was compared by script against the computed status and authority of its files; the table now shows counts where a package is mixed. Three rows differed from the old text and were corrected or kept deliberately: the AI-first hardening row (3 files are P0, not only the roadmap), the Live Map rendering row (one file is P2), and the world rendering core row (kept as the existing `active program; idea/historical support`).
+- Links (AC4): all 83 relative links resolve. Before the move, 53 links were checked at `docs/plans/` and none was already broken.
+- `route` on the new path: domain agent-working, owned, matched by `docs/plans/agent_infrastructure/**`.
+- No plan has missing frontmatter status or authority. No plan frontmatter was edited.
+- Tests (scoped, slot OK from lead-planner, `-n 1`, CPUs 4-5): `tests/docs`, `tests/tools/test_planning_doc_staleness_check.py`, `tests/tools/test_session_cards.py`: 185 passed, 2 skipped, 1 xfailed in 4.05s. Nothing needed the old path.
 
 ## Files Changed
+- `docs/plans/plans_tracking.md` -> `docs/plans/agent_infrastructure/plans_tracking.md` (moved, links re-based, table rebuilt, Date and Scope updated, one archived path corrected in the maintenance notes)
+- `docs/plans/live_map_rendering_and_surface_integration_milestone_plan.md` (line 411, path only)
+- `docs/plans/codebase_health/python_code_craft_foundation_ticket_brief.md` (line 45, path only)
+- `docs/REGISTRY.yaml` (regenerated)
+- this ticket, moved to done; agent-monitoring shards
 
 ## Completion Summary
+Moved `plans_tracking.md` under `docs/plans/agent_infrastructure/` (agent-working owns it), re-based its links, rebuilt the table from the tree (59 rows covering 200 files, audited), and updated the Date and Scope text. Two path-only reference fixes outside agent-working's files: line 411 of the Live Map rendering plan (no holder) and line 45 of the Python Code Craft foundation brief (codebase-planner's file, lead's word citing #715 6543261623; its seat sees it at next start).
+
+Maintenance-note path check: the roadmap-authority note named `docs/plans/architecture_resilience_remediation_roadmap.md`, which is archived; it now names `docs/plans/archive/architecture_resilience_remediation_roadmap.md`. No other note path had moved. No plan's accuracy or authority was re-judged.
+
+Known gap: no plan has missing or doubtful frontmatter status or authority; the table shows what each file declares, and some declared values look odd (for example several `idea_*` files declare `active`) but were left as declared.

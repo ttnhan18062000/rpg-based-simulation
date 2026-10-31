@@ -408,7 +408,7 @@ No open question blocks human review of this milestone plan. `G0` owns routing a
 
 ### Sources consulted
 
-- `AGENTS.md`, frontmatter/registry guidance, and `docs/plans/plans_tracking.md`
+- `AGENTS.md`, frontmatter/registry guidance, and `docs/plans/agent_infrastructure/plans_tracking.md`
 - the two architecture proposals named at the top of this plan
 - `docs/plans/live_map_scaling_roadmap.md` and historical reconnection plan/ticket
 - active Live Map rendering-performance and interest-management epics
