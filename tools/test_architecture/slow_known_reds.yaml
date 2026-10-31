@@ -195,6 +195,6 @@ known_reds:
     ticket: TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT
     owner: rpg-planner
     added_on: "2026-10-30"
-    expires_on: "2026-11-13"
+    expires_on: "2026-11-29"
     kind: broken
-    note: "measured on de5a223ca: WORLD 0.25 against anchor B 0.32 (past the 20 percent tolerance); cause unknown, bisect pending, introduced between cb4f95015 and 33da13604. The entry cannot bound the value: the ticket re-measures at close and reports any further drift"
+    note: "measured on de5a223ca: WORLD 0.25 against anchor B 0.32 (past the 20 percent tolerance); first mover #769 (d914bace7), cleared by rpg-designer's ruling of 2026-10-31; re-anchor waits on the groups, churn and retention fixes. The entry cannot bound the value: the ticket re-measures at close and reports any further drift"
