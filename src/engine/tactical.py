@@ -14,7 +14,7 @@ from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
-from src.core.skills import SKILL_REGISTRY
+from src.core.skills import SKILL_REGISTRY, SkillDefinition
 from src.engine.rpg_depth import WoundService
 from src.cognition.common_knowledge import combat_capability_against
 from src.engine.tactical_destinations import retreat_destination, wander_destination
@@ -122,6 +122,14 @@ def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntitySta
             current_objective_id_set="",
         )
     return None
+
+
+def pick_highest_power_skill(available_skills: List[SkillDefinition]) -> SkillDefinition:
+    """Choice Bias (COMB-264/265): the highest-power skill; deterministic tie-break: power, then skill id.
+
+    ``learned_skills`` is a set, so without the id key an equal-power tie would follow PYTHONHASHSEED.
+    """
+    return min(available_skills, key=lambda skill: (-skill.power, skill.id))
 
 
 class TacticalDecisionSystem:
@@ -702,9 +710,7 @@ class TacticalDecisionSystem:
                             available_skills.append(skill)
                 
                 if available_skills:
-                    # Choice Bias: Pick highest power
-                    available_skills.sort(key=lambda s: s.power, reverse=True)
-                    chosen_skill_id = available_skills[0].id
+                    chosen_skill_id = pick_highest_power_skill(available_skills).id
 
             # Logic ID: COMB-267 (Exhaustion affects tactical choice)
             # If stamina is low and no free skills, might favor basic attack or rest

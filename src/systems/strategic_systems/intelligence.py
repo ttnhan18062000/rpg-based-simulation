@@ -90,7 +90,7 @@ from src.ai.goals.live_record_route import orphan_switch_candidate, route_live_r
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
-from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem, merge_concerns_in_cap_order
 from src.systems.strategic_systems.entity_target_objective import close_entity_target_project, contract_project_id
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
@@ -555,7 +555,7 @@ class StrategicIntelligenceSystem:
                     b_obj = entity.strategic.blockers.get(b_id)
                     if b_obj: new_additions.append(replace(b_obj, resolved=True))
             
-            new_removals = list(set(strat_up.blockers_remove) | resolved_ids)
+            new_removals = sorted(set(strat_up.blockers_remove) | resolved_ids)
             new_projects = list(strat_up.projects_add_or_update)
             if project_upd: new_projects.append(project_upd)
             
@@ -925,7 +925,7 @@ class StrategicIntelligenceSystem:
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             strat_up = ent_upd.strategic or StrategicUpdate()
 
-            new_concerns = list(set(strat_up.concerns_add_or_update + concerns))
+            new_concerns = merge_concerns_in_cap_order(strat_up.concerns_add_or_update, concerns)
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
@@ -937,7 +937,7 @@ class StrategicIntelligenceSystem:
             new_strat_up = replace(
                 strat_up,
                 concerns_add_or_update=new_concerns,
-                concerns_remove=list(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
+                concerns_remove=sorted(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
             )
             refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
                 
@@ -1808,7 +1808,7 @@ class StrategicIntelligenceSystem:
                 # Merge with current state of updates
                 return StrategicUpdate(
                     leads_add_or_update=memory_upd.leads_add_or_update,
-                    leads_remove=list(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
+                    leads_remove=sorted(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
                     concerns_remove=bandwidth_upd.concerns_remove,
                     overload_source_set=bandwidth_upd.overload_source_set,
                     overload_tick_set=bandwidth_upd.overload_tick_set,

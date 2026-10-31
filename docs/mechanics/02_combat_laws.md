@@ -106,6 +106,9 @@ is_wound = damage > (defender.max_hp * 0.25) and defender.alive
     becomes an additional guard-priority qualifier, alongside the existing `hp_ratio < 0.8`/`< 0.7`
     checks.
 
+### 5.5 Skill Selection Tie-Break (COMB-264, COMB-265; divergence 2.144)
+Among the ready, in-range, affordable skills the entity picks the highest power. Deterministic tie-break: power, then skill id.
+
 ---
 
 ## 6. Area of Effect (AoE) Logic
