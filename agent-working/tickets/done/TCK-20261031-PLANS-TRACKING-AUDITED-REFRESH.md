@@ -109,4 +109,6 @@ Moved `plans_tracking.md` under `docs/plans/agent_infrastructure/` (agent-workin
 
 Maintenance-note path check: the roadmap-authority note named `docs/plans/architecture_resilience_remediation_roadmap.md`, which is archived; it now names `docs/plans/archive/architecture_resilience_remediation_roadmap.md`. No other note path had moved. No plan's accuracy or authority was re-judged.
 
-Known gap: no plan has missing or doubtful frontmatter status or authority; the table shows what each file declares, and some declared values look odd (for example several `idea_*` files declare `active`) but were left as declared.
+Known gap: no plan has missing status or authority. Six `idea_*` files declare a status other than `idea` and are left as declared: `docs/plans/agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md`, `docs/plans/idea_frontend_canvas_render_tiers.md`, `docs/plans/idea_hud_color_asset_system.md`, `docs/plans/idea_hud_motion_transition_system.md` and `docs/plans/idea_hud_quality_measurement.md` declare `active`, and `docs/plans/world_rendering/idea_world_render_validation.md` declares `historical`.
+
+Two reference lines outside agent-working's files changed, path only: `docs/plans/live_map_rendering_and_surface_integration_milestone_plan.md` line 411 and `docs/plans/codebase_health/python_code_craft_foundation_ticket_brief.md` line 45 (codebase-planner's file, changed on lead-planner's word citing #715 6543261623).
