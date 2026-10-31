@@ -5812,6 +5812,30 @@
   - delivery
   - planning
 - type: doc
+  path: docs/plans/agent_infrastructure/SDLC_BASELINES_FROZEN.md
+  title: 'AI-First SDLC: Frozen Baselines'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
+  path: docs/plans/agent_infrastructure/SDLC_DECISION_RECORD.md
+  title: 'AI-First SDLC: Decision Record'
+  status: active
+  layer: ai
+  authority: P2
+  audience: agent
+  tags:
+  - ai
+  - governance
+  - delivery
+  - planning
+- type: doc
   path: docs/plans/agent_infrastructure/agent_working_direction.md
   title: Agent-Working Direction — Observable, Self-Diagnosing, Adaptable Delivery
   status: active
@@ -7966,7 +7990,10 @@
   - tools/agent-monitoring/record_hand_orchestrated_closure.py
   - docs/agent-monitoring/schema.md
   - docs/plans/agent_infrastructure/session_layer_working_process.md
-  artifact_files: []
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN/test_plan.md
   tags:
   - ai
   - governance
