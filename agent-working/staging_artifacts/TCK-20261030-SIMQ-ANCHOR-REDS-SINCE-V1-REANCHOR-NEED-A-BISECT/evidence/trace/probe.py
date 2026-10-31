@@ -42,6 +42,22 @@ def ug(state, current_update=None):
         e18 = state.entities[18]; st = e18.strategic
         log(k="e18_tick", tick=state.tick, pos=e18.navigation.position, target=e18.navigation.target,
             project=st.current_project_id, proj_kind=(st.projects[st.current_project_id].kind if st.current_project_id in st.projects else None))
+    if 60 <= state.tick <= 86 and 10006 in state.groups and 18 in state.entities and 30 in state.entities:
+        g6 = state.groups[10006]; l = state.entities[18]; m = state.entities[30]
+        pr = l.strategic.projects.get(l.strategic.current_project_id) if l.strategic.current_project_id else None
+        bond = m.social.bonds.get(18)
+        trust = (bond.sentiment + 1.0) / 2.0 if bond else m.social.trust_history.get(18, 0.5)
+        ax, ay = g6.anchor
+        dsq = {mm: (state.entities[mm].navigation.position[0]-ax)**2 + (state.entities[mm].navigation.position[1]-ay)**2 for mm in g6.member_ids if mm in state.entities}
+        log(k="g6_anchor", tick=state.tick, anchor=g6.anchor, leader=g6.leader_id, leader_project_id=l.strategic.current_project_id,
+            proj_kind=(pr.kind if pr else None), leader_projects=sorted(l.strategic.projects), trust30_in_18=trust, dist_sq_to_anchor=dsq,
+            pos18=l.navigation.position, pos30=m.navigation.position, last_updated=g6.last_updated_tick)
+    if 53 <= state.tick <= 70 and 18 in state.entities:
+        e = state.entities[18]; st = e.strategic
+        objs = getattr(st, "objectives", None)
+        log(k="e18_proj", tick=state.tick, cur=st.current_project_id, projects={pid: (pr.kind, getattr(pr, "status", None)) for pid, pr in st.projects.items()},
+            target=e.navigation.target, work=e.task.work_kind, hp=e.combat.hp,
+            directives=[(d.id, d.kind, str(d.target)) for d in (getattr(st, "directives", None) or {}).values()] if isinstance(getattr(st, "directives", None), dict) else str(getattr(st, "directives", None))[:200])
     adds = getattr(res, "groups_add_or_update", None)
     if adds is not None:
         for r in adds:
