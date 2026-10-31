@@ -140,3 +140,32 @@ NEW FLAG, for P3 and the prefix check: urban_political s42 at d914bace7 looks fr
 ---
 
 lead-planner's note: the check reads existing logs, so it needs no slot. On a STOP, P1-P4 pause until rpg-planner says otherwise.
+
+## Ruling 6 (2026-10-31): urban_political s42
+
+Relayed via lead-planner-u24 and lead-planner. The text between the rules is word for word as relayed.
+
+---
+The addendum was taken into account (silent stretch t727-t1665; "3 lives" inferred, not traced).
+
+1. The run itself is NOT a STOP: no die-out, and events run to the last tick. The 2000t rows DO go to the designer, and they are not re-anchorable as threshold moves.
+- Which rows: s42 2000t COMBAT, PROGRESSION and NARRATIVE, plus the COGNITION and FACTION status flips at 500t, 1000t and 2000t. The flips are event-count changes (2 to 22, and 3 to 0), so they go up with these rows.
+- The question for the designer: is the missing second wave an intended effect of #769's stronger retreat (fewer re-engagements, 21 alive vs 16), or an unintended suppression? The pillars can only be re-anchored after that ruling.
+- Evidence to send: the per-pillar last-scored-tick table, alive counts, events per 100t, and the parent's wave at t1666 (COMBAT), t1669 (NARRATIVE), t1709 (PROGRESSION).
+- Not traced, and the designer may ask for it: what the t1500+ events are at d914bace7, and why no wave forms there.
+- The s42 1000t rows: their scores are fixed by t552. They inherit P3's path under the prefix rule, but they go up with the 2000t rows for the same ruling.
+
+2. YES. P1, P2 and P4 go ahead now, unchanged. P3 also runs as specified (500t, first difference, the status-flip causes). Its result goes into the designer packet rather than being self-sufficient for re-anchoring.
+- P1 note: s123 ECONOMY moves +0.107 on one fewer event (26 vs 25). Record per-pillar event counts beside every probe result. A one-event swing that large is a small-sample sensitivity in the scorer, and the designer should see it.
+
+3. The stale-anchor note: rpg-planner-ubuntu adds it in the SimQ PR, which puts it on main (rpg-planner's seat copy is behind main). Add these words verbatim as a new section at the end of TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE:
+"## Note 2026-10-31 (rpg-planner): stale anchors moved by #769
+TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT's sweep (a25619971 vs d914bace7) found 38 rows out of tolerance at the parent; 10 of them (urban_political s456 500t FACTION, PROGRESSION, SOCIAL, INFORMATION; 1000t COMBAT, FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION) also moved under #769. Any re-anchor of a held row here must be based on values after #769 AND after TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP, never on a25619971's, and each needs its own cause. The ticket counts 36 rows, the sweep 38 (entries are whole-key); reconcile the 2 at close."
+
+4. Re-dating the expiry is needed, and it goes to the owner as its own ask. lead-planner-u24 is putting it to the owner now and will relay the answer with a #715 comment id. Proposed: move the expiry of the 12 whole-key slow_known_reds entries under TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE from 2026-11-15 to 2026-11-29, with no other change. Reason: their cause can only be measured after TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP merges and the 162-run sweep re-runs. The alternative is to let them expire and treat them as reds.
+---
+
+lead-planner's notes, same message:
+- Slot: its go for P1-P4 and the P1 repeat stands and the hold is lifted. Start when B's re-check has finished, because the slot is one run at a time.
+- Do not edit the expiry until the owner's answer arrives with a #715 id.
+- The designer packet goes to rpg-designer via rpg-planner when P3 is in. Send it to lead-planner for the relay.
