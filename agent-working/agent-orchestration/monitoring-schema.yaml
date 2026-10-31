@@ -26,8 +26,8 @@ fields:
   path_reason:
     description: >
       Run field. Why the ticket took its path: pipeline_default (the formal pipeline ran, set by the pipeline itself),
-      pipeline_unavailable, native_port_blocked, small_change, owner_directed, batch_hand_close, investigation_only,
-      other (needs a path_note) or unstated (the writers' default when nobody said).
+      pipeline_unavailable, native_port_blocked, small_change, owner_directed (needs a path_note), batch_hand_close,
+      investigation_only, other (needs a path_note) or unstated (the writers' default when nobody said).
     source: tools/agent-monitoring/vocabulary.py#PATH_REASONS
   phases_omitted:
     description: >

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261031-SDLC-R0-INVENTORY-AND-BASELINE-TAGS
-phase: open
+phase: done
 date: 2026-10-31
 tags: [ai, governance, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 Research stage R0: candidate tasks and the disposition review are recorded, and baselines are frozen as git tags.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -66,13 +66,18 @@ R0 (plan section 70). OD-15 is decided yes: freeze baselines as tags. R0 is read
 - Undecided, and not to be written as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Record: `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (plan read at `1ccaba303`; repository at `6fdfdf555`).
+- Candidates: 7 provisional tasks, 4 quarantined with reasons, from 11 tickets (10 PRs). Each verdict is "static reading; controls not run, needed before R1"; the controls were not run: agent-working-planner narrowed R0 after the owner deferred R1 and later research (#715 6540856174); needed before R1.
+- Disposition review: all 14 section 32a rows have a disposition, with what was checked and what was not. Plan rows noted: Codex size (32a 5k alone against 3,455 by an exact glob; sections 32/retirement table say 5.0k with replay), 61 test files against about 57, Headroom still configured (not yet done), one CI lane shared by Codex and the contract tests, `retrieval_cache.py` runtime trace not done.
+- Billing and subscription limits: **outstanding by the owner's choice** (#715 6540856174: "not now"); no details recorded.
+- Baseline tags: created and pushed by the owner (#715 6541773425), four annotated tags at `6fdfdf5556548105e28ab370832f36bc96241561`; R0 created none. Measured results (replay 45 passed; Codex 299 passed, 5 skipped; provider-neutral 139 passed; pipeline 342 passed, 3 skipped, 1 xfailed) are in the tag messages; the test commands are in the record. Tags stay unprotected until the ruleset ticket.
 
 ## Test Summary
-(to be filled by the implementer)
+Read-only ticket; no code. The four tag test sets ran at `6fdfdf555` in a detached checkout (results in the record); the task controls were not run: agent-working-planner narrowed R0 after the owner deferred R1 and later research (#715 6540856174); needed before R1.
 
 ## Files Changed
-(to be filled by the implementer)
+- `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (new)
 
 ## Completion Summary
-(to be filled by the implementer)
+AC1 met by static reading (7 provisional tasks, 4 quarantined; verdicts marked "static reading; controls not run, needed before R1"). AC2 met (every 32a row has a disposition). AC3 met: tags exist on the remote at the recorded SHA after the owner's yes (#715 6541773425). AC4 met: before R1 the record lists OD-16, 17, 18, 21 and the task controls; nothing is decided and no budget is named. Billing stays outstanding by the owner's choice (#715 6540856174). 
+Known gap: the 7 candidate tasks have no positive or negative control run (not run: agent-working-planner narrowed R0 after the owner deferred R1 and later research (#715 6540856174); needed before R1).
