@@ -1,0 +1,94 @@
+---
+status: historical
+layer: ai
+authority: P2
+audience: agent
+ticket_id: TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE
+phase: done
+date: 2026-10-31
+tags: [planning, documentation]
+---
+
+# TCK-20261031-SDLC-PLAN-REVIEW-FIXES-AND-EVIDENCE
+
+## Title
+Apply lead-planner's review fixes to the AI-first SDLC plan and add an evidence section to its summary
+
+## Status
+DONE
+
+## Tier
+hotfix
+
+## Type
+chore
+
+## Priority
+P2
+
+## Request Summary
+The designer asked for its before/after draft to land in the next agent-working PR, with no plan-only PR. Lead-planner agreed the scope. The text is at main-checkout `.claude/handover/drafts/sdlc_plan_review_fixes.md`, which is gitignored, so the plan's own diff is the durable record. Nothing here is an owner decision and no decision changes.
+
+## Scope
+Docs only, in `docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md` and `AI_FIRST_SDLC_DECISION_SUMMARY.md`:
+- A: the summary's trust statement and "What the proposal rests on" table.
+- B: review findings 1-4, including outcome movement in section 28a.
+- C: wording findings 5-7.
+- D: alignment to the logged decisions and the R0 differences, and the governing-file fact.
+
+Count at landing, with the commit named: test files naming the workflows (`~57` becomes that figure), and Codex lines with the glob stated.
+
+## Out of Scope
+- Writing any undecided decision as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
+- Credential detail of any kind, and u24 specifics.
+- Mermaid diagram text.
+- Plan sections other than those the draft names.
+
+## Acceptance Criteria
+1. Every draft edit is applied at the stated text, except any the planner has marked in Implementation Notes. If a Before string is not found on that line, stop and report; do not approximate.
+2. Both counts are recorded with their commit and, for Codex, the glob.
+3. The sweep figures cite the path on main if the evidence branch has merged, or that branch at d2ed6c8c2 if it still stands. If it has been deleted, the sentence stays and the figures go.
+4. The CI-lane sentence for the Codex row is checked against the workflow first.
+5. `tests/docs` passes and `docs/REGISTRY.yaml` is regenerated.
+6. The PR body says which plan sections lead-planner reviewed and that the rest remain unreviewed, and states the summary's growth of about 350 words.
+
+## Related Tickets
+TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION, TCK-20261031-GOVERNING-FILE-EDITS-VISIBLE-TO-OWNER
+
+## Related Docs
+docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md, docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md
+
+## Related Stored Artifacts
+None.
+
+## Related Code Areas
+None.
+
+## Assumptions / Open Questions
+Line numbers in the draft are from origin/main b110ee4c2. `Un-require` and `5k LOC` each appear twice in the plan, so those two edits go by the draft's line number, 1361 and 1042.
+
+## Implementation Notes
+Applied from the designer's revised draft (main-checkout `.claude/handover/drafts/sdlc_plan_review_fixes.md`, read as it stood on 10-31 after the owner decided OD-10, #715 6543854496), each Before string matched on its stated line, line numbers from origin/main `b110ee4c2`; `Un-require` went by line 1361 and `5k LOC` by line 1042. Nothing was approximated.
+
+Counts at landing (branch commit `29e1fdcc3`):
+- Test files naming `implement-ticket.js` or `implement-epic.js`: **61**, by `git grep -l -E 'implement-ticket\.js|implement-epic\.js' -- tests`. `~57` became `~61` at lines 1039, 1071 and 1094.
+- Codex line count at line 1042: **3,455 lines in 67 files** under `tools/` (glob `git ls-files | grep -i codex | grep -E '^(src|tools)/'`), plus **5,546 lines of tests** (same glob, `tests/`). The replay runner is 1,659 lines (`git ls-files | grep agent_replay | grep -v codex | grep -E '^(src|tools)/'`). Codex plus replay source is therefore 5,114, which keeps the "about 5.0k" at lines 1024 and 1073 true, so those were left. The implementer's earlier 3,455 + 1,659 reproduces; the planner's narrower glob (2,768) is not used.
+- CI lane check: `.github/workflows/test.yml` job "Agent orchestration / codex / replay" runs the seven `tests/agent_codex_*` directories, `tests/agent_orchestration`, `tests/agent_orchestration_claude_adapter`, `tests/agent_orchestration_codex_adapter`, `tests/agent_replay` and `tests/agent_replay_codex`, so the sentence "it also runs tests/agent_orchestration" is true. It was appended to the Recommendation cell of the Codex row (the table has no column named Disposition).
+
+Sweep figures: the evidence branch `rpg-ubuntu-simq-anchor-bisect-impl` still exists on the remote at `d2ed6c8c2` and the path is not on main, so the section 28a paragraph cites the branch as the draft says.
+
+Summary growth: `wc -w` goes from 1,084 to 1,520 words (about 436, counting table markup; the draft estimated about 350).
+
+## Test Summary
+`tests/docs` at `f5b9469fe` (lead-planner slot): 91 passed, 2 skipped, 1 xfailed. The same full `tests/tools` run as the guard ticket (above) covers the registry tests: 5430 passed, 1 failed (registry drift, fixed by the regeneration at close; rerun recorded in the guard ticket).
+
+## Files Changed
+- `docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`
+- `docs/plans/agent_infrastructure/AI_FIRST_SDLC_DECISION_SUMMARY.md`
+- this ticket; `docs/REGISTRY.yaml`
+
+## Completion Summary
+All draft edits applied (items A to D) as written, with the two counts recorded above. Lead-planner reviewed the matrix, sections 1-6, 27a, 28-28a, 32a, 37-38, 42 and 71-72; sections 62-70 and the rest remain unreviewed.
+
+Known gap: the section 28a sweep figures cite a branch that is not on main; if it is deleted before the figures are re-cited, the sentence stays and the figures go (ticket acceptance criterion 3).
+Known gap: the summary grew by about 436 words by `wc -w` (the draft said about 350); the table rows can be cut, the two plain statements not.

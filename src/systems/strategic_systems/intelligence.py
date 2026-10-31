@@ -86,10 +86,11 @@ from src.systems.world_systems.intake import ConcernIntakeSystem
 from src.engine.domain_logic import SimulationDomainLogic
 from src.ai.goals import GoalRegistry, escalated_need_wins
 from src.ai.goals.base import GoalScore
+from src.ai.goals.live_record_route import orphan_switch_candidate, route_live_record, supersede_on_win
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
-from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem, merge_concerns_in_cap_order
 from src.systems.strategic_systems.entity_target_objective import close_entity_target_project, contract_project_id
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
@@ -554,7 +555,7 @@ class StrategicIntelligenceSystem:
                     b_obj = entity.strategic.blockers.get(b_id)
                     if b_obj: new_additions.append(replace(b_obj, resolved=True))
             
-            new_removals = list(set(strat_up.blockers_remove) | resolved_ids)
+            new_removals = sorted(set(strat_up.blockers_remove) | resolved_ids)
             new_projects = list(strat_up.projects_add_or_update)
             if project_upd: new_projects.append(project_upd)
             
@@ -924,7 +925,7 @@ class StrategicIntelligenceSystem:
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             strat_up = ent_upd.strategic or StrategicUpdate()
 
-            new_concerns = list(set(strat_up.concerns_add_or_update + concerns))
+            new_concerns = merge_concerns_in_cap_order(strat_up.concerns_add_or_update, concerns)
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
@@ -936,7 +937,7 @@ class StrategicIntelligenceSystem:
             new_strat_up = replace(
                 strat_up,
                 concerns_add_or_update=new_concerns,
-                concerns_remove=list(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
+                concerns_remove=sorted(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
             )
             refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
                 
@@ -1303,7 +1304,7 @@ class StrategicIntelligenceSystem:
         current_tick = state.tick
         strat = entity.strategic
         
-        boredom_upd = {}
+        boredom_upd: Dict[str, float] = {}
         if strat.current_project_id:
             proj = strat.projects.get(strat.current_project_id)
             if proj and proj.status == ProjectStatus.ACTIVE:
@@ -1605,17 +1606,11 @@ class StrategicIntelligenceSystem:
 
             
         if best_candidate:
-            existing = next((p for p in strat.projects.values() if p.kind == best_candidate.kind), None)
-            
-            if existing and existing.status == ProjectStatus.SUSPENDED:
-                resumed_up = StrategicIntelligenceSystem.resume_project(entity, existing.id)
-                if resumed_up:
-                    return replace(resumed_up,
-                         boredom_delta=boredom_upd,
-                         leads_add_or_update=memory_upd.leads_add_or_update,
-                         leads_remove=memory_upd.leads_remove
-                    )
-            
+            # TCK-20261027-CAPACITY-GATE-FIRST-RECORD-OF-KIND-IS-DEAD-SO-LIVE-SIBLING-NEVER-RESUMED: a goal continues, resumes or contests the LIVE record of its kind (live_record_route), never the first stored one.
+            route = route_live_record(entity, best_candidate, StrategicIntelligenceSystem.resume_project)
+            if route.update is not None:
+                return replace(route.update, boredom_delta=boredom_upd, leads_add_or_update=memory_upd.leads_add_or_update, leads_remove=memory_upd.leads_remove)
+
             if best_candidate.kind == GoalKind.ADVENTURE_ROUTE:
                 # AC3/AC4: materialize via RouteToProjectMapper using the RAW route score
                 # (metadata["raw_score"]), never best_candidate.utility. _score_scale_max()
@@ -1768,12 +1763,15 @@ class StrategicIntelligenceSystem:
                     score=best_candidate.utility
                 )
 
-            if not existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
+            candidate_proj = orphan_switch_candidate(route, candidate_proj, best_candidate.utility, current_tick)
+
+            if not route.existing and not has_project_capacity(strat.projects, strat.profile.max_active_projects) and not escalated_need_wins(entity, best_candidate.kind):
                 if boredom_upd:
                     return StrategicUpdate(boredom_delta=boredom_upd)
                 return StrategicUpdate()
 
             switch_up = StrategicIntelligenceSystem.evaluate_project_switch(with_live_current_score(entity, modified_scores), candidate_proj, current_tick, state=state)
+            switch_up = supersede_on_win(switch_up, route, candidate_proj)
             if switch_up:
                 # TCK-20260812-COMMITTED-INTENTION-SEQUENCE: win-transition bookkeeping. Only
                 # fires when the winning candidate is THIS tick's synthesized committed-intention
@@ -1800,7 +1798,9 @@ class StrategicIntelligenceSystem:
                     **extra_ci,
                     **extra_routing
                 )
-            
+            if route.orphan is not None:
+                return replace(StrategicUpdate(), boredom_delta=boredom_upd, leads_add_or_update=memory_upd.leads_add_or_update, leads_remove=memory_upd.leads_remove)
+
             # Law 194-197: Enforce Strategic Bandwidth
             # Logic ID: 195, 196
             bandwidth_upd = DetourSuggestionSystem.enforce_bandwidth(entity, current_tick)
@@ -1808,7 +1808,7 @@ class StrategicIntelligenceSystem:
                 # Merge with current state of updates
                 return StrategicUpdate(
                     leads_add_or_update=memory_upd.leads_add_or_update,
-                    leads_remove=list(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
+                    leads_remove=sorted(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
                     concerns_remove=bandwidth_upd.concerns_remove,
                     overload_source_set=bandwidth_upd.overload_source_set,
                     overload_tick_set=bandwidth_upd.overload_tick_set,

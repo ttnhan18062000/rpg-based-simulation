@@ -986,10 +986,8 @@ class EntityState:
                     "kind": v.kind,
                      "status": str(v.status),
                     "active_objective_id": v.active_objective_id,
-                    "objectives": [
-                        {f: val for f, val in asdict(o).items() if not (f == "target_entity_id" and val is None)}
-                        for o in v.objectives
-                    ]
+                    "objectives": v.canonical_objectives(),
+                    **v.canonical_extra(),
                 } for k, v in sorted(self.strategic.projects.items())},
                 "directives": {k: asdict(v) for k, v in sorted(self.strategic.directives.items())},
                 "blockers": {k: asdict(v) for k, v in sorted(self.strategic.blockers.items())},

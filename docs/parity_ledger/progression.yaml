@@ -1275,12 +1275,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 skill_unlocked block;\
-    \ set diff on _curr_id.learned_skills vs _prior_id.learned_skills. As of the push-shaper\
-    \ migrations (see PROG-117), this event is also derived by the live-default apply-layer\
-    \ ProgressionShaper (src/observability/event_shapers.py); event_extractor.py's\
-    \ block above is now the flag-gated (_push_shapers_phase2_active) rollback path,\
-    \ not the sole terminus.\n"
+  v2_evidence: "src/observability/extraction/progression.py \u2014 skill_unlocked\
+    \ block; set diff on _curr_id.learned_skills vs _prior_id.learned_skills. As of\
+    \ the push-shaper migrations (see PROG-117), this event is also derived by the\
+    \ live-default apply-layer ProgressionShaper (src/observability/event_shapers.py);\
+    \ src/observability/extraction/progression.py's block above is now the flag-gated\
+    \ (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_progression.py::TestSkillUnlocked
   divergence_note: null
@@ -1295,12 +1295,12 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 trait_expressed and pillar_trait_unlocked\
-    \ blocks; set diff on identity.traits and identity.active_breakthroughs. As of\
-    \ the push-shaper migrations (see PROG-117), both events are also derived by the\
-    \ live-default apply-layer ProgressionShaper (src/observability/event_shapers.py);\
-    \ event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
-    \ rollback path, not the sole terminus.\n"
+  v2_evidence: "src/observability/extraction/progression.py \u2014 trait_expressed\
+    \ and pillar_trait_unlocked blocks; set diff on identity.traits and identity.active_breakthroughs.\
+    \ As of the push-shaper migrations (see PROG-117), both events are also derived\
+    \ by the live-default apply-layer ProgressionShaper (src/observability/event_shapers.py);\
+    \ src/observability/extraction/progression.py's block above is now the flag-gated\
+    \ (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_progression.py::TestTraitExpressed;
     tests/unit/observability/test_event_extractor_progression.py::TestPillarTraitUnlocked
@@ -1317,13 +1317,13 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 progression_conversion_applied\
+  v2_evidence: "src/observability/extraction/progression.py \u2014 progression_conversion_applied\
     \ and progression_plateau_detected blocks; _XP_PLATEAU_TICKS = 50; _emitted_plateau\
-    \ set and _last_xp_tick dict reset in reset_run_state(). As of the push-shaper\
-    \ migrations (see PROG-117), both events are also derived by the live-default\
-    \ apply-layer ProgressionShaper (src/observability/event_shapers.py); event_extractor.py's\
-    \ block above is now the flag-gated (_push_shapers_phase2_active) rollback path,\
-    \ not the sole terminus.\n"
+    \ set and _last_xp_tick dict reset in reset_run_state() (src/observability/event_extractor.py).\
+    \ As of the push-shaper migrations (see PROG-117), both events are also derived\
+    \ by the live-default apply-layer ProgressionShaper (src/observability/event_shapers.py);\
+    \ src/observability/extraction/progression.py's block above is now the flag-gated\
+    \ (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_progression.py::TestProgressionConversionApplied;
     tests/unit/observability/test_event_extractor_progression.py::TestProgressionPlateauDetected
@@ -1396,20 +1396,19 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- _CAPABILITY_STALL_TICKS, _LATE_GENERATION_THRESHOLD,
-    _last_capability_growth_tick/_emitted_capability_stalled/_emitted_life_arc_incoherent
-    class state (cleared in reset_run_state()), new unconditional detection block
-    in the entity loop; config/simulation_quality/scoring_weights.yaml -- capability_growth_stalled:
-    -10.0, life_arc_incoherent: -15.0; src/simulation_quality/scorers/progression.py
+  v2_evidence: 'src/observability/extraction/capability.py -- _CAPABILITY_STALL_TICKS,
+    _LATE_GENERATION_THRESHOLD, _last_capability_growth_tick/_emitted_capability_stalled/_emitted_life_arc_incoherent
+    class state (in src/observability/event_extractor.py, cleared in reset_run_state()),
+    new unconditional detection block in the entity loop; config/simulation_quality/scoring_weights.yaml
+    -- capability_growth_stalled: -10.0, life_arc_incoherent: -15.0; src/simulation_quality/scorers/progression.py
     -- 2 new EVENT_TYPES entries and score() branches, both reading weights from config
     (no numeric literals).'
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_progression.py; tests/simulation_quality/test_progression_scorer.py
   divergence_note: "RETIRED 2026-10-01 (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION):\
-    \ the `life_arc_incoherent` half of this rule was removed with hero rebirth -- its\
-    \ premise (`generation >= 2`, a rebirth occurred) no longer exists; the\
-    \ `capability_growth_stalled` half is unchanged. The text below is history.\
-    \ Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION):\
+    \ the `life_arc_incoherent` half of this rule was removed with hero rebirth --\
+    \ its premise (`generation >= 2`, a rebirth occurred) no longer exists; the `capability_growth_stalled`\
+    \ half is unchanged. The text below is history. Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION):\
     \ this rule's own precondition (`lifecycle.generation >= 2`, a rebirth having\
     \ occurred) was structurally unreachable corpus-wide -- the rebirth-granting mechanic\
     \ itself only existed in `resolve_attack()`, a combat function the real corpus\
@@ -1620,8 +1619,8 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'src/observability/event_shapers.py::ProgressionShaper.shape() (new
-    entity_evolved block); src/observability/event_extractor.py (flag-gated rollback
-    mirror); src/simulation_quality/scorers/progression.py::ProgressionScorer.score()
+    entity_evolved block); src/observability/extraction/progression.py (flag-gated
+    rollback mirror); src/simulation_quality/scorers/progression.py::ProgressionScorer.score()
     (new species_evolution rule); config/simulation_quality/scoring_weights.yaml (species_evolution:
     50.0). Verified against the real EvolutionSystem.evaluate() output (src/engine/evolution.py),
     not a hand-built mock. Not yet observed in any real shipped calibration run --

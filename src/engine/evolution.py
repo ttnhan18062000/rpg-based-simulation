@@ -117,7 +117,7 @@ class EvolutionSystem:
                     
                     id_upd = replace(id_upd, 
                         unspent_ap_delta=id_upd.unspent_ap_delta + total_ap_gain,
-                        learned_skills=list(set(id_upd.learned_skills + skills_to_learn))
+                        learned_skills=sorted(set(id_upd.learned_skills + skills_to_learn))
                     )
                 else:
                     from src.core.updates import AttributeUpdate

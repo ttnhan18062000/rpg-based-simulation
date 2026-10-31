@@ -291,7 +291,7 @@ subject-line traceability gap in the first place. A `Closes:` block goes in the 
 ## Verification
 - Tests: <scoped commands run, per ticket, with results>
 - Gates: <done_checker_static result per ticket, including any stated FAIL>
-- Known gaps: <anything closed with a known failure, stated not hidden>
+- Known gaps: <anything closed with a known failure or a stated gap, stated not hidden>
 
 ## Review notes
 <the only hand-written section: what the user should look at first, and any
@@ -320,6 +320,14 @@ directories, and the last line is `Closes: (none)`. Pass the same three flags to
 `## Known gaps` is load-bearing and deliberate: the repo's Gate Integrity rule says a blocking gate
 result is information to report, never an obstacle to route around. Giving it a fixed slot in every
 PR body makes reporting it the default rather than an act of virtue.
+
+`pr_render.py` fills that line from each ticket's `## Test Summary` and `## Completion Summary`: a
+line containing `FAIL`, or a line beginning `Known gap:` (after an optional list marker; the prefix is
+case-sensitive). A closing agent states a gap that is not a failure with a `Known gap: <what and why>`
+line in one of those two sections; prose such as "no gaps remain" or "except as stated in the record"
+is not read. When nothing matches, the line says `none stated (no FAIL or Known gap: line in any
+ticket's Test/Completion Summary)`, so it names what was checked rather than asserting nothing exists.
+A pointer to this marker in CLAUDE.md's closure guidance is left for the owner to decide (a governing file).
 
 ---
 

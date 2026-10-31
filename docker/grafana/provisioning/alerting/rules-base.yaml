@@ -9,8 +9,9 @@ apiVersion: 1
 # If a single $labels is eaten by the provisioning env expansion, the fallback is a provisioned notification template (templates: under provisioning/alerting).
 # GrafanaAlertingFailures: grafana_alerting_notifications_failed_total is a real 13.2.4 metric (pkg/services/ngalert/metrics/multi_org_alertmanager.go at v13.2.4: the
 # numFailedNotifications desc, sent with WithSkipZeroValueMetrics), so the series only appears after a first failure; `or vector(0)` keeps the rule evaluating until then.
-#   LogShippingErrors     noData Alerting (the series exists at 0 from a fresh promtail start, so noData means the series vanished: promtail not scraped or its metrics gone), execErr OK.
-#                         Its expression carries NO comparison: a healthy promtail returns 0 (Normal); embedding "> 0" would turn the healthy case into NoData and fire.
+#   LogShippingErrors     noData Alerting (prometheus_sd_refresh_failures_total exists at 0 from a fresh alloy start, so noData means the series vanished: alloy not scraped or its metrics gone), execErr OK.
+#                         Its expression carries NO comparison: a healthy alloy returns 0 (Normal); embedding "> 0" would turn the healthy case into NoData and fire.
+#                         Terms: failed Docker discovery refreshes + Loki push retries (series appears only after the first retry, hence "or vector(0)" on that term alone) + dropped entries.
 # runbook_url values are repo-relative paths until a docs host exists (docs/runbooks/README.md is the index).
 groups:
   - orgId: 1
@@ -244,7 +245,7 @@ groups:
             datasourceUid: prometheus
             model:
               refId: A
-              expr: 'sum(rate(loki_internal_log_messages_total{job="promtail",level="error"}[5m]))'
+              expr: 'sum(rate(prometheus_sd_refresh_failures_total{job="alloy"}[5m])) + (sum(rate(loki_write_batch_retries_total{job="alloy"}[5m])) or vector(0)) + sum(rate(loki_write_dropped_entries_total{job="alloy"}[5m]))'
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
@@ -272,7 +273,7 @@ groups:
         for: 10m
         isPaused: false
         annotations:
-          summary: "Promtail is logging errors continuously (log shipping is failing)"
+          summary: "Alloy log shipping is failing (discovery refreshes or Loki pushes keep failing)"
           runbook_url: docs/runbooks/log-shipping.md
         labels:
           severity: warning

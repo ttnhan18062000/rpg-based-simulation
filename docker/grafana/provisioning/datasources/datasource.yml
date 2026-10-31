@@ -24,7 +24,7 @@ datasources:
     uid: tempo
     jsonData:
       tracesToLogsV2:
-        # Loki streams carry a `container` label (promtail relabel); filter on the backend container and the trace id.
+        # Loki streams carry a `container` label (alloy discovery.relabel); filter on the backend container and the trace id.
         datasourceUid: loki
         customQuery: true
         query: '{container=~".*backend.*"} |= "$${__trace.traceId}"'

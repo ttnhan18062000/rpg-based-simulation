@@ -255,12 +255,42 @@ def test_reach_location_arrival_behavior_unchanged():
 
     update_eat = TacticalDecisionSystem.evaluate_entity_intent(state_eat, hero_eat, neighbors=[])
 
+    # A tavern neither serves a meal (SERVICE_KINDS["EAT"] is the inn) nor offers a shift, so the hunger project ENDS here (divergence 2.151;
+    # rpg-planner ruling 2026-10-30). Before, any non-shop building got an EAT that delivered nothing and held the project (a tavern, which no
+    # world declares; reachable only by a fabricated REACH_LOCATION target like this one).
     assert update_eat.entity_id == 2
     assert update_eat.navigation is None
     assert update_eat.interaction is None
-    assert update_eat.task is not None
-    assert update_eat.task.work_kind_set == "ENTITY_ACT"
-    assert update_eat.task.payload_set == {"action": "EAT", "target_id": tavern.id}
+    assert update_eat.task is None
+    assert update_eat.strategic is not None
+    assert update_eat.strategic.current_project_id_set == ""
+    assert update_eat.strategic.projects_add_or_update[0].status == ProjectStatus.COMPLETED
+
+    # The real meal building keeps the arrival meal (hunger 60, an inn that admits the subject).
+    inn_meal = BuildingState(id=703, kind="inn", position=(25.0, 25.0))
+    obj_meal = ObjectiveState(
+        id="obj.reach_location.eat.ent4.t10",
+        kind=ObjectiveKind.REACH_LOCATION,
+        target=str(inn_meal.id),
+        status=ObjectiveStatus.ACTIVE,
+    )
+    project_meal = ProjectState(
+        id="proj.reach_location.eat.ent4.t10",
+        kind="hunger",
+        status=ProjectStatus.ACTIVE,
+        objectives=[obj_meal],
+        active_objective_id=obj_meal.id,
+        lock_until_tick=0,
+    )
+    hero_meal = _with_project(_hero(4, inn_meal.position), project_meal)
+    hero_meal = replace(hero_meal, biological=replace(hero_meal.biological, hunger=60.0))
+    state_meal = AuthoritativeState(tick=10, seed=1, entities={4: hero_meal}, buildings={703: inn_meal})
+
+    update_meal = TacticalDecisionSystem.evaluate_entity_intent(state_meal, hero_meal, neighbors=[])
+
+    assert update_meal.task is not None
+    assert update_meal.task.work_kind_set == "ENTITY_ACT"
+    assert update_meal.task.payload_set == {"action": "EAT", "target_id": inn_meal.id}
 
     inn = BuildingState(id=702, kind="inn", position=(30.0, 30.0))
     obj_rest = ObjectiveState(

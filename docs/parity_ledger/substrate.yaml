@@ -4319,7 +4319,7 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- `biological_state_changed`/`stamina_changed`
+  v2_evidence: 'src/observability/extraction/vitals.py -- `biological_state_changed`/`stamina_changed`
     diff blocks, guarded by a local `_is_real_number()` isinstance helper (defensive
     against MagicMock-based test fixtures elsewhere in the suite that don''t wire
     `.biological`/`.stamina`, never true for a real EntityState). Confirmed firing
@@ -4363,14 +4363,14 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- `attribute_changed` diff block,
-    guarded by the same `_is_real_number()` isinstance helper as SUB-375. Real producer
-    (`evolution.py` non-hero level-up) confirmed too rare to hit within a real, non-mocked
-    1500-tick `Kernel.tick_once()` loop on `sandbox_world` (zero HERO-role entities
-    among the 8 WORKER/3 GUARD/7 CITIZEN present, none leveled up in that window)
-    -- checked directly, not assumed. Verified instead via real hand-constructed `AttributeComponent`
-    objects passed through the real `EventExtractor.extract()` function directly,
-    same fallback pattern as COMB-296''s wound/scar verification.
+  v2_evidence: 'src/observability/extraction/vitals.py -- `attribute_changed` diff
+    block, guarded by the same `_is_real_number()` isinstance helper as SUB-375. Real
+    producer (`evolution.py` non-hero level-up) confirmed too rare to hit within a
+    real, non-mocked 1500-tick `Kernel.tick_once()` loop on `sandbox_world` (zero
+    HERO-role entities among the 8 WORKER/3 GUARD/7 CITIZEN present, none leveled
+    up in that window) -- checked directly, not assumed. Verified instead via real
+    hand-constructed `AttributeComponent` objects passed through the real `EventExtractor.extract()`
+    function directly, same fallback pattern as COMB-296''s wound/scar verification.
 
     '
   proof_type: regression
@@ -4412,7 +4412,7 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- `item_equipped`/`item_unequipped`/
+  v2_evidence: 'src/observability/extraction/vitals.py -- `item_equipped`/`item_unequipped`/
     `equipment_durability_changed` diff blocks, guarded by `isinstance(..., dict)`
     checks on `entity.equipment.slots`/`.durability` and the same `_is_real_number()`
     helper for durability floats (defensive against MagicMock-based test fixtures
@@ -4471,7 +4471,7 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- 4 new diff blocks, guarded
+  v2_evidence: 'src/observability/extraction/vitals.py -- 4 new diff blocks, guarded
     by the same `_is_real_number()` helper for the int-typed role/faction fields and
     `isinstance(..., (set,frozenset)/dict)` checks for known_recipes/cooldowns (defensive
     against MagicMock-based test fixtures elsewhere in the suite). `recipe_learned`''s

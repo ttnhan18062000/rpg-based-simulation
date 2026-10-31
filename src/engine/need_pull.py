@@ -16,6 +16,8 @@ the subject will have ON ARRIVAL, not the need it has now. Pure functions: no st
 """
 from __future__ import annotations
 
+from typing import Optional, Tuple
+
 # The pull is the raw need below ESCALATION_ONSET (a fraction of the consequence line), then a smoothstep adds up to
 # ESCALATION_AMPLITUDE by ESCALATION_FULL.
 ESCALATION_ONSET = 0.6
@@ -46,6 +48,15 @@ def smoothstep(edge0: float, edge1: float, x: float) -> float:
 def arrival_fraction(need: float, rate: float, travel_tiles: float, line: float) -> float:
     """The fraction of its consequence line the need will have reached when the subject gets where it can meet it."""
     return (need + rate * TICKS_PER_TILE * max(0.0, travel_tiles)) / line
+
+
+def step_travel_tiles(position: Tuple[float, float], target_pos: Tuple[float, float], ticks_at_target: float = 0.0,
+                      onward_pos: Optional[Tuple[float, float]] = None) -> float:
+    """The travel term of the arrival adjustment over a whole step (Standing Needs Escalate): the walk to the step's target, what is spent at it (a shift of
+    work, in ticks) and the walk on to where the need is met (the meal). The one sum the pull and the earn step's takeable test both read."""
+    walk = abs(position[0] - target_pos[0]) + abs(position[1] - target_pos[1])
+    onward = 0.0 if onward_pos is None else abs(target_pos[0] - onward_pos[0]) + abs(target_pos[1] - onward_pos[1])
+    return walk + ticks_at_target / TICKS_PER_TILE + onward
 
 
 def need_pull(raw_utility: float, need: float, rate: float, travel_tiles: float, line: float) -> float:

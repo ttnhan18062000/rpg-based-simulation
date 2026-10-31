@@ -66,6 +66,13 @@ class EventRecorder:
     # Channels that close a run with one last event (registered once at import by the channel's owner; each is given this recorder's per-type event counts and returns None when this recorder saw nothing of its channel).
     closing_event_sources: List[Callable[[Dict[str, int]], Optional[SimulationEvent]]] = []
 
+    @classmethod
+    def for_run(cls, run_id: str, **kwargs: Any) -> "EventRecorder":
+        """Build a recorder that stamps ``run_id`` on every event envelope it emits (arguments as for the constructor)."""
+        recorder = cls(**kwargs)
+        recorder.run_id = run_id
+        return recorder
+
     def __init__(
         self,
         run_dir: Optional[str] = None,
@@ -75,6 +82,7 @@ class EventRecorder:
         quality_fn: Optional[Callable] = None,
     ) -> None:
         self.enabled = enabled
+        self.run_id: Optional[str] = None  # set by the owner (the kernel) once the run id is resolved
         self.max_events = max_events
         self.run_dir = run_dir
         self.events: List[SimulationEvent] = []
@@ -214,7 +222,7 @@ class EventRecorder:
 
         # Push to the non-blocking observability queue
         from src.observability.events import ObservabilityEventEnvelope
-        envelope = ObservabilityEventEnvelope.from_simulation_event(event)
+        envelope = ObservabilityEventEnvelope.from_simulation_event(event, run_id=self.run_id)
         
         # Pushing into BoundedObservabilityQueue is thread-safe and non-blocking
         self.queue.try_push(envelope)

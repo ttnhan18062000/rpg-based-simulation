@@ -1028,21 +1028,21 @@ class ProgressionShaper:
 
                 # skill_unlocked / trait_expressed / pillar_trait_unlocked — each field is a
                 # per-tick accumulator of newly-unlocked IDs, not a full snapshot (class docstring).
-                for sk in (getattr(id_upd, "learned_skills", None) or []):
+                for sk in sorted(getattr(id_upd, "learned_skills", None) or [], key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="skill_unlocked", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
                         source_system="event_shapers", message="",
                         payload={"skill_id": sk, "tick": tick},
                     ))
-                for tr in (getattr(id_upd, "traits_add", None) or []):
+                for tr in sorted(getattr(id_upd, "traits_add", None) or [], key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="trait_expressed", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
                         source_system="event_shapers", message="",
                         payload={"trait_id": tr, "tick": tick},
                     ))
-                for bt in (getattr(id_upd, "breakthroughs_add", None) or []):
+                for bt in sorted(getattr(id_upd, "breakthroughs_add", None) or [], key=lambda _id: _id):
                     events.append(SimulationEvent(
                         event_type="pillar_trait_unlocked", event_category="lifecycle",
                         tick=tick, entity_id=eid, severity="INFO",
@@ -1151,7 +1151,7 @@ class WorldDynamicsShaper:
 
         # demographic_mortality / demographic_birth — StateUpdate.entities_remove/entities_add
         entity_updates = getattr(update, "entity_updates", None) or {}
-        for rem_eid in (getattr(update, "entities_remove", None) or []):
+        for rem_eid in sorted(getattr(update, "entities_remove", None) or [], key=lambda _id: _id):
             prior_ent = prior_state.entities.get(rem_eid)
             if prior_ent is None:
                 continue

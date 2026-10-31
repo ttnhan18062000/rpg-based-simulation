@@ -14,13 +14,11 @@ from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
-from src.core.skills import SKILL_REGISTRY
+from src.core.skills import SKILL_REGISTRY, SkillDefinition
 from src.engine.rpg_depth import WoundService
 from src.cognition.common_knowledge import combat_capability_against
-from src.content_semantics.faction import are_entities_hostile
-from src.content_semantics.relation import RelationContext
 from src.engine.tactical_destinations import retreat_destination, wander_destination
-from src.engine.tactical_threat import hostile_acts_on, safety_retreat_warranted
+from src.engine.tactical_threat import hostile_acts_on, perceived_threats, safety_retreat_warranted
 from src.engine.need_pull import HUNGER_LINE, SLEEP_LINE
 from src.engine.tactical_rest import in_place_survival_update
 from src.engine.building_arrival import building_arrival_update
@@ -92,19 +90,6 @@ def _target_still_perceived(entity: "EntityState", target: "EntityState") -> boo
         return True  # gate failure: permissive, as the hostile list does
 
 
-def _perceived_threats(entity: "EntityState", neighbors: List["EntityState"]) -> List["EntityState"]:
-    """Perceived LIVING neighbors the entity's appraisal counts as hostile (same predicate as
-    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw. A dead body is in the neighbour view but is not a threat."""
-    sx, sy = entity.navigation.position
-    return [
-        n for n in neighbors
-        if n.combat.alive and are_entities_hostile(entity, n, RelationContext(
-            distance=abs(n.navigation.position[0] - sx) + abs(n.navigation.position[1] - sy),
-            combat_engaged=True,
-        ))
-    ]
-
-
 def _panic_holds(entity: "EntityState", threats: List["EntityState"], tick: int) -> bool:
     """True when a panic retreat (and its freeze) stands: there are perceived threats, and no need outranks them. Past its consequence line (hunger 95, sleep debt 98)
     a need already takes health, so it is itself a present threat (SURV-07, row 83) and the panic yields to it unless a perceived hostile is ACTING on the subject, by
@@ -137,6 +122,14 @@ def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntitySta
             current_objective_id_set="",
         )
     return None
+
+
+def pick_highest_power_skill(available_skills: List[SkillDefinition]) -> SkillDefinition:
+    """Choice Bias (COMB-264/265): the highest-power skill; deterministic tie-break: power, then skill id.
+
+    ``learned_skills`` is a set, so without the id key an equal-power tie would follow PYTHONHASHSEED.
+    """
+    return min(available_skills, key=lambda skill: (-skill.power, skill.id))
 
 
 class TacticalDecisionSystem:
@@ -212,7 +205,7 @@ class TacticalDecisionSystem:
             social_context=entity.social
         )
         
-        threats = _perceived_threats(entity, neighbors)
+        threats = perceived_threats(entity, neighbors)
         panic_destination = retreat_destination(state, entity, threats) if (emotion.is_fleeing and threats) else None
         # A flight with no destination is not flight (designer ruling, V3): a panic that resolves to the subject's own tile is not taken, and the tick
         # falls through the existing order (in-place survival, then the arrival at a building). A real tactical hostile keeps the old freeze, so the
@@ -717,9 +710,7 @@ class TacticalDecisionSystem:
                             available_skills.append(skill)
                 
                 if available_skills:
-                    # Choice Bias: Pick highest power
-                    available_skills.sort(key=lambda s: s.power, reverse=True)
-                    chosen_skill_id = available_skills[0].id
+                    chosen_skill_id = pick_highest_power_skill(available_skills).id
 
             # Logic ID: COMB-267 (Exhaustion affects tactical choice)
             # If stamina is low and no free skills, might favor basic attack or rest

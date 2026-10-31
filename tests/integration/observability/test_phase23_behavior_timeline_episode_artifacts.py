@@ -1,20 +1,13 @@
 from __future__ import annotations
 import os
 import json
-import shutil
 import pytest
 from src.observability.behavior.behavior_episode import BehaviorEpisode
 
 
 @pytest.fixture
-def temp_run_dir():
-    run_dir = "tests/run_data_phase23_test"
-    if os.path.exists(run_dir):
-        shutil.rmtree(run_dir)
-    os.makedirs(run_dir, exist_ok=True)
-    yield run_dir
-    if os.path.exists(run_dir):
-        shutil.rmtree(run_dir)
+def temp_run_dir(tmp_path):
+    return str(tmp_path)
 
 
 def test_episode_artifacts_are_written_post_run(temp_run_dir):

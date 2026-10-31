@@ -161,6 +161,13 @@ def _score_applies(target: dict) -> bool:
     return target["status"] == "ok"
 
 
+def _mean_score(target: dict, scores: list, n_trials: int) -> float | None:
+    """The mean of one pillar's per-trial scores, only where the score tolerance applies (None for a no-data anchor, whose live scores are None).
+
+    A status mismatch between live and anchor is never skipped here: ``_snap_failure`` fails it, and every caller asserts that before it calls this."""
+    return sum(scores) / n_trials if _score_applies(target) else None
+
+
 def _audit_cognition(world_name: str, seed: int, ticks: int) -> dict:
     """One audit_mode engine run for ``world_name`` replayed through the quality hub; the COGNITION pillar snapshot as a dict."""
     import tempfile
@@ -677,8 +684,8 @@ def test_urban_political_seed123_500t_cognition_grade_stability() -> None:
         + "\n".join(band_failures)
     )
 
-    mean_score = sum(trial_scores) / n_trials
-    assert not _score_applies(anchor) or _within_score_tolerance(mean_score, anchor["score"], abs_floor=anchor["abs_floor"]), (
+    mean_score = _mean_score(anchor, trial_scores, n_trials)
+    assert mean_score is None or _within_score_tolerance(mean_score, anchor["score"], abs_floor=anchor["abs_floor"]), (
         f"urban_political_seed123_500t -- COGNITION mean_score={mean_score:.4f} across {n_trials} "
         f"trials outside tolerance of anchor_score={anchor['score']} (abs_floor={anchor['abs_floor']}) "
         f"-- per-trial values: {trial_scores}"
@@ -863,8 +870,8 @@ def test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative_grade_sta
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -974,8 +981,8 @@ def test_urban_political_seed42_1000t_social_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1092,8 +1099,8 @@ def test_urban_political_seed123_1000t_social_economy_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1182,8 +1189,8 @@ def test_urban_political_selfmodel_probe_seed42_200t_social_world_grade_stabilit
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1287,8 +1294,8 @@ def test_generated_frontier_3_42_seed123_200t_combat_narrative_grade_stability()
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1375,8 +1382,8 @@ def test_urban_political_seed42_200t_social_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1486,8 +1493,8 @@ def test_frontier_extended_seed42_200t_narrative_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1577,8 +1584,8 @@ def test_frontier_extended_seed123_200t_combat_progression_narrative_grade_stabi
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1688,8 +1695,8 @@ def test_frontier_living_world_seed42_200t_social_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1778,8 +1785,8 @@ def test_frontier_living_world_seed123_200t_combat_narrative_grade_stability() -
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -1874,8 +1881,8 @@ def test_frontier_marches_seed42_200t_narrative_grade_stability() -> None:
 
     score_failures: list[str] = []
     for pillar, target in anchors.items():
-        mean_score = sum(trial_scores[pillar]) / n_trials
-        if _score_applies(target) and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
+        mean_score = _mean_score(target, trial_scores[pillar], n_trials)
+        if mean_score is not None and not _within_score_tolerance(mean_score, target["score"], abs_floor=target["abs_floor"]):
             score_failures.append(
                 f"  {pillar}: mean_score={mean_score:.4f} across {n_trials} trials outside "
                 f"tolerance of anchor_score={target['score']} (abs_floor={target['abs_floor']}) -- "
@@ -2033,3 +2040,19 @@ def test_snap_failure_four_way_on_hub_snapshots():
     assert "contract failure" in _snap_failure("t X", _ND_TARGET, _Snap("C", None, status="no-data", min_events=3))
     assert _snap_failure("t X", _OK_TARGET, {"grade": "B", "normalized_score": 1.0, "status": None, "min_events": None}) is None  # the dict form (_audit_cognition)
     assert _score_applies(_OK_TARGET) and not _score_applies(_ND_TARGET)
+
+
+def test_mean_score_is_computed_only_where_the_score_tolerance_applies():
+    assert _mean_score(_OK_TARGET, [0.5, 1.5], 2) == 1.0
+    assert _mean_score(_ND_TARGET, [None], 1) is None  # both no-data: no mean, no crash
+    with pytest.raises(TypeError):
+        sum([None]) / 1  # the old shape (`sum(trial_scores) / n_trials`) on the same input
+
+
+def test_a_status_mismatch_between_live_and_anchor_still_fails_before_any_mean_is_taken():
+    """Both directions fail in ``_snap_failure``, which every guard asserts before it takes the mean; the mean helper never hides them."""
+    lost = _snap_failure("t COGNITION", _OK_TARGET, _Snap(None, None, status="no-data", min_events=3))  # scored anchor, live no-data
+    gained = _snap_failure("t COGNITION", _ND_TARGET, _Snap("B", 1.0, status="ok"))  # no-data anchor, live scored
+    assert lost is not None and "lost its data" in lost
+    assert gained is not None and "gained data" in gained
+    assert _snap_failure("t COGNITION", _ND_TARGET, _Snap(None, None, status="no-data", min_events=3)) is None  # only this case reaches the skip

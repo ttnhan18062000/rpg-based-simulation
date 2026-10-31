@@ -157,8 +157,8 @@ def test_two_identical_runs_record_identical_causes_and_canonical_state():
 
 def test_event_extractor_stays_exact_match_on_combat_for_passive_reasons():
     import inspect
-    from src.observability import event_extractor
-    assert 'death_reason", None) == "COMBAT"' in inspect.getsource(event_extractor)
+    from tests.helpers.event_extractor_source import extractor_source  # extract() is split across src/observability/extraction/
+    assert 'death_reason", None) == "COMBAT"' in extractor_source()
 
 
 # --- Sibling: terminal DEFEAT / REBIRTH ------------------------------------------------------------

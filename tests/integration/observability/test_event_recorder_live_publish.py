@@ -1,20 +1,17 @@
 from __future__ import annotations
 import os
-import shutil
 import pytest
 from src.observability.event_recorder import EventRecorder
 from src.observability.live.event_publisher import LiveEventPublisher, LiveEventSubscriber, SubscriptionFilter
 from src.observability.events import SimulationEvent
 
 @pytest.fixture(autouse=True)
-def clean_run_dir():
-    # Process-unique dir: under `-n auto` both tests can run on different workers, and a fixed dir is removed by the other's teardown.
-    run_dir = f"tests/run_data_live_publish_test_{os.getpid()}"
-    shutil.rmtree(run_dir, ignore_errors=True)
+def clean_run_dir(tmp_path):
+    # Per-test tmp_path: nothing is written into the repo tree, and no worker shares a directory with another.
     LiveEventPublisher.reset_instance()
-    yield run_dir
-    shutil.rmtree(run_dir, ignore_errors=True)
+    yield str(tmp_path)
     LiveEventPublisher.reset_instance()
+
 
 def test_event_recorder_integration(clean_run_dir):
     run_dir = clean_run_dir
@@ -55,9 +52,15 @@ def test_event_recorder_integration(clean_run_dir):
     assert len(recorder.events) == 2
     
     # Verify live event publication routing
+    # Delivery is asynchronous (queue drain worker): wait up to 5 s for the first event instead of a fixed 50 ms
+    # sleep, which lost the race under xdist load (the same failure shows on unmodified main).
     import time
-    time.sleep(0.05)
-    live_events = sub.get_events()
+    live_events = []
+    deadline = time.monotonic() + 5.0
+    while not live_events and time.monotonic() < deadline:
+        live_events = sub.get_events()
+        if not live_events:
+            time.sleep(0.01)
     assert len(live_events) == 1
     assert live_events[0].event_type == "swing_sword"
     

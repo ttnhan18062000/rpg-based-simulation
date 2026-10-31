@@ -131,6 +131,49 @@ def _dump(items: list) -> str:
 
 
 _TOP_LEVEL_ITEM = re.compile(r"^-(?:\s|$)")
+# A top-level key of an entry block: on the `- key:` line or at two-space indent. Anything else
+# (deeper indent, `  - ` sequence items, blank lines) continues the previous key.
+_ENTRY_KEY = re.compile(r"^(?:- |  )([A-Za-z_][A-Za-z0-9_-]*):(?:\s|$)")
+
+
+def _field_splice_block(old_lines: list, old_entry: dict, entry: dict):
+    """Return the entry block with each unchanged top-level key keeping its original bytes.
+
+    Only keys whose parsed value changed (or that are new) are dumped; removed keys are dropped;
+    existing keys keep their order and new keys are appended. Returns None when the old block does
+    not split into key segments cleanly; the caller then falls back to a whole-entry dump."""
+    segments: list = []  # (key, [lines])
+    for line in old_lines:
+        match = _ENTRY_KEY.match(line)
+        if match:
+            segments.append((match.group(1), [line]))
+        elif segments:
+            segments[-1][1].append(line)
+        else:
+            return None
+    if not segments or [k for k, _ in segments] != list(old_entry):
+        return None
+    out: list = []
+    for key, seg_lines in segments:
+        if key not in entry:
+            continue
+        if entry[key] == old_entry[key]:
+            out.extend(seg_lines)
+        else:
+            out.extend(_dump([{key: entry[key]}]).splitlines(keepends=True))
+    for key in entry:
+        if key not in old_entry:
+            out.extend(_dump([{key: entry[key]}]).splitlines(keepends=True))
+    if not out:
+        return None
+    # normalise indent: the first line carries the `- `, every later key line the two-space indent
+    fixed = []
+    for line in out:
+        match = _ENTRY_KEY.match(line)
+        if match:
+            line = ("- " if not fixed else "  ") + line[2:]
+        fixed.append(line)
+    return fixed
 
 
 def _splice_entry(text: str, entries: list, entry: dict) -> str:
@@ -140,8 +183,10 @@ def _splice_entry(text: str, entries: list, entry: dict) -> str:
     shards reformats hundreds of lines (hand-written quoting and wrapping), which made agents
     deviate from the mandated writer (TCK-20261004-PARITY-LEDGER-WRITER-WHOLE-SHARD-REWRITE-CHURN).
     The i-th column-0 `- ` line starts the i-th entry; an update replaces that block, an add appends
-    one. Anything unexpected (item count mismatch, or the spliced text not parsing back to exactly
-    the intended entries) falls back to a whole-shard dump, so the result is always correct."""
+    one. Within an updated entry, a key whose value did not change keeps its original lines
+    (`_field_splice_block`); only changed or added keys are re-dumped. Anything unexpected (item
+    count mismatch, or the spliced text not parsing back to exactly the intended entries) falls
+    back one level (whole-entry dump, then whole-shard dump), so the result is always correct."""
     lines = text.splitlines(keepends=True)
     starts = [i for i, line in enumerate(lines) if _TOP_LEVEL_ITEM.match(line)]
     expected = [dict(e) for e in entries]
@@ -155,18 +200,23 @@ def _splice_entry(text: str, entries: list, entry: dict) -> str:
         block = _dump([entry])
         if position is None:
             body = text if text.endswith("\n") or not text else text + "\n"
-            candidate = body + block
+            candidates = [body + block]
         else:
             end = starts[position + 1] if position + 1 < len(starts) else len(lines)
             # keep blank/comment lines that trail the old block: they belong to the gap, not the entry
             while end - 1 > starts[position] and (not lines[end - 1].strip() or lines[end - 1].lstrip().startswith("#")):
                 end -= 1
-            candidate = "".join(lines[: starts[position]]) + block + "".join(lines[end:])
-        try:
-            if yaml.safe_load(candidate) == expected:
-                return candidate
-        except yaml.YAMLError:
-            pass
+            candidates = []
+            field_block = _field_splice_block(lines[starts[position]:end], entries[position], entry)
+            if field_block is not None:
+                candidates.append("".join(lines[: starts[position]]) + "".join(field_block) + "".join(lines[end:]))
+            candidates.append("".join(lines[: starts[position]]) + block + "".join(lines[end:]))
+        for attempt in candidates:
+            try:
+                if yaml.safe_load(attempt) == expected:
+                    return attempt
+            except yaml.YAMLError:
+                pass
     return _dump(expected)
 
 

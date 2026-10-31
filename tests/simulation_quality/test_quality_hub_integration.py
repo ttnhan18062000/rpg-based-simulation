@@ -75,6 +75,17 @@ class TestPersistence:
         hub.on_envelope(_env("action_executed"))
         mock_persistence.write.assert_called_once()
 
+    def test_a_redelivered_envelope_is_counted_once_and_written_once(self, scoring_weights: ScoringWeights, tmp_path) -> None:
+        from src.simulation_quality.persistence import QualityPersistence
+        mock_persistence = MagicMock(spec=QualityPersistence)
+        hub = QualityHub([AgencyScorer(scoring_weights)], scoring_weights, mock_persistence, run_id="x")
+        env = _env("action_executed")
+        hub.on_envelope(env)
+        once = hub.get_pillar_score(PillarId.AGENCY)
+        hub.on_envelope(env)
+        assert hub.get_pillar_score(PillarId.AGENCY) == once
+        assert mock_persistence.write.call_count == 1
+
 
 class TestErrorIsolation:
     def test_scorer_exception_does_not_propagate(self, scoring_weights: ScoringWeights, tmp_path) -> None:

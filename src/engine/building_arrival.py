@@ -11,7 +11,11 @@ from typing import Any, Optional
 
 from src.core.strategic import ObjectiveStatus, ProjectStatus
 from src.core.updates import EntityUpdate, StrategicUpdate, TaskUpdate
+from src.engine.building_services import SERVICE_KINDS, offers_work
+from src.engine.service_admission import admits
 from src.engine.shop_sale import plan_sale
+from src.engine.work_shift import SHIFT_START, shift_takeable
+from src.engine.work_wake import held_work_is_threatened
 
 
 def _end_project(entity: Any, project: Any) -> EntityUpdate:
@@ -35,23 +39,37 @@ def _act(entity: Any, action: str, building_id: int, **extra: Any) -> EntityUpda
                                                              payload_set={"action": action, "target_id": building_id, **extra}))
 
 
+def _hunger_arrival(state: Any, entity: Any, project: Any, building_id: int) -> EntityUpdate:
+    """The hunger project's action at the building it reached: a sale at a shop (the visit ends once nothing is left to sell), else a meal, a shift or the end."""
+    building = state.buildings.get(building_id)
+    at_shop = getattr(building, "kind", None) == "shop"
+    done = finished_visit(state, entity, project, building) if at_shop else None
+    if done is not None:
+        return done
+    if at_shop:
+        return _act(entity, "SELL", building_id)
+    if entity.biological.hunger < HUNGER_NEED_FLOOR:
+        return _end_project(entity, project)  # fed: a meal is bought only for a hunger (no paying to eat when not hungry)
+    # The action is derived from what this building can do for the subject, never stored on the project: a building that serves a meal and would
+    # deliver it to this subject (the one admission rule) is a meal; otherwise a building that offers a shift the subject can finish before the
+    # starvation line is work (the EARN_THEN_BUY step, held for SHIFT_TICKS, paid on the last tick); otherwise there is nothing to do here.
+    if getattr(building, "kind", None) in SERVICE_KINDS["EAT"] and admits(entity, "EAT"):
+        return _act(entity, "EAT", building_id)
+    if building is not None and offers_work(building):
+        if shift_takeable(entity, state, building.position):
+            return _act(entity, "WORK", building_id, **{SHIFT_START: state.tick})
+        if held_work_is_threatened(entity, state):
+            # Not takeable NOW because of a present threat (designer ruling 2026-10-30): the hunger project stays current, nothing is dispatched, and the
+            # tactical answer to the threat takes over through the normal switch; the next decision judges again. The project is not ended or abandoned.
+            return EntityUpdate(entity_id=entity.id)
+    return _end_project(entity, project)  # no meal here and no shift it could finish before the starvation line: the project ends (the existing path)
+
+
 def building_arrival_update(state: Any, entity: Any, project: Any, building_id: int) -> EntityUpdate:
-    """The survival action by project kind at the building the subject reached: a meal at the inn or a sale at a shop (hunger; the shop visit
-    ends once nothing is left to sell), a bed (fatigue); anything else is idle."""
+    """The survival action by project kind at the building the subject reached: a meal, a shift or a sale (hunger), a bed (fatigue); anything else is idle."""
     kind = getattr(project, "kind", "")
     if kind == "hunger":
-        building = state.buildings.get(building_id)
-        at_shop = getattr(building, "kind", None) == "shop"
-        done = finished_visit(state, entity, project, building) if at_shop else None
-        if done is not None:
-            return done
-        if at_shop:
-            return _act(entity, "SELL", building_id)
-        if entity.biological.hunger < HUNGER_NEED_FLOOR:
-            return _end_project(entity, project)  # fed: a meal is bought only for a hunger (no paying to eat when not hungry)
-        # At the inn the hunger step is a meal. Free meals stay on (owner decision 44), so a broke subject eats too; the shift of work
-        # (work_shift.py) is dispatched here only on the removal stack, where a meal costs coin and a broke subject cannot eat.
-        return _act(entity, "EAT", building_id)
+        return _hunger_arrival(state, entity, project, building_id)
     if kind == "fatigue":
         return _act(entity, "REST", building_id)
     return EntityUpdate(entity_id=entity.id)

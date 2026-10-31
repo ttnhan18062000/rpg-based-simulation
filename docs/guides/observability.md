@@ -28,7 +28,8 @@ Key source files:
 |---|---|
 | `src/observability/event_recorder.py` | Writes `SimulationEvent` objects to the shared queue; controls backpressure |
 | `src/observability/events.py` | `SimulationEvent` and `ObservabilityEventEnvelope` dataclasses, `EventCategory` type |
-| `src/observability/event_extractor.py` | Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer. Legacy path — still live for domains not yet shaper-migrated, and the flag-gated rollback path for migrated domains (see below) |
+| `src/observability/event_extractor.py` | `EventExtractor` facade: resolves the four rollback flags, then calls the per-domain functions in `src/observability/extraction/` in a fixed order. Reads state diffs per tick, produces `SimulationEvent` objects; read-only observer. Legacy path — still live for domains not yet shaper-migrated, and the flag-gated rollback path for migrated domains (see below) |
+| `src/observability/extraction/` | One module per event domain (lifecycle, vitals, combat, economy, strategy, leads, social, contracts, quests, progression, capability, resources, world, faction); each function takes an `ExtractContext` and returns a `list[SimulationEvent]`. `entity.py` runs the per-entity sequence |
 | `src/observability/event_shapers.py` | Apply-layer push shapers (`SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/`QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`); derives events directly from `prior_state` + `update`, not a post-tick diff. Live-default derivation path for most COMBAT/ECONOMY/FACTION/AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL/NARRATIVE event types since the 2026-08-06/07/08 push-shaper cutover tickets — see `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the current per-event-type derivation path |
 | `src/observability/queue.py` | Global observability queue, `QueueDrainWorker` |
 | `src/observability/hard_law_monitor.py` | Listens for `InvariantViolation` events; raises hard stops |
@@ -76,7 +77,7 @@ Key fields:
 {
   "event_id": "evt_abc123",
   "event_type": "combat_kill",
-  "category": "combat",
+  "event_category": "combat",
   "tick": 47,
   "entity_id": "hero_7",
   "region_id": "region_east",
@@ -167,14 +168,14 @@ python3 -m src compare-sweep <sweep_id> --baseline docs/observability/baselines/
 
 ## Adding a new event type
 
-1. Add the `event_type` string and optional `category` to `src/observability/events.py`
+1. Add the `event_type` string and optional `event_category` to `src/observability/events.py`
    (`EventCategory` Literal, if a new category is needed).
 2. Emit the event in `src/observability/event_shapers.py` — add it to the relevant domain's
    shaper class (registered in `SHAPER_REGISTRY`/`PHASE2_SHAPER_REGISTRY`/
    `QUEST_SHAPER_REGISTRY`/`AGENCY_SHAPER_REGISTRY`, delivered via `run_shadow_shapers()`),
    the live-default path for most domains since the 2026-08-06/07/08 push-shaper cutover
-   tickets. Only emit in `src/observability/event_extractor.py`'s per-tick loop (entity loop,
-   faction loop, world-events loop) if the event's domain has not yet been shaper-migrated —
+   tickets. Only emit in the matching `src/observability/extraction/` module (per-entity sequence in
+   `entity.py`, then the world, faction and world-event functions that `EventExtractor.extract` calls) if the event's domain has not yet been shaper-migrated —
    check `docs/simulation_quality/event_type_coverage.md` §1.1's `source` column for the
    current per-event-type derivation path before choosing. Both `EventExtractor` and each
    `EventShaper` are read-only observers — neither mutates state.

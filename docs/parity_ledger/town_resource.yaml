@@ -2222,9 +2222,9 @@
   status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py''s economy `intent_results` loop,
-    guarded via the same `_push_shapers_active` flag read as COMB-295. Verified via
-    real kernel run (`dungeon_crawl_seed42_500t`, default flag state): 0 economy-category
+  v2_evidence: 'src/observability/extraction/economy.py''s economy `intent_results`
+    loop, guarded via the same `_push_shapers_active` flag read as COMB-295. Verified
+    via real kernel run (`dungeon_crawl_seed42_500t`, default flag state): 0 economy-category
     events attributed to `event_extractor` in the real event stream; all combat/economy/faction
     events (39 total) attributed to `event_shapers` instead. See COMB-295''s v2_evidence
     for the shared kernel.py delivery-path change.

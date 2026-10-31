@@ -56,6 +56,7 @@ domains:
       - .graphifyignore
       - tools/graphify_link.py
       - tools/graphify_prune.py
+      - tools/parity_ledger_writer.py   # the mandated parity-ledger writer (owner #715 6525197149)
       - tools/search_*.py          # search_mcp, search_server, search_shared (owner 2026-10-13)
       - tools/start_*_mcp.sh       # start_search_mcp, start_headroom_mcp
       - tools/*_search.py          # exactly knowledge_search.py and eval_search.py today
@@ -272,13 +273,13 @@ roles:
     card_note: "Host ubuntu."
   - role: agent-working-designer
     identity: {domain: agent-working, function: designer, session_name: agent-working-designer,
-               legacy_session_name: agent-working-design, seat_status: unstaffed,
-               interim_holder: agent-working-planner}   # no designer on host ubuntu (owner 2026-10-18); interim holder: the ubuntu planner
+               legacy_session_name: agent-working-design, seat_status: staffed}
     responsibility:
       accepts_dispatch_from: [user]
     capability: {may_write: [".claude/handover/drafts/**", "docs/plans/agent_infrastructure/**"]}
     placement: {worktree: agent-working-designer, max_sessions: 1}
     handover: .claude/handover/agent-working-designer.md
+    card_note: "Host ubuntu; twin `-u24`."
   - role: agent-working-planner
     identity: {domain: agent-working, function: planner, session_name: agent-working-planner,
                legacy_session_name: agent-working-design, seat_status: staffed}   # held on host ubuntu since 2026-10-18

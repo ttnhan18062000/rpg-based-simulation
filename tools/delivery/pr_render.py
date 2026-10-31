@@ -21,8 +21,9 @@ text, never a live re-run of `done_checker_static.py`.** A live re-run reflects 
 working tree (e.g. `data_runs_clean` scans `data/runs/` as it exists right now, which drifts
 constantly in a shared worktree), not what was true when that ticket actually closed. The ticket's
 own recorded text is the historically accurate answer a PR reviewer wants. "Known gaps" is a literal
-scan for the substring `FAIL` in those two sections, surfacing the containing line — formalizing the
-convention this repo's own tickets already use by hand.
+scan of those two sections for a line containing the substring `FAIL` or a line beginning `Known gap:`
+(after an optional list marker; case-sensitive), surfacing the containing line. The `Known gap:` marker
+is the one explicit way to state a gap that is not a `FAIL`; prose that merely mentions a gap is not read.
 
 **Ticket discovery**: commit-subject `TCK-` IDs (`git log <base>..HEAD --format=%s`) are the
 *primary* signal (Scope item 2); ticket IDs implied by changed paths under `agent-working/tickets/` are a
@@ -352,12 +353,21 @@ def choose_scope(tickets: list, layer_registry_path: Path = _DEFAULT_LAYER_REGIS
     return scope, tie_warning, unregistered_warning
 
 
+KNOWN_GAP_MARKER = "Known gap:"
+KNOWN_GAPS_NONE_STATED = (
+    "- Known gaps: none stated (no FAIL or Known gap: line in any ticket's Test/Completion Summary)"
+)
+
+
 def extract_known_gaps(ticket: dict) -> list:
+    """A line is a gap when it contains `FAIL`, or begins `Known gap:` after an optional list marker.
+    A line matching both appears once."""
     gaps = []
     for section in ("test_summary", "completion_summary"):
         for line in ticket.get(section, "").splitlines():
-            if "FAIL" in line:
-                gaps.append(line.strip().lstrip("-").strip())
+            stripped = line.strip().lstrip("-*").strip()
+            if "FAIL" in line or stripped.startswith(KNOWN_GAP_MARKER):
+                gaps.append(stripped)
     return gaps
 
 
@@ -417,7 +427,7 @@ def _render_section(heading: str, tickets: list, warnings: list) -> str:
             lines.append(f"- {t['ticket_id']} Tests: {t['test_summary'] or '(none recorded)'}")
         gaps_by_ticket = [(t["ticket_id"], gap) for t in tickets for gap in extract_known_gaps(t)]
         if not gaps_by_ticket:
-            lines.append("- Known gaps: none stated")
+            lines.append(KNOWN_GAPS_NONE_STATED)
         else:
             # One bullet per gap, tagged with its owning ticket -- a single semicolon-joined line
             # across tickets left a reader unable to tell where one ticket's gap ended and
@@ -546,7 +556,7 @@ def render_ticketless_body(
         "## What landed": f"{theme}\n\nChanged files ({len(files)}):\n{summary}" if files else theme,
         "## Tickets": "(none: this PR closes no ticket)",
         "## Why": why,
-        "## Verification": "- Tests: (none recorded: no ticket on this branch)\n- Known gaps: none stated"
+        "## Verification": f"- Tests: (none recorded: no ticket on this branch)\n{KNOWN_GAPS_NONE_STATED}"
         + (f"\n- Discovery warnings: {'; '.join(warnings)}" if warnings else ""),
         "## Review notes": _REVIEW_NOTES_PLACEHOLDER,
     }

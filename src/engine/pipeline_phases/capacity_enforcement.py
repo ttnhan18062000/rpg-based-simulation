@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, StrategicUpdate
 
-from src.core.strategic import live_projects_in_the_trim
+from src.core.strategic import CognitionProfile, live_projects_in_the_trim
 from src.strategy.capacity import CapacityService
 from src.core.updates import EntityUpdate, StrategicUpdate
 
@@ -63,19 +63,7 @@ class CapacityEnforcementPhase:
                 )
             
             # 2. Enforce Concerns
-            concern_removals = []
-            if len(entity.strategic.concerns) + len(strat_upd.concerns_add_or_update) > profile.max_concerns:
-                all_concerns = dict(entity.strategic.concerns)
-                for concern in strat_upd.concerns_add_or_update:
-                    all_concerns[concern.id] = concern
-                for c_id in strat_upd.concerns_remove:
-                    all_concerns.pop(c_id, None)
-                    
-                concern_removals = CapacityService.trim_dict(
-                    all_concerns,
-                    profile.max_concerns,
-                    lambda c: c.urgency
-                )
+            concern_removals = CapacityEnforcementPhase._concern_removals(entity, strat_upd, profile)
             
             # 3. Enforce Turning Points (History)
             all_tps = entity.strategic.turning_points
@@ -154,12 +142,12 @@ class CapacityEnforcementPhase:
                 continue
 
             # Update the strategic update with removals
-            new_leads_remove = list(set(strat_upd.leads_remove) | set(lead_removals))
-            new_concerns_remove = list(set(strat_upd.concerns_remove) | set(concern_removals))
-            new_projects_remove = list(set(strat_upd.projects_remove) | set(project_removals))
-            new_hypotheses_remove = list(set(strat_upd.hypotheses_remove) | set(hypo_removals))
-            new_zones_remove = list(set(strat_upd.candidate_zones_remove) | set(zone_removals))
-            new_committed_intentions_remove = list(set(strat_upd.committed_intentions_remove) | set(ci_removals))
+            new_leads_remove = sorted(set(strat_upd.leads_remove) | set(lead_removals))
+            new_concerns_remove = sorted(set(strat_upd.concerns_remove) | set(concern_removals))
+            new_projects_remove = sorted(set(strat_upd.projects_remove) | set(project_removals))
+            new_hypotheses_remove = sorted(set(strat_upd.hypotheses_remove) | set(hypo_removals))
+            new_zones_remove = sorted(set(strat_upd.candidate_zones_remove) | set(zone_removals))
+            new_committed_intentions_remove = sorted(set(strat_upd.committed_intentions_remove) | set(ci_removals))
 
             refined_entity_updates[e_id] = replace(
                 ent_upd,
@@ -193,6 +181,20 @@ class CapacityEnforcementPhase:
                     )
 
         return replace(update, entity_updates=refined_entity_updates)
+
+    @staticmethod
+    def _concern_removals(entity: "EntityState", strat_upd: StrategicUpdate, profile: CognitionProfile) -> List[str]:
+        """Concern ids to drop so the entity stays within ``profile.max_concerns`` after this update."""
+        if len(entity.strategic.concerns) + len(strat_upd.concerns_add_or_update) <= profile.max_concerns:
+            return []
+        all_concerns = dict(entity.strategic.concerns)
+        for concern in strat_upd.concerns_add_or_update:
+            all_concerns[concern.id] = concern
+        for c_id in strat_upd.concerns_remove:
+            all_concerns.pop(c_id, None)
+        # Id-descending, so the stable lowest-urgency-first trim drops the higher id on a tie (not insertion history).
+        all_concerns = dict(sorted(all_concerns.items(), key=lambda kv: kv[0], reverse=True))
+        return CapacityService.trim_dict(all_concerns, profile.max_concerns, lambda c: c.urgency)
 
     @staticmethod
     def _score_lead(lead) -> float:

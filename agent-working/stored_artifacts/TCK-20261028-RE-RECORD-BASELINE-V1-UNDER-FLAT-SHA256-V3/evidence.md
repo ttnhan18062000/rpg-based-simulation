@@ -18,7 +18,7 @@ with PYTHONHASHSEED=0 and cache `/mnt/data/scratch-rpg-implementer-2/v3/cache`. 
 
 R arm (v3) results: `results/957caf8f6cff-72320cac-5000/` (30 files). It is copied to
 `/mnt/data/scratch-rpg-measure/results/957caf8f6cff-72320cac-5000/` (diff-checked) and the original copy is kept.
-sha256 of the sorted per-file sha256 list: `48e379775b923edcb6f6efa66e142f957ab25c3ae86ae4d788ce4ea332480444`.
+The pin `48e379775b923edcb6f6efa66e142f957ab25c3ae86ae4d788ce4ea332480444` is the output of `cd /mnt/data/scratch-rpg-implementer-2/v3 && sha256sum cache/results/957caf8f6cff-72320cac-5000/*.json | sha256sum` (path-prefixed lines in glob order). The shared copy's path-free form, `sha256sum *.json | sha256sum` in `/mnt/data/scratch-rpg-measure/results/957caf8f6cff-72320cac-5000`, gives `44e6dc1a40394cdc9c88444c7935fa949544155242b755dc5edff80dd0560999`. (Corrected per the owner's fix, #767 issuecomment-6472976361; the earlier text said "sha256 of the sorted per-file sha256 list", which is wrong.)
 
 ## 1. F1 moves only digests: R (v3, 957caf8f6) vs P (v2, 04b85fb2e)
 

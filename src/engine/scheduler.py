@@ -1,22 +1,24 @@
 # Compliance IDs: INFRA-116
 from __future__ import annotations
 
-from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
-from src.core.state import AuthoritativeState
-from src.core.work import WorkItem, WorkClass
-from src.engine.candidate_selector import MovementCandidateSelector
-from src.engine.cadence import SystemCadence, should_run
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
 from src.core.items import food_hunger_recovery
+from src.core.state import AuthoritativeState
+from src.core.work import WorkClass, WorkItem
 from src.engine.appraisal import can_eat_item
+from src.engine.cadence import should_run
+from src.engine.candidate_selector import MovementCandidateSelector
 from src.engine.need_pull import hunger_is_pressing, need_is_pressing
+from src.engine.need_wake import NEED_WAKE_CADENCE
 from src.engine.sleep_debt import is_asleep
+from src.engine.work_wake import held_work_is_threatened
 
 # Ticks between the brain wakes of an entity beside an unengaged hostile (decision 32); the decision comes within this bound.
 ADJACENCY_WAKE_COOLDOWN = 2
 
 # Ticks between the brain wakes of a holder of a move while a need is pressing: the strategic cadence, the rate at which an idle
 # entity already decides, so a held mover is no slower to decide than an idle one.
-NEED_WAKE_CADENCE: int = SystemCadence.model_fields["strategic_intelligence"].default
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -78,6 +80,10 @@ class DeterministicScheduler:
             # A sleeper's debt is high by nature, so only hunger wakes it (decision 41 x SURV-07, owner ruling 2026-10-11). Waking is a re-decision: while
             # the debt is at the collapse line the decision is the collapse again (it holds), below it the hunger goal decides: eat if a way is open, else sleep.
             return hunger_is_pressing(ent.biological.hunger) and should_run(state.tick, ent.id, NEED_WAKE_CADENCE)
+        if work_kind == "ENTITY_ACT" and ent.task.payload.get("action") == "WORK":
+            # A held shift runs no brain, and hunger does not interrupt a shift the subject can finish (it was only taken if it fits before the starvation line).
+            # Only a present threat to life outranks it (tier 1): the brain re-decides, the task is replaced and the wage, paid on the last tick, is forfeited.
+            return held_work_is_threatened(ent, state)
         if work_kind == "ENTITY_ACT" and ent.task.payload.get("action") == "INTERACT":
             # A gatherer on a node that still has charges holds its INTERACT with no brain, so a grazer on a regrowing patch is never released to eat
             # (TCK-20261012-A-HELD-GATHERER-ON-A-REGROWING-PATCH-IS-NEVER-RELEASED-TO-EAT). Hunger wakes it on the same cadence only when it carries food its

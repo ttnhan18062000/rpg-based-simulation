@@ -17,10 +17,12 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Sequence, Tuple
 
+from src.content_semantics.faction import are_entities_hostile
+from src.content_semantics.relation import RelationContext
 from src.core.movement_modes import MovementMode
 from src.core.state import EntityState
 from src.domains.combat_engagement.power import apparent_power
-from src.engine.scheduler import NEED_WAKE_CADENCE
+from src.engine.need_wake import NEED_WAKE_CADENCE
 
 # A subject whose safety disposition is above this is "cautious" for the SAFETY_PRESSURE_RETREAT branch (the
 # value that gate has always used; content has levels 0.9 and 0.75 and below, so it separates high from the rest).
@@ -57,6 +59,19 @@ def _is_closing(entity: EntityState, hostile: EntityState, distance_now: float) 
     """The hostile is within threat range and nearer than it was at its previous position."""
     previous = hostile.navigation.last_position
     return distance_now <= THREAT_RANGE and previous is not None and distance_now < _distance(entity, previous)
+
+
+def perceived_threats(entity: EntityState, neighbors: List[EntityState]) -> List[EntityState]:
+    """Perceived LIVING neighbors the entity's appraisal counts as hostile (same predicate as
+    AppraisalSystem.evaluate_emotional_state), so a retreat flees what the panic gate saw. A dead body is in the neighbour view but is not a threat."""
+    sx, sy = entity.navigation.position
+    return [
+        n for n in neighbors
+        if n.combat.alive and are_entities_hostile(entity, n, RelationContext(
+            distance=abs(n.navigation.position[0] - sx) + abs(n.navigation.position[1] - sy),
+            combat_engaged=True,
+        ))
+    ]
 
 
 def present_threat_terms(entity: EntityState, hostiles: Sequence[EntityState]) -> List[ThreatTerm]:

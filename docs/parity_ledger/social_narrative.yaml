@@ -3025,21 +3025,22 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py (cooperation_event emit block;\
-    \ reputation_delta emit block with REPUTATION_DELTA_THRESHOLD=0.05 guard). src/domains/cooperation/phase.py\
-    \ (CooperationPhase.resolve \u2014 property_updates now stores posture string\
-    \ value, not raw CooperationDecisionResult). src/engine/apply.py (apply_generation\
-    \ \u2014 feature_flags preserved on AuthoritativeState tick reconstruction). config/simulation_quality/profiles/urban_political.yaml\
-    \ (feature_flags: {ENABLE_SOCIAL_COOPERATION: \"ON\"}). config/simulation_quality/profiles/frontier_living_world.yaml,\
+  v2_evidence: "src/observability/extraction/strategy.py (cooperation_event emit block);\
+    \ src/observability/extraction/social.py (reputation_delta emit block with REPUTATION_DELTA_THRESHOLD=0.05\
+    \ guard). src/domains/cooperation/phase.py (CooperationPhase.resolve \u2014 property_updates\
+    \ now stores posture string value, not raw CooperationDecisionResult). src/engine/apply.py\
+    \ (apply_generation \u2014 feature_flags preserved on AuthoritativeState tick\
+    \ reconstruction). config/simulation_quality/profiles/urban_political.yaml (feature_flags:\
+    \ {ENABLE_SOCIAL_COOPERATION: \"ON\"}). config/simulation_quality/profiles/frontier_living_world.yaml,\
     \ config/simulation_quality/profiles/highland_traverse.yaml (feature_flags: {ENABLE_SOCIAL_COOPERATION:\
     \ \"ON\"}; SOCIAL grade C\u2192S at 3 seeds each). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION,\
     \ TCK-20260702-SIMQ-UPLIFT-SOCIAL-ZERO, TCK-20260710-SIMQ-DEPTH-SOCIAL) As of\
     \ the push-shaper migrations, cooperation_event is now also derived by the live-default\
     \ apply-layer StrategyShaper (cross-domain colocation, see SOC-239), and reputation_delta\
     \ is now also derived by the live-default apply-layer SocialShaper (see SOC-240);\
-    \ both in src/observability/event_shapers.py. event_extractor.py's blocks above\
-    \ are now the flag-gated (_push_shapers_phase2_active) rollback path, not the\
-    \ sole terminus.\n"
+    \ both in src/observability/event_shapers.py. the extraction/ blocks above are\
+    \ now the flag-gated (_push_shapers_phase2_active) rollback path, not the sole\
+    \ terminus.\n"
   proof_type: parity
   test_path: 'tests/unit/observability/test_event_extractor_social_faction.py::test_cooperation_event_emitted_when_decision_in_property_updates;
     tests/unit/observability/test_event_extractor_social_faction.py::test_reputation_delta_emitted_on_significant_change;
@@ -3058,11 +3059,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py (contract_completed: status ==
-    ContractStatus.FULFILLED; contract_lapsed: prior==ACTIVE and new==EXPIRED; contract_expired_offer:
-    prior==OFFERED and new==EXPIRED or reap-removed). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+  v2_evidence: 'src/observability/extraction/contracts.py (contract_completed: status
+    == ContractStatus.FULFILLED; contract_lapsed: prior==ACTIVE and new==EXPIRED;
+    contract_expired_offer: prior==OFFERED and new==EXPIRED or reap-removed). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
     As of the push-shaper migrations, all 3 event types are also derived by the live-default
-    apply-layer SocialShaper (src/observability/event_shapers.py, see SOC-240); event_extractor.py''s
+    apply-layer SocialShaper (src/observability/event_shapers.py, see SOC-240); src/observability/extraction/contracts.py''s
     blocks above are now the flag-gated (_push_shapers_phase2_active) rollback path,
     not the sole terminus.
 
@@ -3090,20 +3091,20 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py (faction_updates loop: diplomatic_transition
+  v2_evidence: 'src/observability/extraction/faction.py (faction_updates loop: diplomatic_transition
     with frozenset dedup set; alliance_accepted guard; territory_ownership_changed;
-    faction_tension_delta; world_events_add loop: war_declared, military_conflict_resolved;
-    entity-scan: faction_extinct). src/observability/events.py (EventCategory Literal
-    += "faction"). src/simulation_quality/quality_hub.py (TRANSLATION_MAP additions:
-    leadership_changed, alliance_formed, betrayal_desertion). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
+    faction_tension_delta; entity-scan: faction_extinct); src/observability/event_extractor.py
+    (world_events_add loop: war_declared, military_conflict_resolved). src/observability/events.py
+    (EventCategory Literal += "faction"). src/simulation_quality/quality_hub.py (TRANSLATION_MAP
+    additions: leadership_changed, alliance_formed, betrayal_desertion). (TCK-20260629-SIMQ-EMIT-SOCIAL-FACTION)
     As of the push-shaper migrations, diplomatic_transition, alliance_accepted, territory_ownership_changed,
     faction_tension_delta, war_declared, and military_conflict_resolved are also derived
     by the live-default apply-layer FactionShaper (src/observability/event_shapers.py).
     faction_extinct, despite sitting in this same entry alongside those 6 FactionShaper-derived
     events, is derived by the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),
-    not FactionShaper. event_extractor.py''s blocks above are now the flag-gated (_push_shapers_active
-    for the first 6, _push_shapers_phase2_active for faction_extinct) rollback path,
-    not the sole terminus.
+    not FactionShaper. those blocks above (extraction/faction.py, event_extractor.py)
+    are now the flag-gated (_push_shapers_active for the first 6, _push_shapers_phase2_active
+    for faction_extinct) rollback path, not the sole terminus.
 
     '
   proof_type: null
@@ -3140,10 +3141,11 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 alliance_proposed block\
+  v2_evidence: "src/observability/extraction/faction.py \u2014 alliance_proposed block\
     \ inside alliance_accepted guard; resource_seized block inside territory_add loop\
-    \ with tension_delta guard; paid_info_transaction second emit in INFORMATION_PURCHASE\
-    \ branch; conservation_law_verified block at tick % 50 with economy_event_types\
+    \ with tension_delta guard; src/observability/extraction/economy.py \u2014 paid_info_transaction\
+    \ second emit in INFORMATION_PURCHASE branch; src/observability/extraction/resources.py\
+    \ \u2014 conservation_law_verified block at tick % 50 with economy_event_types\
     \ guard. src/engine/scenario_runtime.py \u2014 scenario_objective_progressed emit\
     \ in _evaluate_after_tick() when result == RUNNING. As of the push-shaper migrations,\
     \ alliance_proposed and resource_seized are also derived by the live-default apply-layer\
@@ -3151,7 +3153,7 @@
     \ EconomyShaper; conservation_law_verified is now derived by run_shadow_shapers()\
     \ as a cross-shaper aggregation, not any single per-domain shaper class (all in\
     \ src/observability/event_shapers.py). scenario_objective_progressed remains scenario_runtime.py-only\
-    \ \u2014 not shaper-migrated. event_extractor.py's blocks above are now the flag-gated\
+    \ \u2014 not shaper-migrated. the extraction/ blocks above are now the flag-gated\
     \ (_push_shapers_active for alliance_proposed/resource_seized/paid_info_transaction,\
     \ _push_shapers_phase2_active for conservation_law_verified) rollback path, not\
     \ the sole terminus.\n"
@@ -3173,13 +3175,14 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 contract_milestone_completed\
+  v2_evidence: "src/observability/extraction/contracts.py \u2014 contract_milestone_completed\
     \ block inside strategic.contracts loop; isinstance guards on expiry_tick/created_tick;\
     \ progress = elapsed / (expiry - created); thresholds (0.25, 0.50, 0.75); _emitted_contract_milestones\
-    \ class-level set gate; reset in reset_run_state(). As of the push-shaper migrations,\
-    \ this event is also derived by the live-default apply-layer SocialShaper (src/observability/event_shapers.py,\
-    \ see SOC-240); event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
-    \ rollback path, not the sole terminus.\n"
+    \ class-level set gate; reset in reset_run_state() (src/observability/event_extractor.py).\
+    \ As of the push-shaper migrations, this event is also derived by the live-default\
+    \ apply-layer SocialShaper (src/observability/event_shapers.py, see SOC-240);\
+    \ src/observability/extraction/contracts.py's block above is now the flag-gated\
+    \ (_push_shapers_phase2_active) rollback path, not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_contract_milestone.py
   divergence_note: null
@@ -3192,13 +3195,14 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/observability/event_extractor.py \u2014 social_memory_created\
+  v2_evidence: "src/observability/extraction/social.py \u2014 social_memory_created\
     \ block after reputation_delta block, inside social section; compares curr_trust\
     \ vs prior_trust per entity per tick; _emitted_social_memory class-level set gate;\
-    \ reset in reset_run_state(). As of the push-shaper migrations, this event is\
-    \ also derived by the live-default apply-layer SocialShaper (src/observability/event_shapers.py,\
-    \ see SOC-240); event_extractor.py's block above is now the flag-gated (_push_shapers_phase2_active)\
-    \ rollback path, not the sole terminus.\n"
+    \ reset in reset_run_state() (src/observability/event_extractor.py). As of the\
+    \ push-shaper migrations, this event is also derived by the live-default apply-layer\
+    \ SocialShaper (src/observability/event_shapers.py, see SOC-240); src/observability/extraction/social.py's\
+    \ block above is now the flag-gated (_push_shapers_phase2_active) rollback path,\
+    \ not the sole terminus.\n"
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_social_memory.py
   divergence_note: null
@@ -3306,13 +3310,14 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'src/observability/event_extractor.py -- QuestState import, isinstance-gated
+  v2_evidence: 'src/observability/extraction/quests.py -- QuestState import, isinstance-gated
     QuestEvent construction reading .quest_status with explicit payload={"status":
-    ...}, commitment_abandoned kept structurally independent (still reads generic
-    .status, applies to any project kind). Real-kernel verification (dungeon_crawl_seed42_500t):
-    quest_event count dropped from 700 (pre-fix, 100% mislabeled) to 0 (post-fix --
-    correctly excludes non-quest projects; 0 expected since TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING,
-    still open, means no real QuestState quests exist in live gameplay yet).'
+    ...}; src/observability/event_extractor.py -- commitment_abandoned kept structurally
+    independent (still reads generic .status, applies to any project kind). Real-kernel
+    verification (dungeon_crawl_seed42_500t): quest_event count dropped from 700 (pre-fix,
+    100% mislabeled) to 0 (post-fix -- correctly excludes non-quest projects; 0 expected
+    since TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING, still open, means no real QuestState
+    quests exist in live gameplay yet).'
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_narrative.py::TestQuestEventConfirmation;
     tests/unit/observability/test_event_extractor_agency2.py
@@ -3353,8 +3358,8 @@
     flag, deliberately NOT folded into ENABLE_PUSH_EVENT_SHAPERS_PHASE2 which already
     defaults ON -- reusing it would have delivered live immediately with no SHADOW
     window, the identical double-fire-risk mistake TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY
-    already found and fixed once for Phase 2 itself). src/observability/event_extractor.py
-    -- event_extractor.py''s own quest_event construction now gated behind `not _push_shapers_quest_active`
+    already found and fixed once for Phase 2 itself). src/observability/extraction/quests.py
+    -- the extractor''s own quest_event construction now gated behind `not _push_shapers_quest_active`
     (rollback path; commitment_abandoned in the same loop deliberately left ungated
     -- separate signal, not migrated by this ticket, see SOC-243). src/domains/optimization/feature_flags.py
     -- new ENABLE_PUSH_EVENT_SHAPERS_QUEST, default ON. Real-kernel-adjacent verification
@@ -3378,8 +3383,8 @@
     WorldEvent(category=QUEST_COMPLETED) (src/engine/pipeline_phases/quest_opportunity_rewards.py)
     -- a different mechanism for a different registry (state.quest_registry''s QuestOpportunity
     entries, E23C), not the entity-project QuestState lifecycle quest_event actually
-    tracks. Historical ticket files in agent-working/tickets/done/ are not edited after close; this
-    entry is the correction of record going forward.'
+    tracks. Historical ticket files in agent-working/tickets/done/ are not edited
+    after close; this entry is the correction of record going forward.'
   support_boundary: 'Observability delivery-mechanism migration only -- no change
     to NarrativeScorer''s scoring logic, no change to which statuses fire (byte-identical
     to SOC-241''s fix, just delivered via a different code path). grade_anchors.json

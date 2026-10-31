@@ -289,7 +289,7 @@ class TestLifeArcIncoherentRetired:
 
     def test_detector_literals_are_gone(self):
         import inspect
-        from src.observability import event_extractor
-        src = inspect.getsource(event_extractor)
+        from tests.helpers.event_extractor_source import extractor_source
+        src = extractor_source()
         assert "life_arc_incoherent" not in src and "_LATE_GENERATION_THRESHOLD" not in src
         assert not hasattr(EventExtractor, "_emitted_life_arc_incoherent")

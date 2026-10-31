@@ -334,3 +334,16 @@ def test_a_drift_entry_with_cases_is_a_lint_error():
 def test_the_slow_registry_rejects_cases():
     problems = kr.lint_known_reds([_slow("tests.a*", cases=[{"world": "w", "seed": 1}])], SLOW_SPEC)
     assert any("cases is not allowed in the slow registry" in p for p in problems)
+
+
+def test_the_real_gate_registry_owns_exactly_fls_43_merchant_38_for_the_low_hp_retreat_ticket():
+    """TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE: the scoped V3 entry owns frontier_living_world/43
+    entity 38 and nothing near it; any other V3 fail stays unowned."""
+    known = kr.load_known_reds(GATE_FILE, RPG_GATE_SPEC)
+    low_hp = "TCK-20261028-LOW-HP-RETREAT-BRANCH-HOLDS-A-STARVING-SUBJECT-IN-PLACE-BESIDE-A-NON-ACTING-HOSTILE"
+    assert _owner(_v3("frontier_living_world", 43, 38), known) == low_hp
+    assert _owner(_v3("frontier_living_world", 43, 39), known) is None
+    assert _owner(_v3("frontier_living_world", 43, 38, 39), known) is None
+    assert _owner(_v3("frontier_living_world", 42, 38), known) is None
+    assert _owner(_v3("crowded_frontier", 43, 38), known) is None
+    assert _owner(_v3("frontier_living_world", None, 38, scope="pooled"), known) is None

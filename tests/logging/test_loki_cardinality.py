@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os
-import yaml
+import re
 import json
 import logging
 from pathlib import Path
@@ -14,39 +14,41 @@ ALLOWED_LOKI_LABELS = {"level", "component", "service", "environment", "containe
 # High-cardinality labels that must NEVER be promoted to Loki stream labels
 DISALLOWED_LOKI_LABELS = {"tick", "entity_id", "worker_id", "causal_id", "transaction_id", "run_id", "target_id", "quest_id"}
 
-def test_promtail_labels_are_safe():
+def test_alloy_labels_are_safe():
     """
-    Ensure docker/promtail-config.yml does not promote any high-cardinality fields to Loki stream labels.
+    Ensure docker/alloy/config.alloy does not promote any high-cardinality fields to Loki stream labels.
     Prevents Loki memory/index crash regressions.
     """
-    config_path = Path(__file__).resolve().parents[2] / "docker" / "promtail-config.yml"  # repo-root anchored, not cwd
-    assert config_path.exists(), "docker/promtail-config.yml must exist"
-    
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-        
-    scrape_configs = config.get("scrape_configs", [])
-    assert scrape_configs, "scrape_configs must be defined in docker/promtail-config.yml"
-    
-    for job in scrape_configs:
-        pipeline_stages = job.get("pipeline_stages", [])
-        for stage in pipeline_stages:
-            if "labels" in stage:
-                labels_dict = stage["labels"]
-                # If labels is None, empty, or not a dict, skip
-                if not labels_dict or not isinstance(labels_dict, dict):
-                    continue
-                
-                for label_name in labels_dict.keys():
-                    assert label_name not in DISALLOWED_LOKI_LABELS, (
-                        f"CRITICAL REGRESSION: High-cardinality field '{label_name}' is promoted as "
-                        f"a Loki stream label in job '{job.get('job_name', 'unknown')}'! "
-                        f"This will cause Loki database index explosion."
-                    )
-                    assert label_name in ALLOWED_LOKI_LABELS, (
-                        f"WARNING: Unknown label '{label_name}' detected. "
-                        f"Only low-cardinality labels are permitted."
-                    )
+    config_path = Path(__file__).resolve().parents[2] / "docker" / "alloy" / "config.alloy"  # repo-root anchored, not cwd
+    assert config_path.exists(), "docker/alloy/config.alloy must exist"
+    text = config_path.read_text()
+    text = re.sub(r"//[^\n]*", "", text)  # comments may name forbidden labels
+
+    # Every stage.labels block: brace-match its body, then read the keys of its values = { ... } map.
+    promoted = set()
+    blocks = 0
+    for m in re.finditer(r"stage\.labels\s*\{", text):
+        blocks += 1
+        depth, i = 1, m.end()
+        while depth and i < len(text):
+            depth += {"{": 1, "}": -1}.get(text[i], 0)
+            i += 1
+        body = text[m.end():i - 1]
+        values = re.search(r"values\s*=\s*\{(.*?)\}", body, flags=re.S)
+        if values:
+            promoted |= set(re.findall(r"([A-Za-z_][A-Za-z0-9_]*)\s*=", values.group(1)))
+    assert blocks, "docker/alloy/config.alloy must define a stage.labels block"
+    assert promoted, "stage.labels must promote at least level and component"
+    for label_name in promoted:
+        assert label_name not in DISALLOWED_LOKI_LABELS, (
+            f"CRITICAL REGRESSION: High-cardinality field '{label_name}' is promoted as "
+            f"a Loki stream label in docker/alloy/config.alloy! "
+            f"This will cause Loki database index explosion."
+        )
+        assert label_name in ALLOWED_LOKI_LABELS, (
+            f"WARNING: Unknown label '{label_name}' detected. "
+            f"Only low-cardinality labels are permitted."
+        )
 
 def test_formatter_serializes_fields():
     """

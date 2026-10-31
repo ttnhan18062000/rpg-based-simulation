@@ -445,8 +445,8 @@ class TestAntiDriftGuards:
         from src.ai.goals.adventure_scorer import AdventureGoalScorer
         source = inspect.getsource(AdventureGoalScorer.score)
         assert "last_defer_reason" not in source
-        extractor_source = inspect.getsource(EventExtractor.extract)
-        assert "last_defer_reason" in extractor_source
+        from tests.helpers.event_extractor_source import extractor_source  # extract() is split across src/observability/extraction/
+        assert "last_defer_reason" in extractor_source()
 
     def test_event_extractor_has_reset_run_state(self):
         """Guard 2: reset_run_state() classmethod must exist and be callable."""
