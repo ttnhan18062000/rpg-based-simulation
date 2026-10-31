@@ -11,6 +11,8 @@ tags: [ai, audit, governance, delivery, planning]
 
 Status: proposal, nothing implemented. It summarises `AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md`, written at `1f749c1aa` and revised in Round 2 on 2026-10-31. Numbers here were re-measured at `ba7aa11bd` from host ubuntu on 2026-10-30. W44 is partial: it holds only rows already on main, and the week runs to 11-01.
 
+**How far to trust this.** The plan's citations do not cover an operating model like this one (about 20 long-lived seats, two hosts, one owner), and no experiment has tested the proposed design. The one experiment run, E1, read the current system's history. Some sources were read second-hand, because arxiv and openai were blocked from the host (plan §7).
+
 ## The proposal
 
 Keep what delivers: seats, worktrees, batch PRs, tickets and the recorder. Add three hard boundaries, then freeze and remove the dormant pipeline:
@@ -19,6 +21,23 @@ Keep what delivers: seats, worktrees, batch PRs, tickets and the recorder. Add t
 - **Evidence:** one close command records what's known at close. PR, CI and merge facts come from GitHub later.
 
 Separately, a small evaluation track starts with a Sonnet/Opus pilot (plan Part IX). Production never depends on it.
+
+## What the proposal rests on
+
+Basis: **measured** here, **platform docs** (how GitHub or Claude Code says it behaves), **cited advice** (research or guidance about other settings), or **reasoned** (argued, no data).
+
+| Claim | Basis | Tested here? | What would prove it wrong |
+|---|---|---|---|
+| The shared admin login is the main defect; a separate agent identity fixes it (OD-2, OD-10) | Measured for the defect; cited advice and platform docs for the fix | No: E6a, Phase 1 | After revocation, an agent can still act as you |
+| M1 keeps merge yours on GitHub (OD-3) | Platform docs, from a delegated pass | No: E6b pending | E6b: the machine user can merge, or your merge fails |
+| Merging from outside the VMs won't hurt delivery (OD-7) | Reasoned | No: first read in Phase 2's 2-week window | Merges slow or batch up in that window |
+| Design D beats a rebuild, an orchestration engine or ephemeral workers | Reasoned | No: E2a, E2c, E4, opt-in, Phase 6 | A thin pipeline gives materially fewer defects at similar cost, or interruption losses are large (plan §61) |
+| A close check, evidence layers and a gate job catch what matters at fair cost (OD-4, OD-11, OD-13) | Reasoned, on a measured baseline (1-2 of 84 closes premature) | No: E1-replay, Phase 2 | Replay finds little, or false positives slow delivery |
+| Removing the pipeline loses nothing in use (OD-5, OD-6) | Measured non-use, which doesn't show removal is safe | No; tags keep it recoverable | A later comparison favours it |
+| Delivery today is healthy | Measured to 10-26, by CI green and reverts | E1, read-only | Those can't see outcome movement: a green PR can move simulation results, which then get re-anchored, not reverted |
+| An evaluation track will give usable answers (OD-16 to OD-21) | Cited advice and reasoned | No: R1 pilot | The pilot can't tell the models apart at its budget |
+
+OD-8 and OD-9 are "measure first", so they carry no claim yet.
 
 ## What the refresh changed
 
@@ -65,8 +84,8 @@ An external review (ChatGPT, advisory) and your research problem led to these ch
 | OD-7 | Review load | Follows OD-3; M1 adds no approval, but moves every merge out of the VM (87 merges in W43, 45 in 5 days of W44) | With E6b's result |
 | OD-4, OD-11, OD-12, OD-13 | Machine-proven close; evidence layers; claims; gate job | As in the plan | Phase 2 entry |
 | OD-5, OD-6 | Remove pipeline; Codex track | Remove from production after tagging; decide Codex at R2 | Phase 4 entry |
-| OD-16 to OD-21 | Evaluation budget and execution; framework; scope; research-only search; promotion; thresholds | Budget after R0; hybrid framework; search stays research-only | R1 entry onward |
+| OD-16 to OD-21 | Evaluation budget and execution; framework; scope; research-only search; promotion; thresholds | Budget after R0; hybrid framework; search stays research-only | R1 entry onward; lead-planner advises R1 wait until Phase 2 lands, to keep your attention on authority and completion |
 | OD-8 | Token budget | Measure first; needs both hosts | Phase 3 exit |
-| OD-9 | Coordination target | Measure per session as well as per close, then decide | M7, on or after 11-04 |
+| OD-9 | Coordination target, and one queue for asks across hosts | Measure per session as well as per close, then decide | M7, on or after 11-04 |
 
 Before any credential change: a ruleset export as the rollback point, and an inventory of credential stores and tools that assume your login (plan §54, §27a).

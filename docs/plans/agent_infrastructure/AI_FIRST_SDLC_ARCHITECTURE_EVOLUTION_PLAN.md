@@ -62,7 +62,7 @@ The problems are elsewhere:
 1. **Authority is not separated.** The owner and every agent use one admin GitHub identity. Every merge is an admin-bypass merge, so the two "required" checks bind no one.
 2. **Completion cannot be proven.** "Done" is certified only by four bookkeeping conditions. The pre-close Definition-of-Done (DoD) check never really runs on the hand path; run after close it fails 97 of 97 times. Phase events are narration.
 3. **The process is defined in the wrong places.** The operating model that is actually used (seats, batches, hand closure) was never adopted as a decision. Meanwhile the dormant 12-phase pipeline is still described as "the process" in four places.
-4. **Coordination overhead is rising.** Cross-session messages per closed ticket went from 3.8 to 7.7 to 11.8 over W41–W43, while closures fell from 274 to 151 to about 120.
+4. **Coordination overhead is rising.** Cross-session messages per closed ticket went from 3.7 to 8.5 to 17.8 over W41–W43, while closures fell from 274 to 151 to about 120.
 
 **Recommendation [Prop, RECOMMENDED].** **Alternative D, "Evidence-gated hand path"**: incremental hardening (A) plus a few targeted lean refactors taken from B. It does **not** propose durable orchestration (C).
 
@@ -118,7 +118,7 @@ These are ranked by evidence (detail in §12).
 2. **P-2 Completion is unverifiable (confirmed defect class, low observed harm).** The DoD Part A never runs before close on the hand path. The done-checker has no tests condition. Phase events are narration. 1–2 of 84 closes were provably premature. About 5 FAIL verdicts since 10-07 are unresolved.
 3. **P-3 The process definition has drifted from the operating model (confirmed).** The hand/batch model was never adopted as a decision. `owner_directed` is undefined: 196 of 201 such rows carry no note. The pipeline is described in four places, and CLAUDE.md has 22 discrepancies with the implementation.
 4. **P-4 Traceability (confirmed).** Nothing links a run to its PR, commit, model or instruction version. 30% of closures are unattributed to a seat.
-5. **P-5 Rising coordination overhead (observed trend, cause unmeasured).** Messages per closure went 3.8 → 7.7 → 11.8. The approvals log is heavy. The owner's attention is a single point of failure.
+5. **P-5 Rising coordination overhead (observed trend, cause unmeasured).** Messages per closure went 3.7 → 8.5 → 17.8. The approvals log is heavy. The owner's attention is a single point of failure.
 6. **P-6 Context freshness (partly confirmed).** The search "stale" flag is a false positive in every worktree. The graph is stale. Handover notes over the cap are announced but cut.
 7. **P-7 Maintenance surface (confirmed).** About 9.2k Python and 5.5k JS lines are dormant. Tests pin source strings. The four-representation pipeline spec has had no maintenance since 10-09; it remains a false source of assurance.
 8. **P-8 Security hygiene (plausible risks).** Bash command prefixes are logged unredacted into a public repo. gitleaks is report-only. Injected GitHub text has no trust tiering. The sandbox is off (`socat` is missing, so enabling it would fall back to unsandboxed).
@@ -138,7 +138,7 @@ Everything else stays agent-driven and flexible. That includes planning, design,
 ## 5. Reasons for the Recommendation
 
 - **It solves the demonstrated problems (P-1 to P-4) at the lowest cost.** P-1 is fixed mostly by GitHub settings plus one machine account, using features available on a personal public repo [Src R14]. P-2 is fixed by one CI job and one CLI.
-- **It preserves what works.** Throughput and quality outcomes are good (§46): 0 reverts, 100% CI-green merges, 4.1 h median lead time. A rebuild (B) or an orchestration platform (C) would put that at risk to fix problems the platform doesn't address. The defects are about *authority* and *evidence*, not orchestration.
+- **It preserves what works.** Throughput and quality outcomes are good as far as they were measured (§46): 0 reverts, 100% CI-green merges, 4.1 h median lead time. CI green and revert counts don't see outcome movement (§28a). A rebuild (B) or an orchestration platform (C) would put that at risk to fix problems the platform doesn't address. The defects are about *authority* and *evidence*, not orchestration.
 - **It matches the research.** Use the simplest solution that works [Src R1]. Start with a single agent and enforce guardrails outside the prompt [Src R2]. Multi-agent setups fit shared-context coding work poorly and cost about 15× the tokens [Src R3]. Simple pipelines with execution-based validation compete with complex agents [Src R4]. Interface quality beats orchestration complexity [Src R5]. Give each agent its own governed identity [Src R12, ASI03].
 - **It follows the owner's stated constraints.** No new orchestration engine; guardrails, not a sandbox; proportionate checks over monitoring data; one PR per batch; humans own merge and main [Repo, §13].
 
@@ -149,14 +149,14 @@ Everything else stays agent-driven and flexible. That includes planning, design,
 | # | Decision | Recommended | Why it matters |
 |---|---|---|---|
 | OD-1 | Adopt the hand/batch path as the official execution model | Yes | Unblocks retiring the pipeline and gives the path a real definition |
-| OD-2 | Create a machine user for agents. The owner's credentials leave **agent-reachable storage** on both hosts, and old tokens are revoked | Yes, with OD-10 | The only real fix for P-1. Needs owner action and has a small one-off cost |
+| OD-2 | Create a machine user for agents. The owner's credentials leave **both hosts**, and old tokens are revoked | Yes, with OD-10 | The only real fix for P-1. Needs owner action and has a small one-off cost |
 | OD-3 | Merge model: **M1** owner-only merge kept by the `update` rule, or **M2** `pull_request` rule with required approval, so checks bind, but collaborators can merge once approved | **M1 now**, M2 only if the owner accepts delegating the merge click (§27a) | Decided owner-only merge versus server-bound checks |
 | OD-4 | What has to be machine-proven before a close | Post-close conditions, plus CI tests on src paths, shown by the gate job, plus the owner's merge decision | Defines C-1 |
 | OD-5 | Retire `implement-ticket.js`, `implement-epic.js` and the skill imitation | Remove from production, after Phase 2 lands **and** a baseline tag exists (§32a) | Removes 5.5k JS lines plus the four-place spec |
 | OD-6 | Codex/provider-neutral track (about 6.5k lines) | **Changed: freeze as tagged baseline, leave CI, decide at R2** (§32a) | Maintenance surface versus harness-comparison research |
 | OD-7 | Owner review load. Under M1 the merge is the owner's review, so there is no extra approval step. Applies in full under M2 (87 merges in W43; 45 in the first 5 days of W44) | Follows OD-3 | Velocity versus control |
 | OD-8 | A token/cost budget (per batch or per week) | Measure first (Phase 3), then decide | No budget exists today |
-| OD-9 | Coordination target, e.g. messages per closure | Measure, then review at session-layer M7 (≥ 11-04) | P-5 |
+| OD-9 | Coordination target, e.g. messages per closure, and a single queue for owner asks across hosts. On 10-31 (lead-planner's observation) the owner answered the same dispatch on both hosts, and a push yes was recorded for a head already superseded; no #715 reader caught it automatically | Measure, then review at session-layer M7 (≥ 11-04) | P-5 |
 
 ### Round 2 additions to the decision register
 
@@ -164,11 +164,11 @@ New recommendations are not approved by appearing here. Decided so far: the list
 
 | # | Decision | Existing owner position | Evidence | Options | Recommended | Trade-off | Confidence | Validation | If deferred |
 |---|---|---|---|---|---|---|---|---|---|
-| OD-10 | Where owner credentials live | "Guardrail, not a sandbox"; owner-only actions (§13) | §27a | (a) Outside the hosts, browser only; (b) second OS user; (c) App with held key | **(a)** | Owner loses terminal merge; lead relays stay for requests only | High on need; medium on ergonomics | E6a | Identity is cosmetic |
+| OD-10 | Where owner credentials live | "Guardrail, not a sandbox"; owner-only actions (§13) | §27a | (a) Outside the hosts: `gh` on the physical machine, browser as fallback; (b) second OS user; (c) App with held key | **(a)** | Owner loses terminal merge inside the VMs; lead relays stay for requests only | High on need; medium on ergonomics | E6a | Identity is cosmetic |
 | OD-11 | Evidence lifecycle | None | §24 self-reference; squash merges | Three layers; single late record; DB | **Three layers, no DB** | Slight record growth | High | E5 | Phase 3 can't be specified |
 | OD-12 | Claim consistency | Implicit: #634 convention | 1 of 318; one collision | Advisory; ref claims; locks with fencing | **Advisory + ref claims cross-host** | Some duplicates remain possible, and they are caught at PR | Medium | E6b, count collisions | Duplicates stay rare and manual |
 | OD-13 | Required CI shape | Required checks exist; no blocking on monitoring data | §28a | Gate job; many required lanes; trusted-base App | **Gate job** | PR can still edit it; owner sees that | Medium-high | E6b, replay | Lanes can't safely become required |
-| OD-14 | Security rollback | None | §39, §42 | Suspend publishing; restore token | **Suspend** | Delivery can stop for a while | High | Rehearse once | Unsafe fallback stays written |
+| OD-14 | Security rollback | None | §39, §42 | Suspend publishing; restore token | **Suspend; agents never regain the owner token** | Delivery can stop for a while | High | Rehearse once | Unsafe fallback stays written |
 | OD-15 | Freeze baselines before retirement | None | §32a | Tags; keep live; delete | **Tags now** | Very small cost | High | Tag checks out | Risk of losing a reproducible baseline |
 | OD-16 | Evaluation investment and execution | Token efficiency preferred; research interest stated in the owner's problem | No budget exists; subscription behaviour unknown | Subscription on host; API key with cap; off-host runner | **Decide after R0** with a hard cap for R1 | Isolation versus cost versus setup | Low until R0 | R0 | R1 can't start |
 | OD-17 | Evaluation framework | None | §64 | E-A; E-B; E-C | **E-C, staged** | Possible rework of the runner | Medium | R2 spike | Pilot still possible |
@@ -330,7 +330,7 @@ The prior audit is mostly right on structure. It overstated some numbers and mis
 
 ## 11. Existing Architectural Strengths (preserve)
 
-1. **Delivery outcomes are good.** 0 reverts in 60 days; CI green at merge on 100% of closing PRs; relevant test lanes ran on 100% of src PRs; 4.1 h median lead time.
+1. **Delivery outcomes are good.** 0 reverts in 60 days; CI green at merge on 100% of closing PRs; relevant test lanes ran on 100% of src PRs; 4.1 h median lead time. These measures don't see outcome movement (§28a).
 2. **Durable state lives in git** (tickets, artifacts, logs). Sessions are disposable.
 3. **The ticket validators and the CI corpus test** keep 0 location inconsistencies across 3,017 tickets, and they caught 395 drifted done tickets historically.
 4. **Generated role cards** come from registries, with drift tests and a token budget that has actually blocked an over-budget change (10-26).
@@ -347,7 +347,7 @@ The prior audit is mostly right on structure. It overstated some numbers and mis
 | P-2 | Defect class | Done is certified only by bookkeeping; Part A never runs before close; no tests condition; narrated events | 97 of 97 post-close FAILs; 263 of 263 synthetic | Every close; harm 1–2 of 84 | **MEDIUM-HIGH** | No independent evidence | No: CI job plus close CLI |
 | P-3 | Defect | Process drift: the used model isn't decided; the unused one is documented in 4 places | §10; 22 discrepancies | Continuous | MEDIUM | Prose patches | No: decision plus generation |
 | P-4 | Defect | No run → PR/commit/model/instructions links; 30% no seat | Schema; runs | Every run | MEDIUM | Missing fields | No |
-| P-5 | Trend | Coordination overhead: 3.8 → 11.8 messages per closure | tools shards (partial capture) | Rising | MEDIUM (unmeasured cost) | No measure, no target | No |
+| P-5 | Trend | Coordination overhead: 3.7 → 17.8 messages per closure | tools shards (partial capture) | Rising | MEDIUM (unmeasured cost) | No measure, no target | No |
 | P-6 | Defect / risk | Context freshness signals wrong (search stale, graph stale) | `knowledge_search.py:681`; graph header | Every worktree search | MEDIUM | Wrong root; no rebuild schedule | No |
 | P-7 | Cost | Dormant infrastructure; source-pinned tests | §32 | — | MEDIUM | — | No: retirement |
 | P-8 | Risk | Unredacted command logging to a public repo; report-only secret scanning; no trust tiering; sandbox off | `post_tool_hook.py`; security-scan.yml; R13 | No real secret found | MEDIUM | Advisory only | No |
@@ -365,7 +365,7 @@ From owner decisions [Repo, DECIDED-OWNER]:
 - "Guardrail, not a sandbox"; **no new orchestration engine**; no autonomy beyond the human points (session layer §1, §10).
 - Proportionate checks over monitoring data; no blocking gates on monitoring data (09-16).
 - One PR per batch, big batches (09-19, 10-03).
-- The guard asks only for merge, push to main, remote delete and worktree/data delete. Governing files are protected by review and merge. The role split is advisory (10-07).
+- The guard asks only for merge, push to main, remote delete and worktree/data delete. Governing files are protected by review and merge. The role split is advisory (10-07). In auto mode, CLAUDE.md edits appear to land with no prompt (inferred: it is not on the documented protected-path list). .claude/settings.json edits go to the classifier (platform docs). Detection first (owner, #715 6543787917; TCK-20261031-GOVERNING-FILE-EDITS-VISIBLE-TO-OWNER); a guard ask stays undecided until its counts are in.
 - Implementers need no grant to push or open a PR on their own branch (10-06).
 - **Never use `bypassPermissions`** (handover rule; the ticket isn't committed).
 - Owner-only actions: merge, push to main, remote branch delete, worktree/data delete.
@@ -503,7 +503,7 @@ Ratings are qualitative. Baselines come from §46 where available.
 
 | Objection | Response | When the other option is better |
 |---|---|---|
-| "Owner approval on every PR slows delivery" (about 66–164 per week) | Under M1 (§27a) nothing is added: the owner's merge is the review, but it moves to a browser outside the hosts. Under M2, one extra click per PR, with OD-7's path-scoped fallback | If owner time is the binding constraint, require code-owner review only on governing paths and accept AI review for the rest |
+| "Owner approval on every PR slows delivery" (about 66–164 per week) | Under M1 (§27a) nothing is added: the owner's merge is the review, but it moves outside the hosts. Under M2, one extra click per PR, with OD-7's path-scoped fallback | If owner time is the binding constraint, require code-owner review only on governing paths and accept AI review for the rest |
 | "A machine user is operational burden on two hosts" | One account and one classic PAT (§27a), configured once per host. The ToS allows one free machine account [Src R14] | A GitHub App, if the owner prefers short-lived tokens; it needs a private key held outside agent reach |
 | "D keeps the elaborate seat model, which is the real cost driver (P-5)" | True, D doesn't fix coordination overhead directly. It measures it (Phase 3) and leaves the decision to M7 with data | **E (ephemeral workers)** wins if E2 shows that equal-quality work costs far fewer tokens and messages |
 | "Retiring the pipeline throws away the only deterministic orchestrator" | It hasn't completed a ticket in 3 weeks. Its value can be recovered as a thin C1 shell for epics if E2/E4 show need | **C1**, if the evidence shows epics lose significant work to interruption |
@@ -763,7 +763,7 @@ Three different properties, which the first plan blurred:
 
 **Bypass actors.** Bypass is granted to a role, today the admin role; only the owner holds it on a personal repo [Src R14; repo ruleset].
 
-**Recommendation: M1 now.** It keeps a decided constraint, adds no click, and ends with agents unable to land anything. The first plan's "inert checks" defect then becomes a stated property: the human merge is the check, and a red-merge count in the retro shows whether that is holding (0 of 51 so far). M2 is the better design if the owner later wants checks enforced independently of attention, and it requires giving up owner-only merge as worded.
+**Recommendation: M1 now.** It keeps a decided constraint, adds no approval step, and ends with agents unable to land anything. The first plan's "inert checks" defect then becomes a stated property: the human merge is the check, and a red-merge count in the retro shows whether that is holding (0 of 51 so far). In practice the owner often merges on a lead's summary, and a red-merge count only catches red, so the gate job must show enough to read directly. M2 is the better design if the owner later wants checks enforced independently of attention, and it requires giving up owner-only merge as worded.
 
 **Owner flow under I-1 [Prop].** Today the lead hands the owner paste-ready commands, the owner runs them in the lead's terminal, and the lead sees the output and logs it. After I-1, the lead prepares the same commands for the owner's own shell on the physical machine, and can only verify the result afterwards, read-only, with the machine token. Merge commands always carry `--match-head-commit`.
 
@@ -804,7 +804,7 @@ Passing means GitHub rejected every attempt and no owner credential remains usab
 |---|---|---|---|
 | Agent-reported completion | Seat | Low (annotation) | Narrative only |
 | Execution evidence | `work close` (validators run, files moved) and tool activity | Medium (local and mutable, but generated) | Close-check input |
-| Automated test results | **CI**, path-scoped required lanes | **High** | Merge gate |
+| Automated test results | **CI**, one always-run gate job (§28a) | **High** | Merge gate |
 | Static validation | Validators in `work close` **and re-run in CI** | High (CI copy) | Merge gate |
 | AI-based review | Separate read-only reviewer | Advisory | Owner input |
 | Human decision | Owner's merge under M1; GitHub review under M2 | **Authoritative** | Merge gate |
@@ -848,7 +848,7 @@ Passing means GitHub rejected every attempt and no owner credential remains usab
 - It fails if a needed lane failed or was cancelled.
 - It accepts a skip only for the reason that lane's condition states: unchanged registry re-sync, or no affected paths computed by `changed-files`.
 - It evaluates the post-close conditions inside the job, with no `paths:` filter, so it always concludes.
-- It prints the list of governing paths the PR touches, for the owner's merge decision.
+- It prints the head SHA, the lane results and the governing paths the PR touches, for the owner to read directly at merge. The path list has one definition, shared with TCK-20261031-GOVERNING-FILE-EDITS-VISIBLE-TO-OWNER.
 - Lane names stay free to change, because only the gate's name is bound.
 
 | Risk | How addressed | Residual |
@@ -863,6 +863,8 @@ Passing means GitHub rejected every attempt and no owner credential remains usab
 **Rejected:** a trusted-base evaluator via `workflow_run` plus an App-posted check. It works in principle, but adds key custody and a privileged path for a threat that the owner's merge already covers under M1. Reconsider under M2 with high merge volume. **`pull_request_target` running PR code: never.**
 
 **Rollout.** Advisory for 2 weeks; then, under M1, "required" means the owner doesn't merge on red, and the retro counts exceptions. Under M2 it becomes a ruleset requirement.
+
+**Green says nothing about outcome movement.** Regressions in simulation outcomes here get re-anchored or held as known-reds, not reverted, so a revert count can't see them. #769's change was intended and it merged green (25 checks passed, 5 skipped); a later sweep found it moved 85 of 810 pillar anchors, 16 of them from inside to outside tolerance, with 38 already outside at its parent (`agent-working/staging_artifacts/TCK-20261030-SIMQ-ANCHOR-REDS-SINCE-V1-REANCHOR-NEED-A-BISECT/evidence/sweep/`, branch `rpg-ubuntu-simq-anchor-bisect-impl` at d2ed6c8c2). On #795, a PR that moves simulation hashes, the "SimQ grade-anchor drift (informational)" job skipped. The proposed close check (undecided, OD-4) would therefore gain one condition: an outcome-changing PR states its measured movement, or says it measured none. rpg-planner's checklist already re-checks SimQ anchors at close for behaviour-changing rpg tickets; this generalises that.
 
 ## 29. Observability and Evidence Model
 
@@ -896,6 +898,8 @@ flowchart LR
   - command prefixes are redacted;
   - transcripts stay host-local under harness retention;
   - the public repo receives only redacted, summarised telemetry.
+
+Hypothesis, untested: free non-default pushes under Phase 1 remove part of the relay cost, because rulers can read evidence directly.
 
 ## 29a. Evidence Lifecycle (Round 2)
 
@@ -1036,10 +1040,10 @@ Governs §32 and §34 for the components listed. "Freeze" means an annotated git
 
 | Component | Production value | Research value | Maintenance burden | Reuse cost | Recommendation | Decision gate |
 |---|---|---|---|---|---|---|
-| `implement-ticket.js`, `implement-epic.js` | None (0 completions since 10-04) | Medium: the only "heavy" workflow baseline, but known to fail on gate sites | High: ~57 source-pinned tests, four-place spec | High: not runnable natively | **Freeze as experimental baseline**; do not revive for production | After the close check is required (OD-5). Delete tag only after the R3 architecture comparison |
+| `implement-ticket.js`, `implement-epic.js` | None (0 completions since 10-04) | Medium: the only "heavy" workflow baseline, but known to fail on gate sites | High: ~61 source-pinned tests, four-place spec | High: not runnable natively | **Freeze as experimental baseline**; do not revive for production | After the close check is required (OD-5). Delete tag only after the R3 architecture comparison |
 | Skill imitation | None | Low: not reproducible | Low-medium | n/a | **Retire** | OD-5 |
 | Provider-neutral contract + YAML | None | Low-medium: vocabulary and role descriptions for multi-provider research, but unexercised | Medium: its CI lane | Medium | **Freeze** | R2: reuse only if the runner needs it |
-| Codex track (`agent_codex_*`, `agent_replay_codex`) | None | Medium: a harness comparison needs a second harness, but it wraps an old pilot, and Inspect SWE documents Codex too | Medium-high: 5k LOC plus lane | High, and possibly more than reimplementing | **Freeze**, not maintain | R2 Inspect spike. If Inspect runs Codex, retire the tag from consideration |
+| Codex track (`agent_codex_*`, `agent_replay_codex`) | None | Medium: a harness comparison needs a second harness, but it wraps an old pilot, and Inspect SWE documents Codex too | Medium-high: 3.5k LOC of source (3,455 lines in 67 files under `tools/`; glob `git ls-files | grep -i codex | grep -E '^(src|tools)/'`, counted at `29e1fdcc3`) plus about 5.5k lines of tests and a CI lane | High, and possibly more than reimplementing | **Freeze**, not maintain. Split the CI lane "Agent orchestration / codex / replay" first: it also runs tests/agent_orchestration. | R2 Inspect spike. If Inspect runs Codex, retire the tag from consideration |
 | `tools/agent_replay`: sampler, exclusion logging, metrics | None | **High:** reuse in R0 | Low | Low | **Extract for research** | R0 |
 | `tools/agent_replay`: `runner.py`, detectors | None | Low: tied to pipeline gate branches, and measures no model | Low | n/a | **Freeze with the pipeline** | With the pipeline |
 | `model_routing_mechanical_agents_experiment.md` | None | Medium as a design; targets dormant agents | None | Low | **Rewrite for the hand path** at R2 | R2 |
@@ -1068,7 +1072,7 @@ Governs §32 and §34 for the components listed. "Freeze" means an annotated git
 
 | Component | Approximate size | Condition |
 |---|---|---|
-| `implement-ticket.js`, `implement-epic.js`, their skills, pipeline-only gate call sites, and source-pinned tests | ~3k JS + parts of 31 gates + ~57 test files | Baseline tag exists; the gate has been in force for 2 weeks (OD-5, §32a) |
+| `implement-ticket.js`, `implement-epic.js`, their skills, pipeline-only gate call sites, and source-pinned tests | ~3k JS + parts of 31 gates + ~61 test files | Baseline tag exists; the gate has been in force for 2 weeks (OD-5, §32a) |
 | Provider-neutral contract and adapters | ~1.5k + YAML | Baseline tag exists; OD-6 |
 | Codex track + replay runner | ~5.0k, minus what R0 extracts | Baseline tag exists; OD-6 |
 | Context packet assembler | ~0.6k | Phase 4 |
@@ -1091,7 +1095,7 @@ All removals are archive commits: recoverable from git history, with no data los
 
 1. The four-place process spec: JS, SKILL.md, YAML and CLAUDE.md.
 2. Prose procedure in CLAUDE.md (22 drifts).
-3. Tests that pin source strings (~57 files on the workflow JS).
+3. Tests that pin source strings (~61 files on the workflow JS).
 4. `execution_mode` and `owner_directed` semantics.
 5. Week-close rewrites contradicting "append-only".
 6. REGISTRY.yaml merge-conflict tax: 21 of 67 merges still conflict.
@@ -1357,8 +1361,8 @@ Phase 3 can start in parallel with Phase 2. The close-check condition "a closure
 | Risk | Phase | Mitigation | Rollback |
 |---|---|---|---|
 | **Phase 1 failure:** agents locked out, or machine identity compromised | 1 | E6b first; scratch PR; rehearse once | See "Phase 1 failure" below. **Never** restore the owner token to agents |
-| Owner review becomes a bottleneck, or browser merging is awkward | 1–2 | Batch PRs; M1 adds no approval step | Revisit OD-3 and OD-10; never by returning credentials to agents |
-| Close check false positives slow delivery | 2 | 2-week advisory window | Un-require |
+| Owner review becomes a bottleneck, or merging from outside the VMs is awkward | 1–2 | Batch PRs; M1 adds no approval step | Revisit OD-3 and OD-10; never by returning credentials to agents |
+| Close check false positives slow delivery | 2 | 2-week advisory window | Drop that condition from the gate job |
 | Schema change breaks the retro | 3 | Optional fields; compatibility reader | Revert the reader |
 | Removing a used capability | 4 | Archive, don't delete; announce on issue #634 first | Revert the archive commit |
 | Instruction change degrades behaviour | 4 | Ablation (E8); staged edit | Revert CLAUDE.md |
@@ -1454,6 +1458,7 @@ All measured in this pass or the audit, read-only.
 | Integrity | Unauthorized transitions | Merges/approvals by agent identity | GitHub audit | n/a until Phase 1 | — | 0 (definitional) |
 | Quality | Post-merge defect rate | Follow-up tickets citing a closed ticket as defective within 14 days / closes | ticket text | 1–2 of 84 | Heuristic | Owner, after 8 weeks |
 | Quality | Reverts | Count/month | git | 0 | — | Monitor |
+| Quality | Outcome movement | Outcome-changing PRs stating measured movement / those PRs; known-red additions and anchor moves per retro | PR body, SimQ anchors, known-red list | None | Needs a definition of "outcome-changing" (Phase 2) | Monitor |
 | Quality | CI first-pass rate | First run success / PRs | Actions | 72% | Includes drift failures | Owner after split by cause |
 | Quality | AI reviewer finding validity | Owner-accepted findings / findings | PR comments | none | Needs E2b | Decide adoption |
 | Reliability | Handover recoveries | manual_actions handover_recovery / week | manual_actions | 26–33 | Sampled tagger | Trend |
@@ -1462,7 +1467,8 @@ All measured in this pass or the audit, read-only.
 | Efficiency | Tokens per verified close, by tier | session tokens joined by session_id | real_token_usage + evidence | No | Host-local | Owner after 4 weeks (OD-8) |
 | Efficiency | Lead time, by tier | git + GitHub | — | 4.1 h median (all) | Lower bound | Monitor |
 | Efficiency | Owner touches per PR | approvals + merges + #715 comments / PR | GitHub | ~1 merge + approval logs | — | Owner |
-| Efficiency | Messages per close | SendMessage rows / closes | tools + evidence | 11.8 (W43) | Partial capture | M7 decision |
+| Efficiency | Messages per close | SendMessage rows / closes | tools + evidence | 17.8 (W43) | Partial capture | M7 decision |
+| Efficiency | Relay hops | Seats a request and its answer pass through, sampled per cycle | tools shards | One SimQ cycle on 10-31 (lead-planner's observation): planner to lead to lead to planner to designer and back, with one wrong count and a retraction | Sampled by hand at first | M7 decision |
 | Maintainability | Dormant LOC | per §32 method | git | ~14.7k | — | Per OD-5/6 |
 | Maintainability | Change amplification | Files touched per process-rule change | git | 4–6 (audit §30) | Small samples | ≤2 after Phase 4 (generated) |
 | Maintainability | Doc/impl drift | Generated-table drift test failures | CI | 22 known | — | 0 (test) |
@@ -1903,7 +1909,7 @@ Search only makes sense after trustworthy evaluation, on a small interpretable s
 12. **Retirement informed by research?** Yes (§32a).
 13. **Old and new harnesses compared fairly?** Only from equal starts and within stated limits (§70).
 14. **Benchmarks protected?** Partly. Public-repo exposure through training cannot be controlled, and it is recorded.
-15. **Operable by the owner?** A web-based approval and merge, one account and one ruleset are simpler than the first plan. Research adds operating work only if opted into.
+15. **Operable by the owner?** A merge from outside the hosts, one account and one ruleset are simpler than the first plan. Research adds operating work only if opted into.
 16. **A smaller design with equal guarantees?** M1 is that design for authority: it needs no CODEOWNERS and no approval rule. It gives up server-bound checks, though, so M2 stays open.
 17. **What would make us reject D?** The conditions in §61, plus: the owner refuses to move credentials out of agent reach, in which case the identity boundary isn't real and should be downgraded honestly.
 18. **What would favour a rebuild?** E2 or R-stage results showing fresh workers or a thin shell materially better at similar cost, or change amplification staying high after Phase 4.

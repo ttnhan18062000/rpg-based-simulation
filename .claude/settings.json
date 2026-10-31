@@ -69,6 +69,16 @@
     ]
   },
   "hooks": {
+    "ConfigChange": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "R=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; test -f \"$R/tools/sessions/config_change_warning.py\" || exit 0; python3 \"$R/tools/sessions/config_change_warning.py\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "*",
