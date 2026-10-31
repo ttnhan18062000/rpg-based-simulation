@@ -41,6 +41,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from handover_home import handover_dir as _main_handover_dir  # noqa: E402
 
+sys.path.append(str(Path(__file__).resolve().parent / "agent-monitoring"))  # appended: nothing there may shadow a tools/ module
+from secret_redact import redact_bytes  # noqa: E402  TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION
+
 TRANSIT_ROOT = Path("agent-working/handover-transit")
 HANDOVER_DIR = Path(".claude/handover")
 MANIFEST = "MANIFEST.jsonl"
@@ -328,18 +331,25 @@ def export_bundle(*, roles: list[str] | None = None, drafts: bool = True, memory
         shutil.rmtree(bundle)  # rolling: replace this host's previous bundle wholesale
     head, stamp = _git_head(), _now()
     rows = []
+    skipped: list[dict] = []
     for kind, rel, src in items:
         dest = bundle / "files" / kind / (rel + STORE_SUFFIX)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(src, dest)
+        try:
+            stored, redacted = redact_bytes(src.read_bytes())  # the repository is public: a token in a note must not be published
+        except Exception as exc:  # noqa: BLE001 - never export a file that could not be checked; say so in the manifest
+            skipped.append({"kind": kind, "path": rel, "skipped": "redaction_failed", "error": type(exc).__name__})
+            continue
+        dest.write_bytes(stored)
         rows.append({
-            "kind": kind, "path": rel, "sha256": _sha256(src), "bytes": src.stat().st_size,
+            "kind": kind, "path": rel, "sha256": hashlib.sha256(stored).hexdigest(), "bytes": len(stored),
             "host": host, "head": head, "exported_at": stamp,
             "worktree": worktree, "branch": branch,
             "belongs_to": belongs_to(kind, rel, src, role, roster),
+            **({"redacted": redacted} if redacted else {}),
         })
     (bundle / MANIFEST).write_text(
-        "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows), encoding="utf-8"
+        "".join(json.dumps(r, sort_keys=True) + "\n" for r in rows + skipped), encoding="utf-8"
     )
     return bundle
 
@@ -349,6 +359,7 @@ def _read_manifest(bundle: Path) -> list[dict]:
     if not mf.is_file():
         raise TransitError(f"no {MANIFEST} in {bundle}")
     rows = [json.loads(line) for line in mf.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = [r for r in rows if "skipped" not in r]  # a file left out of the export has no stored copy: see skipped_rows()
     for r in rows:
         if r.get("kind") not in KINDS:
             raise TransitError(f"unknown kind in manifest: {r.get('kind')!r}")
@@ -356,6 +367,14 @@ def _read_manifest(bundle: Path) -> list[dict]:
         if Path(r["path"]).is_absolute() or ".." in parts:
             raise TransitError(f"unsafe path in manifest: {r['path']!r}")
     return rows
+
+
+def skipped_rows(bundle: Path) -> list[dict]:
+    """Files the export left out (`skipped: redaction_failed`): named in the manifest, no stored copy."""
+    mf = bundle / MANIFEST
+    if not mf.is_file():
+        return []
+    return [r for r in (json.loads(line) for line in mf.read_text(encoding="utf-8").splitlines() if line.strip()) if "skipped" in r]
 
 
 def _stored(bundle: Path, row: dict) -> Path:
@@ -538,6 +557,13 @@ def main(argv: list[str] | None = None) -> int:
                               allow_shrink=a.allow_shrink)
             rows = _read_manifest(b)
             print(f"exported to {b} ({len(rows)} files: {summarize_groups(rows)}) from {wt} on {br}")
+            for r in skipped_rows(b):
+                print(f"WARNING: {r['kind']}/{r['path']} was left out of the bundle: it could not be checked for secrets "
+                      f"({r['skipped']}, {r['error']})", file=sys.stderr)
+            hidden = sum(r.get("redacted", 0) for r in rows)
+            if hidden:
+                print(f"NOTE: {hidden} secret-shaped string(s) in {sum(1 for r in rows if r.get('redacted'))} file(s) were replaced "
+                      "with [REDACTED:<shape>] in the bundle; the local files are unchanged")
             if role is None and any(r["kind"] == "handover" and (r["belongs_to"]["kind"] == "draft") for r in rows):
                 print("WARNING: the exporting role is unresolved (no --role, no SESSION_ROLE): drafts are listed as "
                       "unattributed. Pass --role <role> to attribute them.", file=sys.stderr)
