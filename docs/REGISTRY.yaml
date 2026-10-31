@@ -7890,6 +7890,19 @@
   - content
   last_verified: '2026-10-09'
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
+  ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
+  title: Append rpg-planner's binding note about the capacity trim's tie rule to the
+    cognition_capacity_fatigue entry in registries/mechanisms.yaml.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - registries/mechanisms.yaml
+  artifact_files: []
+  tags:
+  - determinism
+- type: ticket
   path: agent-working/tickets/done/TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU.md
   ticket_id: TCK-20261030-AGENT-WORKING-DESIGNER-SEAT-STAFFED-ON-UBUNTU
   title: The roster marks `agent-working-designer` as staffed on host ubuntu, ending

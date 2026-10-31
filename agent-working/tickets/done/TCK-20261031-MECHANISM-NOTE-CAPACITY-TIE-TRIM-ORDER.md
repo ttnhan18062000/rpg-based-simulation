@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
-phase: open
+phase: done
 date: 2026-10-31
 tags: [determinism]
 ---
@@ -15,7 +15,7 @@ tags: [determinism]
 Append rpg-planner's binding note about the capacity trim's tie rule to the cognition_capacity_fatigue entry in registries/mechanisms.yaml.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -64,6 +64,13 @@ The other five mechanisms. Any src change.
 - Dispatch after B merges, under S4 (#715 6473439661). If B is still unmerged when this is ready, fold it into B's open PR; the push ask stays separate (lead-planner).
 
 ## Implementation Notes
+Appended the binding text, byte for byte, as a new final line of cognition_capacity_fatigue's verified.note in registries/mechanisms.yaml (a folded block scalar, same indent). Regenerated the verification, priority, registry, system-rollup, territory and cross-domain views; only docs/brainstorm/mechanism_verification_view.md changed (1 line). `tools/mechanism_registry/registry.py` validates (rc 0). Folded into the open B PR (#795) as the ticket allows; B's push ask is separate.
+
 ## Test Summary
+Full tests/tools and tests/codebase run in per-letter chunks (not a -k subset), each with the CI marker filter, on cores 0-3 (cores 4-5 were held by a measurement sweep): all chunks pass except two failures that are not this change: `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` (REGISTRY drift while this ticket was still open; regenerated at close) and `tests/codebase/test_codebase_health_snapshot.py::test_make_target_runs_successfully_end_to_end` (the local `make` uses /usr/bin/python3, which has no ruff; environment, not code). `generate_registry --check` is re-run after close.
+
 ## Files Changed
+registries/mechanisms.yaml; docs/brainstorm/mechanism_verification_view.md; this ticket.
+
 ## Completion Summary
+The tie rule at the capacity trim is now recorded on its mechanism entry. No src change.
