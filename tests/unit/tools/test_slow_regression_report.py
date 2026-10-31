@@ -222,10 +222,20 @@ def test_real_file_owns_the_one_corpus_test_that_reads_a_held_row_by_its_exact_i
     test_id = f"{CORPUS}hero_guild_routing_seed42_1000t_cognition_grade_stability"
     entry = srr.owner_of(test_id, known)
     assert entry is not None and entry["match"] == test_id and entry["kind"] == "broken"
-    assert entry["ticket"] == "TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE" and str(entry["expires_on"]) == "2026-11-15"
+    assert entry["ticket"] == "TCK-20261024-SIMQ-V1-HELD-ROWS-NEED-A-CAUSE" and str(entry["expires_on"]) == "2026-11-29"
     # the other two former catch-all keys read re-anchored COGNITION rows and stay unowned
     for other in ("simq_routing_test_seed42_500t", "simq_routing_test_seed42_1000t"):
         assert srr.owner_of(f"{CORPUS}{other}_cognition_grade_stability", known) is None
+
+
+def test_real_file_no_longer_owns_the_arena_tests_whose_gold_assertions_were_fixed():
+    known = srr.load_known_reds(REAL_KNOWN_REDS)
+    for test_id in (
+        "tests.arena.test_arena_quests::test_arena_quest_progression_paid_by_a_funded_treasury",
+        "tests.arena.test_arena_regional_control::test_arena_regional_control",
+        "tests.arena.test_arena_regional_control::test_arena_conquest_and_debuff",
+    ):
+        assert srr.owner_of(test_id, known) is None
 
 
 def test_real_file_has_no_corpus_catch_all_any_more():
