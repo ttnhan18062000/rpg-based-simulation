@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 from session_role import stamp as stamp_session_role  # noqa: E402
-from vocabulary import PATH_REASONS  # noqa: E402
+from vocabulary import PATH_REASONS, PATH_REASONS_NEEDING_NOTE  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 # TCK-20261020-HAND-CLOSURE-AGENT-COUNT-UNKNOWN: the key is required but may be an explicit null (unknown; a hand
@@ -62,8 +62,9 @@ def _optional_field_errors(record: dict) -> list[str]:
     reason = record.get("path_reason")
     if reason is not None and reason not in PATH_REASONS:
         errors.append(f"path_reason must be one of {PATH_REASONS}")
-    if reason == "other" and not record.get("path_note"):
-        errors.append("path_reason 'other' requires a non-empty path_note")
+    note = record.get("path_note")
+    if reason in PATH_REASONS_NEEDING_NOTE and not (note.strip() if isinstance(note, str) else note):
+        errors.append(f"path_reason {reason!r} requires a non-empty path_note")
     if record.get("path_note") is not None and not isinstance(record["path_note"], str):
         errors.append("path_note must be a string or null")
     omitted = record.get("phases_omitted")
