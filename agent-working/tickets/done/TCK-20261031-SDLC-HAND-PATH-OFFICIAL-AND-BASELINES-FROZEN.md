@@ -88,3 +88,6 @@ Phase 0 (plan section 39). OD-1 is decided yes, so the operating model can be re
 
 ## Completion Summary
 AC1: the decision record marks OD-1, 2, 3, 10, 14, 15 decided with #715 6529263880 and OD-3 subject to E6b; all others undecided. AC2: refused with a test on each writer; other reasons unaffected. AC3: every baseline row names ref and SHA. AC4: see the PR body.
+
+Known gap: the full `tests/tools` run (AC4) has not run yet; it waits for a lead slot and its result is added before the push.
+Known gap: the CLAUDE.md closure example still shows `--path-reason` alternatives with no `--path-note` (one-line note chosen by the owner, #715 6540849801; not edited until the owner has seen the final text).
