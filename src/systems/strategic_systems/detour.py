@@ -11,15 +11,25 @@ Covers:
 """
 from __future__ import annotations
 from dataclasses import replace
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from src.core.state import EntityState
 from src.core.strategic import (
     BlockerState, LeadKind, LeadState, LeadCertainty, ObjectiveState, ObjectiveStatus,
-    CognitionProfile, live_projects_in_the_trim
+    CognitionProfile, ConcernState, live_projects_in_the_trim
 )
 from src.core.updates import StrategicUpdate
 from src.engine.domain.lead_routing import LeadRoutingSystem
+
+
+def concern_cap_rank(concern: ConcernState) -> Tuple[float, str]:
+    """Sort key for the concern cap: urgency descending, then id, so a tie drops the higher id (not insertion history)."""
+    return (-concern.urgency, concern.id)
+
+
+def merge_concerns_in_cap_order(stored: List[ConcernState], added: List[ConcernState]) -> List[ConcernState]:
+    """First-seen union of concern states (a set would follow PYTHONHASHSEED), ordered by `concern_cap_rank`."""
+    return sorted(dict.fromkeys(stored + added), key=concern_cap_rank)
 
 
 class DetourSuggestionResult:
@@ -175,7 +185,7 @@ class DetourSuggestionSystem:
         # Enforce concern bandwidth
         active_concerns = sorted(
             entity.strategic.concerns.values(),
-            key=lambda c: (-c.urgency, c.id),  # tie at the cap: the higher id is dropped (determinism, not insertion history)
+            key=concern_cap_rank,  # ties at the cap drop the higher id
         )
         if len(active_concerns) > profile.max_concerns:
             excess = active_concerns[profile.max_concerns:]

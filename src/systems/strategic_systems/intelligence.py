@@ -90,7 +90,7 @@ from src.ai.goals.live_record_route import orphan_switch_candidate, route_live_r
 from src.ai.score_modifiers import ScoreModifierSystem
 from src.domains.adventure.mapper import RouteToProjectMapper
 from src.systems.party import PartyCoordinationSystem
-from src.systems.strategic_systems.detour import DetourSuggestionSystem
+from src.systems.strategic_systems.detour import DetourSuggestionSystem, merge_concerns_in_cap_order
 from src.systems.strategic_systems.entity_target_objective import close_entity_target_project, contract_project_id
 from src.systems.strategic_systems.work_queue import StrategicWorkQueue
 from src.core.dirty import get_dirty_set
@@ -925,7 +925,8 @@ class StrategicIntelligenceSystem:
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             strat_up = ent_upd.strategic or StrategicUpdate()
 
-            new_concerns = sorted(dict.fromkeys(strat_up.concerns_add_or_update + concerns), key=lambda c: (-c.urgency, c.id))  # first-seen merge, urgency desc then id (determinism)
+            # first-seen merge in cap order: a later tie at the cap drops the higher id
+            new_concerns = merge_concerns_in_cap_order(strat_up.concerns_add_or_update, concerns)
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
