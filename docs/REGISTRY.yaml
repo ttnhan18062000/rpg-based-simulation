@@ -8092,6 +8092,22 @@
   tags:
   - testing
 - type: ticket
+  path: agent-working/tickets/inprogress/TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP.md
+  ticket_id: TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP
+  title: A new group's id comes from a count, so it can collide with a live group's
+    id and overwrite that record. Allocate group ids so they never repeat.
+  tier: standard
+  ticket_type: bug
+  date: '2026-10-31'
+  related_code_areas:
+  - src/systems/world_systems/groups.py (l.110, l.170, l.227, l.308)
+  - src/engine/pipeline_phases/groups.py, src/engine/military_conflict.py, src/domains/cooperation/phase.py
+    (other group update producers)
+  artifact_files: []
+  tags:
+  - social
+  - simulation-quality
+- type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
   ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
   title: 'Evolve the AI-first SDLC: separate authority, verifiable completion, evidence,
