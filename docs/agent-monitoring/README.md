@@ -255,7 +255,15 @@ when the tier plan marks the phase `full` and the closer narrated none, and prin
 and Architecture-Verify are `skipped` with `skip_reason: no_hand_tool`. Document-Update is `ok` (derived by the recorder,
 naming up to three files) when the ticket's own changed files include a `docs/` file other than `docs/REGISTRY.yaml` and
 `docs/parity_ledger/**`; otherwise, or when git cannot say what changed, it is `skipped` with `no_hand_tool`. A narrated
-event always wins, and no other phase is added. The run row's `agent_count` is `null` for a hand closure (unknown: the recorder cannot see agent calls), so neither these events nor the narrated ones are counted as agent calls. A hotfix gets only Document-Update (its Review and Architecture-Verify are
+event always wins, and no other phase is added.
+
+The default Review `skipped` hides a review that did happen: every standard ticket reaches main through a PR its domain
+planner reviews by comment. `--review-ref <PR#>#<comment id>` (`TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW`,
+owner option (a), #715 6545962757) records Review as `ok`, its summary naming the PR and the comment, so the retro's
+Paths table counts it as ran and stops offering Review as a routing candidate for those runs. Give it only once the review
+comment exists. A close without it keeps `skipped`/`no_hand_tool`, so a PR that really had no review still shows. The
+flag is refused for a tier with no Review step (hotfix) and when a Review event was narrated. Architecture-Verify is not
+affected: it stays `skipped` unless the closer narrates one. The run row's `agent_count` is `null` for a hand closure (unknown: the recorder cannot see agent calls), so neither these events nor the narrated ones are counted as agent calls. A hotfix gets only Document-Update (its Review and Architecture-Verify are
 `skipped_event` in the plan).
 
 `tool_call_count`/`cost_proxy_score` are only ever added to an event when real `tools.jsonl` rows

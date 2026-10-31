@@ -51,7 +51,7 @@ from validate_frontmatter import (  # noqa: E402
     extract_frontmatter,
     check_ticket_location_consistency,
 )
-from generate_registry import generate_registry, parse_body_section, _strip_frontmatter  # noqa: E402
+from generate_registry import generate_registry, indexable_paths, parse_body_section, _strip_frontmatter  # noqa: E402
 from ticket_field_values import (  # noqa: E402
     check_disposition_fields,
     check_ticket_field_values,
@@ -1342,6 +1342,20 @@ def check_tag_drift(
     )
 
 
+def _unstaged_closing_ticket(root: Path, ticket_id: str) -> str | None:
+    """The closing ticket's done/ path when it exists on disk but git neither tracks nor stages it, else None. None also
+    when `root` is not a git top level (`indexable_paths` returns None), so a plain-directory run keeps today's behaviour.
+    TCK-20261031-REGISTRY-CHECK-NAMES-AN-UNSTAGED-CLOSING-TICKET."""
+    tracked = indexable_paths(root)
+    if tracked is None:
+        return None
+    for path in sorted(root.glob(f"{posix(TICKETS / 'done')}/**/{ticket_id}.md")):
+        rel = path.relative_to(root).as_posix()
+        if rel not in tracked:
+            return rel
+    return None
+
+
 def check_registry_entry_regenerated(
     ticket_id: str,
     root: Path = Path("."),
@@ -1416,6 +1430,16 @@ def check_registry_entry_regenerated(
             + (f" (note: regen exited nonzero: {regen_note})" if regen_note else ""),
         )
     if not regenerate:
+        unstaged = _unstaged_closing_ticket(resolved_root, ticket_id)
+        if unstaged:
+            # generate_registry indexes `git ls-files` only, so neither the on-disk nor a fresh registry can hold this
+            # ticket, and `make docs-registry` alone would not help: the order that works is stage, regenerate, stage.
+            return _fail(
+                f"{unstaged} is not tracked or staged, so no registry (on disk or fresh) can index it "
+                f"(generate_registry indexes `git ls-files` only); run `git add {unstaged}`, then "
+                "`make docs-registry`, then `git add docs/REGISTRY.yaml`, and re-run the check",
+                "ticket_not_staged",
+            )
         fresh_has_entry = False
         with tempfile.TemporaryDirectory() as tmp:
             tmp_output = Path(tmp) / "REGISTRY.yaml"

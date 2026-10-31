@@ -161,7 +161,8 @@ def render_section(runs: list[dict], events: list[dict], total_field_runs: int |
                          else "No routing candidate: no run in this group carries the fields yet.")
         lines += [f"- {h}" for h in held] + [""]
     return "\n".join(lines + [f"_Routing needs {round(100 * SKIPPED_OR_OMITTED_SHARE)}% of runs, at least {MIN_RUNS} runs "
-                              f"carrying the fields, and `unstated` at most {round(100 * MAX_UNSTATED_SHARE)}% of `path_reason`._", ""])
+                              f"carrying the fields, and `unstated` at most {round(100 * MAX_UNSTATED_SHARE)}% of `path_reason`. "
+                              "A Review recorded with `--review-ref` (the planner's PR review) counts as ran, not skipped._", ""])
 
 
 def build_parser() -> argparse.ArgumentParser:

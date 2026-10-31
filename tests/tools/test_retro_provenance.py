@@ -132,3 +132,45 @@ def test_the_hand_coverage_line_says_how_many_durations_a_week_close_re_derived(
     assert p["rederived"] == 1 and "1 duration(s) re-derived at week close" in "\n".join(rp.by_source_lines(p))
     p = rp.summary([dict(base, run_id="b")], [])
     assert p["rederived"] == 0 and "re-derived" not in "\n".join(rp.by_source_lines(p))
+
+
+# --- TCK-20261031-RETRO-SAYS-MID-WEEK-UNKNOWN-DURATIONS-DERIVE-AT-WEEK-CLOSE ----------------------------------------------
+
+_OPEN_NOTE = "the week is not finished, so these get a derived duration at `make agent-monitoring-close-week`"
+
+
+def test_an_open_week_says_where_its_unknown_durations_come_from():
+    text = generate_retro.generate(RUNS, EVENTS, "2026-W41", week_str="2026-W41", week_open=True)
+    assert f"| Avg duration (measured/declared, n=3) | 30 min (unknown, not averaged: 3; {_OPEN_NOTE}) |" in text
+    assert text.count(_OPEN_NOTE) == 1  # next to the unknown count in the Run Summary only
+
+
+def test_a_closed_week_is_byte_identical_to_before():
+    default = generate_retro.generate(RUNS, EVENTS, "2026-W41", week_str="2026-W41")
+    explicit = generate_retro.generate(RUNS, EVENTS, "2026-W41", week_str="2026-W41", week_open=False)
+    assert default == explicit and _OPEN_NOTE not in default
+    assert "| Avg duration (measured/declared, n=3) | 30 min (unknown, not averaged: 3) |" in default
+
+
+def test_an_open_week_with_no_unknown_duration_adds_nothing():
+    known = [r for r in RUNS if r["run_id"] in ("P1", "H-DECL", "H-DER")]
+    assert _OPEN_NOTE not in generate_retro.generate(known, EVENTS, "2026-W41", week_str="2026-W41", week_open=True)
+
+
+def test_week_is_open_follows_week_close_is_finished(monkeypatch):
+    import datetime as dt
+
+    class _Today(dt.date):
+        current = dt.date(2026, 10, 31)
+
+        @classmethod
+        def today(cls):
+            return cls.current
+
+    monkeypatch.setattr(generate_retro, "date", _Today)
+    assert generate_retro._week_is_open("2026-W44") is True      # ends Sunday 2026-11-01
+    _Today.current = dt.date(2026, 11, 2)
+    assert generate_retro._week_is_open("2026-W44") is False     # finished
+    assert generate_retro._week_is_open("2026-W43") is False
+    assert generate_retro._week_is_open(None) is False           # a rolling window
+    assert generate_retro._week_is_open("not-a-week") is False   # an unreadable id never fails the report

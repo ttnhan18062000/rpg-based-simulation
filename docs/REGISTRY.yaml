@@ -7979,6 +7979,25 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW.md
+  ticket_id: TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW
+  title: 'A standard-tier hand close''s Review phase is the planner''s PR review:
+    record it, rather than `skipped`/`no_hand_tool` in every run'
+  tier: standard
+  ticket_type: repair
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/record_hand_orchestrated_closure.py
+  - tools/agent-monitoring/generate_retro.py, tools/agent-monitoring/path_report.py
+    (routing-candidate text)
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW/investigation.md
+  - agent-working/stored_artifacts/TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW/plan.md
+  - agent-working/stored_artifacts/TCK-20261031-HAND-CLOSE-REVIEW-PHASE-RECORDS-THE-PR-REVIEW/test_plan.md
+  tags:
+  - agent-monitoring
+  - governance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER.md
   ticket_id: TCK-20261031-MECHANISM-NOTE-CAPACITY-TIE-TRIM-ORDER
   title: Append rpg-planner's binding note about the capacity trim's tie rule to the
@@ -8019,6 +8038,38 @@
   - planning
   - tracking
   - documentation
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-REGISTRY-CHECK-NAMES-AN-UNSTAGED-CLOSING-TICKET.md
+  ticket_id: TCK-20261031-REGISTRY-CHECK-NAMES-AN-UNSTAGED-CLOSING-TICKET
+  title: '`registry_entry_regenerated` (read-only) fails with `ticket_not_staged`
+    and the working order when the closing `done/` ticket isn''t tracked or staged,
+    not with a misleading `entry_absent`'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/gate_checks/done_checker_static.py
+  - indexable_paths
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-RETRO-SAYS-MID-WEEK-UNKNOWN-DURATIONS-DERIVE-AT-WEEK-CLOSE.md
+  ticket_id: TCK-20261031-RETRO-SAYS-MID-WEEK-UNKNOWN-DURATIONS-DERIVE-AT-WEEK-CLOSE
+  title: 'Retro Run Summary: for a week that isn''t closed yet, say that its unknown
+    hand-closure durations are derived at the week close'
+  tier: hotfix
+  ticket_type: bug
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/retro_provenance.py
+  - tools/agent-monitoring/generate_retro.py
+  - tools/agent-monitoring/week_close.py (read only)
+  artifact_files: []
+  tags:
+  - agent-monitoring
+  - data-quality
 - type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION.md
   ticket_id: TCK-20261031-SDLC-GUARD-PAYLOADS-AND-SECRET-REDACTION

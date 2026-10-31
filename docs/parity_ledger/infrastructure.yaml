@@ -4303,7 +4303,10 @@
   priority: P2
   legacy_evidence: null
   v2_evidence: 'tools/gate_checks/done_checker_static.py::check_registry_entry_regenerated
-    + .claude/workflows/implement-ticket.js (run_finalize_selfcheck 4th tuple element)
+    + .claude/workflows/implement-ticket.js (run_finalize_selfcheck 4th tuple element); the read-only
+    check also fails with reason class ticket_not_staged, naming the git add -> make docs-registry
+    -> git add docs/REGISTRY.yaml order, when the done/ ticket is neither tracked nor staged
+    (tests/tools/test_done_checker_static.py::test_registry_reason_ticket_not_staged_names_the_working_order)
 
     '
   proof_type: null

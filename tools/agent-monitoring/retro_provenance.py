@@ -87,11 +87,16 @@ def top_note(p: dict) -> list[str]:
             "excluded from the Spend Proxy tables._", ""]
 
 
-def run_summary_rows(p: dict) -> list[str]:
+def run_summary_rows(p: dict, week_open: bool = False) -> list[str]:
+    """`week_open` (TCK-20261031-RETRO-SAYS-MID-WEEK-UNKNOWN-DURATIONS-DERIVE-AT-WEEK-CLOSE): the report covers an ISO week
+    that is not finished yet. Its unknown hand-closure durations are not "unrecordable": `week_close.py` derives them from
+    tool activity at `make agent-monitoring-close-week`. A finished week's row is unchanged."""
     h, d = p["headline"], p["derived"]
     avg = f"{h['avg_min']} min" if h["avg_min"] is not None else "n/a"
     d_avg = f"{d['avg_min']} min" if d["avg_min"] is not None else "n/a"
-    return [f"| Avg duration (measured/declared, n={h['n']}) | {avg} (unknown, not averaged: {h['unknown']}) |",
+    later = ("; the week is not finished, so these get a derived duration at `make agent-monitoring-close-week`"
+             if week_open and h["unknown"] else "")
+    return [f"| Avg duration (measured/declared, n={h['n']}) | {avg} (unknown, not averaged: {h['unknown']}{later}) |",
             f"| Avg duration, derived from tool activity (n={d['n']}) | {d_avg} |"]
 
 
