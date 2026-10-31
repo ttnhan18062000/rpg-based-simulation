@@ -74,7 +74,7 @@ Platform's runner facts (#593 issuecomment-6345851046):
 - [x] AC2: the runner identity is recorded with the results, and the aggregate refuses a mixed Python version or OS, with a test on fake artifacts.
 - [ ] AC3: per-arm wall time and peak RSS are in the results (T1).
 - [x] AC4: the workflow is pinned (the pin guard passes), it is `workflow_dispatch`-only, and a static test asserts that it has no `pull_request` / `push` trigger and that its concurrency does not cancel.
-- [ ] AC5: rpg's collected-results option (its own PR) is reviewed by testing-planner, and the STOP and host-independence refusals are tested there.
+- [x] AC5: rpg's collected-results option (its own PR) is reviewed by testing-planner, and the STOP and host-independence refusals are tested there.
 
 ## Related Tickets
 - TCK-20261023-MEASURED-STEP-RUN-AND-RERUN-LEDGER (T1)
@@ -114,4 +114,9 @@ Testing half built 2026-10-26; see the staging investigation.md / plan.md. Contr
 - tests/static/test_workflow_actions_pinned_by_sha.py, tests/static/test_workflow_run_blocks_take_github_context_via_env.py (cover the new workflow)
 
 ## Completion Summary
-OPEN. The testing half is built (AC2, AC4). AC1 needs a real dispatch after rpg's TCK-20261026-PAIRED-COMPARES-COLLECTED-OFF-HOST-RESULTS and T1 are on main; AC5 is testing-planner's review of rpg's PR; AC3's ledger row waits for T1.
+Still OPEN. Status 2026-10-31 under owner go #715 6543261623. T2 merged in #775; rpg's option in #752; T1 in #773.
+- AC1 OPEN: paired-arms.yml has zero runs. It needs rpg to name a step, and an owner ask for the dispatch.
+- AC2, AC4: met.
+- AC3 OPEN on its ledger row only: wall_seconds and peak_rss_mb are in each cost.json. The row depends on TCK-20261023-PAIRED-WRITES-ONE-RUN-LEDGER-ROW-PER-INVOCATION (rpg, in todos).
+- AC5 met late: #752 merged without my review (only a lead cross-domain comment). I reviewed it after the merge on 2026-10-31: the collected branch of tools/rpg_measure/paired.py and the refusal tests in tests/unit/tools/test_rpg_measure_collected.py (18 passed). A differing python, os or image is refused, a differing repeat runner is refused, a missing result is refused with nothing run, a non-identical repeat is refused, and neutral STOP exits 1. Non-blocking finding: a key with no cost.json has no runner, so `runner_identity` has nothing to compare and the host-independence refusal cannot fire for it. That is the agreed contract (a missing cost.json is not a refusal), and paired_arms.py always writes one, so it matters only for hand-assembled caches. AC1 must confirm the `- runners:` line is present. These refusals are proven on fake artifacts, not on a real off-host run; that is AC1.
+
