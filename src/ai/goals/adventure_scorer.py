@@ -7,7 +7,7 @@ from src.core.enums import EntityRole
 from src.core.strategic import GoalKind
 from src.domains.adventure.schema import RouteFamily
 from src.engine.behavior_consumers import get_cognition_profile_definition, get_role_definition
-from src.observability.cognition.decision_trace_writer import get_active_writer as _get_active_writer
+from src.observability.active_decision_trace import get_active_writer as _get_active_writer
 
 # Per-process cache of cognition_profile_id -> supports_adventure_routing, shared across all
 # entities and ticks. phase.py's own _supports_adventure_routing(entity, cache) expects a
