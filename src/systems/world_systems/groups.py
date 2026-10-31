@@ -26,7 +26,16 @@ class GroupSystem:
         from src.core.state import GroupRecord
         
         groups_add_or_update: List[GroupRecord] = []
+        groups_add: List[GroupRecord] = []
         entity_updates: Dict[int, EntityUpdate] = {}
+        # Group id allocation (TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP): start at the durable
+        # counter and step past every id already taken (the store, adds already in this tick's update, ids
+        # handed out in this call). The counter itself is advanced only by apply, via next_group_id_set.
+        taken_ids = set(state.groups)
+        if current_update is not None:
+            taken_ids.update(g.id for g in current_update.groups_add)
+            taken_ids.update(g.id for g in current_update.groups_add_or_update)
+        next_free_id = state.next_group_id
 
         def is_alive(e_id: int) -> bool:
             # Check for death in current update
@@ -305,7 +314,11 @@ class GroupSystem:
                 
                 if len(new_group_members) >= 2:
                     # Form new group
-                    new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)
+                    while next_free_id in taken_ids:
+                        next_free_id += 1
+                    new_g_id = next_free_id
+                    taken_ids.add(new_g_id)
+                    next_free_id = new_g_id + 1
                     leader_id = id_a # Simplified: initiator is leader
                     anchor_x = sum(state.entities[m_id].navigation.position[0] for m_id in new_group_members) / len(new_group_members)
                     anchor_y = sum(state.entities[m_id].navigation.position[1] for m_id in new_group_members) / len(new_group_members)
@@ -333,7 +346,7 @@ class GroupSystem:
                         last_updated_tick=state.tick,
                         composition_score=comp_score,
                     )
-                    groups_add_or_update.append(new_group)
+                    groups_add.append(new_group)
                     
                     for m_id in new_group_members:
                         already_forming.add(m_id)
@@ -342,6 +355,8 @@ class GroupSystem:
         return StateUpdate(
             entity_updates=entity_updates,
             groups_add_or_update=groups_add_or_update,
+            groups_add=groups_add,
+            next_group_id_set=next_free_id if groups_add else None,
         )
 
     @staticmethod

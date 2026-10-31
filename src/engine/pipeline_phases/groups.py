@@ -54,6 +54,11 @@ class GroupPhase:
             else:
                 new_groups_add.append(g)
 
+        # New records are concatenated, never merged by id: a duplicate id must reach apply and be rejected there.
+        new_groups_added = list(update.groups_add) + list(group_update.groups_add)
+        id_sets = [v for v in (update.next_group_id_set, group_update.next_group_id_set) if v is not None]
+        new_next_group_id = max(id_sets) if id_sets else None
+
         # Merge group removals
         new_groups_remove = list(
             set(list(update.groups_remove) + list(group_update.groups_remove))
@@ -65,7 +70,8 @@ class GroupPhase:
         tick = state.tick
 
         # Build a combined view: groups already in state PLUS groups being added/updated
-        groups_being_updated = {g.id: g for g in new_groups_add}
+        groups_being_updated = {g.id: g for g in new_groups_added}
+        groups_being_updated.update({g.id: g for g in new_groups_add})
         all_relevant_group_ids = (
             set(state.groups.keys()) | set(groups_being_updated.keys())
         ) - removed_ids
@@ -110,7 +116,8 @@ class GroupPhase:
         # --- E41D: Defection pass ---
         # Re-build the combined group view after the leadership pass has potentially
         # updated groups in new_groups_add.
-        groups_being_updated = {g.id: g for g in new_groups_add}
+        groups_being_updated = {g.id: g for g in new_groups_added}
+        groups_being_updated.update({g.id: g for g in new_groups_add})
 
         # Merge side-effect entity updates from group logic (e.g. leadership changes)
         refined_entity_updates = dict(update.entity_updates)
@@ -201,6 +208,8 @@ class GroupPhase:
         return replace(
             update,
             groups_add_or_update=new_groups_add,
+            groups_add=new_groups_added,
+            next_group_id_set=new_next_group_id,
             groups_remove=new_groups_remove,
             entity_updates=refined_entity_updates,
             clan_updates=new_clan_updates,

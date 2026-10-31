@@ -114,7 +114,7 @@ class DirtySetBuilder:
     def mark_from_update(self, state: AuthoritativeState, update: StateUpdate):
         """Incremental update from a StateUpdate."""
         self.groups.update(update.groups_remove)
-        for g in update.groups_add_or_update:
+        for g in (*update.groups_add, *update.groups_add_or_update):
             self.groups.add(g.id)
             
         self.regions.update(update.world_updates.keys())
@@ -291,7 +291,7 @@ class DirtySet:
             town_cloned = False
         
         groups.update(update.groups_remove)
-        for g in update.groups_add_or_update:
+        for g in (*update.groups_add, *update.groups_add_or_update):
             groups.add(g.id)
             
         regions.update(update.world_updates.keys())

@@ -49,6 +49,39 @@ class ApplyPlan:
     grid_invalidated: bool = False
 
 
+GROUP_ADD_ID_TAKEN = "group_add_id_taken"
+
+
+def resolve_group_adds(prior_groups: Any, update: StateUpdate) -> StateUpdate:
+    """An add never replaces: a record whose id is already in the store (live or dissolved, or an earlier add this tick) is rejected.
+
+    The rejection is counted in ``rejections_delta`` and the rejected record's members lose the ``group_id_set`` that
+    pointed at it, so no entity is left pointing at a group it is not listed in. In-place updates are not touched.
+    """
+    if not update.groups_add:
+        return update
+    taken: Dict[int, Any] = dict(prior_groups)
+    accepted: List[Any] = []
+    rejected: List[Any] = []
+    for g in update.groups_add:
+        if g.id in taken:
+            rejected.append((g, taken[g.id]))
+        else:
+            taken[g.id] = g
+            accepted.append(g)
+    if not rejected:
+        return update
+    entity_updates = dict(update.entity_updates)
+    for g, holder in rejected:
+        for m_id in sorted(g.member_ids - set(holder.member_ids)):
+            eu = entity_updates.get(m_id)
+            if eu is not None and eu.group_id_set == g.id:
+                entity_updates[m_id] = _dc_replace(eu, group_id_set=None)
+    delta = dict(update.rejections_delta)
+    delta[GROUP_ADD_ID_TAKEN] = delta.get(GROUP_ADD_ID_TAKEN, 0) + len(rejected)
+    return _dc_replace(update, groups_add=accepted, entity_updates=entity_updates, rejections_delta=delta)
+
+
 class ApplyPlanBuilder:
     """
     Constructs a structured ApplyPlan from an authoritative StateUpdate.
@@ -102,7 +135,7 @@ class ApplyPlanBuilder:
         
         # 2. Determine Collections to Copy
         cols = plan.collections_to_copy
-        if update.groups_remove or update.groups_add_or_update: cols.add("groups")
+        if update.groups_remove or update.groups_add_or_update or update.groups_add: cols.add("groups")
         if update.world_updates: cols.add("regions")
         if update.node_updates or update.nodes_add: cols.add("nodes")
         if update.chest_updates or update.chest_add_or_update: cols.add("chests")
@@ -120,6 +153,8 @@ class ApplyPlanBuilder:
         if "groups" in cols:
             for g_id in update.groups_remove:
                 new_groups.pop(g_id, None)
+            for g in update.groups_add:
+                new_groups[g.id] = g
             for g in update.groups_add_or_update:
                 new_groups[g.id] = g
         plan.world_collection_changes["groups"] = new_groups

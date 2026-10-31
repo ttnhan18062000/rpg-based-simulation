@@ -190,7 +190,7 @@ class MilitaryConflictPhase:
         world_updates: Dict[str, WorldUpdate] = {}
         faction_updates: List[FactionUpdate] = []
         world_events: List[WorldEvent] = []
-        groups_add: list = []
+        groups_add: list = []  # new squad records go through StateUpdate.groups_add (typed add; never advances next_group_id)
 
         # E53Cd: Orphaned siege cleanup — clear sieges where factions are no longer at WAR
         for rid, reg in sorted(state.regions.items()):
@@ -353,5 +353,5 @@ class MilitaryConflictPhase:
             world_updates=world_updates,
             faction_updates=faction_updates,
             world_events_add=world_events,
-            groups_add_or_update=groups_add,
+            groups_add=groups_add,
         )

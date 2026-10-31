@@ -1320,6 +1320,19 @@ class CampState:
         return res
 
 
+GROUP_ID_BASE = 10000
+FACTION_SQUAD_ROLE = "FACTION_SQUAD"
+
+
+def seeded_next_group_id(groups: Any) -> int:
+    """max(10000, highest non-squad group id + 1); squad records (hash ids) are skipped by role."""
+    ids = [
+        g_id for g_id, g in groups.items()
+        if isinstance(g_id, int) and FACTION_SQUAD_ROLE not in getattr(g, "roles", {}).values()
+    ]
+    return max([GROUP_ID_BASE, *(i + 1 for i in ids)])
+
+
 @dataclass(frozen=True, slots=True)
 # VERIFIED v2: authoritative_state_model
 class AuthoritativeState:
@@ -1487,6 +1500,11 @@ class AuthoritativeState:
         object.__setattr__(self, "entities", _readonly_mapping(self.entities))
         has_hostile = False
         has_contracts = False
+        # A state built with groups but without a counter (older data) seeds it past the highest
+        # non-squad id; squads carry hash ids and are recognised by role for this seed only.
+        seed_gid = seeded_next_group_id(self.groups)
+        if self.next_group_id < seed_gid:
+            object.__setattr__(self, "next_group_id", seed_gid)
         if self.entities:
             int_e_keys = [k for k in self.entities.keys() if isinstance(k, int)]
             if int_e_keys and self.next_entity_id <= max(int_e_keys):
@@ -1532,6 +1550,10 @@ class AuthoritativeState:
     processed_transaction_ids: List[str] = field(default_factory=list)
     next_node_id: int = 1000
     next_entity_id: int = 1
+    # Group id counter (TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP): only rises; decision
+    # code reads it, ApplyPath advances it from StateUpdate.next_group_id_set. Squad records (hash
+    # ids, FACTION_SQUAD role) never advance it.
+    next_group_id: int = 10000
     next_item_instance_id: int = 1
 
     def to_readonly(self) -> AuthoritativeState:

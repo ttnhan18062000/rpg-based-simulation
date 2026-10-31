@@ -86,8 +86,8 @@ def test_hero_party_forms_from_contract():
     state = _build_multi_hero_state()
     update = GroupSystem.update_groups(state)
 
-    assert len(update.groups_add_or_update) >= 1, "Expected at least one group to form"
-    group = update.groups_add_or_update[0]
+    assert len(update.groups_add) >= 1, "Expected at least one group to form"
+    group = update.groups_add[0]
     assert len(group.member_ids) >= 2, "Group must have ≥ 2 members"
 
     leader_entity = state.entities[group.leader_id]
@@ -106,8 +106,8 @@ def test_hero_party_composition_score_nonzero():
     state = _build_multi_hero_state()
     update = GroupSystem.update_groups(state)
 
-    assert update.groups_add_or_update, "Expected a group"
-    group = update.groups_add_or_update[0]
+    assert update.groups_add, "Expected a group"
+    group = update.groups_add[0]
     assert group.composition_score > 0.0, (
         f"Expected composition_score > 0, got {group.composition_score:.3f}"
     )

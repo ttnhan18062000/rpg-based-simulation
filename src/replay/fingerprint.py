@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Dict
 
-from src.core.state import AuthoritativeState
+from src.core.state import GROUP_ID_BASE, AuthoritativeState
 
 
 class StateFingerprinter:
@@ -102,6 +102,7 @@ class StateFingerprinter:
             f"maturity={state.maturity}:"
             f"last_calamity_tick={state.last_calamity_tick}:"
             f"movement_count={state.movement_count}" + ("" if state.grief_drained_tick == -1 else f":grief_drained_tick={state.grief_drained_tick}")
+            + ("" if state.next_group_id == GROUP_ID_BASE else f":next_group_id={state.next_group_id}")
         )
 
         raw_data = (

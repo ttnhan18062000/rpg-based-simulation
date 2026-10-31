@@ -42,7 +42,7 @@ def test_no_proximity_only_groups():
     update = GroupSystem.update_groups(state)
     
     # Currently this will FAIL because existing GroupSystem uses proximity
-    assert len(update.groups_add_or_update) == 0
+    assert len(update.groups_add_or_update) == 0 and len(update.groups_add) == 0
 
 def test_recruitment_logic_evaluation():
     """Verify that recruitment evaluates trust and betrayal history."""
@@ -103,9 +103,9 @@ def test_party_formation_from_contract():
     
     update = GroupSystem.update_groups(state)
     
-    assert len(update.groups_add_or_update) == 1
-    assert 1 in update.groups_add_or_update[0].member_ids
-    assert 2 in update.groups_add_or_update[0].member_ids
+    assert len(update.groups_add) == 1
+    assert 1 in update.groups_add[0].member_ids
+    assert 2 in update.groups_add[0].member_ids
 
 def test_betrayal_dissolves_group_and_adds_directive():
     """Verify that attacking a group member dissolves the group and creates an avenge directive."""

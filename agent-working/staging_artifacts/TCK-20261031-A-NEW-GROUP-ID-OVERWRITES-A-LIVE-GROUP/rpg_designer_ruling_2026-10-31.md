@@ -26,3 +26,22 @@ Counts (reported, not gated):
 Then COGNITION (entity 6 / group 10009) is re-measured on this fix together with the retention fix, before the s42 re-anchor."
 
 lead-planner's notes, same message: TCK-20261031-A-RETREAT-PROJECT-OUTLIVES-ITS-THREAT is dispatched on u24 lane C (owner go #715 6543058711). The re-measure needs both fixes on one tree; tell lead-planner when this fix is near so the leads can order the merges. Check u24's open branches before touching shared files; that fix may touch state too. The 15-run base count needs a plan, wall estimate and stop time for lead-planner's go. The expiry re-date stays in this PR, on main before 11-15.
+
+---
+
+## rpg-planner's follow-up ruling (u24, 2026-10-31; relayed by lead-planner-u24 and lead-planner). Binding, word for word:
+
+"1. The set: YES, the retention trace's set (crowded_frontier, frontier_living_world, urban_political × s42-46, 2000t, at or after 6fdfdf555). Counts are reported, not gated, and 2000t matches the s42 re-anchor horizon. Keep the slot go as given.
+
+2. Omitting next_group_id while it is 10000: ACCEPTED, with one condition. Omission is safe only if load reproduces the value. When the field is absent, the load seed is max(10000, highest non-squad id + 1), which gives 10000 only when no non-squad group sits at an id of 10000 or above.
+- The architecture round-trip test must cover three cases: no groups; squad-only groups; and formed groups with the counter above 10000. Each must satisfy load(dump(s)).next_group_id == s.next_group_id.
+- Show that every producer of a non-squad group advances the counter: the merge paths in updates.py and pipeline_phases/groups.py, plus any world-gen or content-seeded groups.
+- If any path creates a non-squad group without advancing the counter, always serialise the field instead. That moves the hash at t0, which is fine as long as it's stated.
+
+3. Rejecting an add over ANY existing id, dissolved records included: ACCEPTED. A dissolved record is kept history, so overwriting it is also silent loss. Agreed with your ask:
+- show by test that an in-place update of the same group, and a dissolve (both through groups_add_or_update), are NOT rejected;
+- confirm that nothing legitimately re-forms a group at its dissolved id.
+
+4. Agreed and binding: a rejected add is atomic. No member's group_id is written for it, and the rejection is counted and surfaced. Fix it or prove it, with a test that a rejected add leaves every member's group_id unchanged."
+
+lead-planner's note, same message: lane C (TCK-20261031-A-RETREAT-PROJECT-OUTLIVES-ITS-THREAT) was dispatched, investigation first, no branch or plan yet (suggested name rpg-retreat-completes); its likely surface is the project lifecycle in intelligence.py and it is asked to keep clear of apply_plan.py:124's group path.

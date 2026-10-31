@@ -8,7 +8,7 @@ import json
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from src.core.state import AuthoritativeState
+from src.core.state import GROUP_ID_BASE, AuthoritativeState
 
 # PERF-D5 point 2: the proof digest is named and versioned. A stored or emitted digest of a
 # different scheme is never compared with this one.
@@ -137,6 +137,9 @@ class CanonicalStateHasher:
             "town_center": state.town_center,
         }
         data.update(CanonicalStateHasher._grief_fields(state))
+        # Joins only once a formation has advanced it past the seed, so a state that never allocated keeps its digest.
+        if state.next_group_id != GROUP_ID_BASE:
+            data["next_group_id"] = state.next_group_id
         return data
 
     @staticmethod
