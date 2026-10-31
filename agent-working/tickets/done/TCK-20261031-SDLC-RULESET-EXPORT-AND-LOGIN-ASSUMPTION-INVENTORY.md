@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
-phase: open
+phase: done
 date: 2026-10-31
 tags: [ai, governance, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 The ruleset is exported as the rollback point, and the tools that assume the owner's login are listed.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -63,13 +63,19 @@ Plan section 54 items 3-4, required before any credential change. Both are read-
 - Undecided, and not to be written as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Read-only: GET calls only, none denied. Result record `agent-working/stored_artifacts/sdlc-phase-0/ruleset_export_and_login_inventory.md`; export `ruleset_14220945_export.jsonl` beside it.
+- The one ruleset (`protect_branches`, id 14220945) is exported with `current_user_can_bypass` removed (it describes the caller, so it would show a false change); a comparison against a fresh read ignores only that field.
+- The export was read with an admin-level login. Whether a lower-role read returns `bypass_actors` is **unverified**, so a compare under a machine user may differ without a ruleset change.
+- Repository-level Actions secrets: none. (Planner condition: nothing about credentials beyond that.)
+- The inventory lists 12 tools/workflows/integrations with their `gh` verbs and API paths and the predicted behaviour under a write-role user, each marked unverified where not run. No tool uses an admin-only endpoint.
+- Content was cleared for a public repository by agent-working-planner before commit: the ruleset id, name, admin always-bypass and required checks are already public in the audit; actor 5 is a role.
 
 ## Test Summary
-(to be filled by the implementer)
+Token-shape scan of the new files (ghp_/gho_/ghu_/ghs_/ghr_/github_pat_, AWS, sk-, Slack, PEM, JWT): clean on the new and changed files (positive control matched). `validate_frontmatter.py --content-type doc` passes on the result record. The export parses as JSON (13 keys).
 
 ## Files Changed
-(to be filled by the implementer)
+- `agent-working/stored_artifacts/sdlc-phase-0/ruleset_14220945_export.jsonl` (new)
+- `agent-working/stored_artifacts/sdlc-phase-0/ruleset_export_and_login_inventory.md` (new)
 
 ## Completion Summary
-(to be filled by the implementer)
+Done. AC1: the export parses and has a stated comparison rule. AC2: every inventoried item has a stated behaviour, marked unverified where not run. AC3: no credential value, store location or host detail. Known gap: none stated beyond the unverified items marked in the record.

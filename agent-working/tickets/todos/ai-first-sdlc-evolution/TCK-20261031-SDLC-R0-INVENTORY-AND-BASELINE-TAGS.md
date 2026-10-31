@@ -15,7 +15,7 @@ tags: [ai, governance, delivery]
 Research stage R0: candidate tasks and the disposition review are recorded, and baselines are frozen as git tags.
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -66,13 +66,17 @@ R0 (plan section 70). OD-15 is decided yes: freeze baselines as tags. R0 is read
 - Undecided, and not to be written as decided: OD-4 to OD-9, OD-11 to OD-13, OD-16 to OD-21.
 
 ## Implementation Notes
-(to be filled by the implementer)
+Record: `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (plan read at `1ccaba303`; repository at `6fdfdf555`).
+- Candidates: 7 provisional tasks, 4 quarantined with reasons, from 11 tickets (10 PRs). Each verdict is "static reading; controls not run, needed before R1"; the owner narrowed R0 so the controls are not run (#715 6540856174).
+- Disposition review: all 14 section 32a rows have a disposition, with what was checked and what was not. Plan rows noted: Codex size (32a 5k alone against 3,455 by an exact glob; sections 32/retirement table say 5.0k with replay), 61 test files against about 57, Headroom still configured (not yet done), one CI lane shared by Codex and the contract tests, `retrieval_cache.py` runtime trace not done.
+- Billing and subscription limits: **outstanding by the owner's choice** (#715 6540856174: "not now"); no details recorded.
+- Baseline tags: four names proposed, all at `6fdfdf5556548105e28ab370832f36bc96241561`. **No tag created, even locally.** Last-known-good results are not measured (a lead slot is needed); tags are unprotected until the ruleset ticket.
 
 ## Test Summary
-(to be filled by the implementer)
+Read-only ticket; no code. The four tag test sets are outstanding (lead slot); the task controls are deferred by the owner.
 
 ## Files Changed
-(to be filled by the implementer)
+- `agent-working/stored_artifacts/sdlc-phase-0/r0_inventory_record.md` (new)
 
 ## Completion Summary
-(to be filled by the implementer)
+NOT closed. AC1 (candidate list with count, source close, verdict) met by static reading. AC2 met (every 32a row has a disposition). AC3 **open**: tags do not exist and need the owner's yes after measured results. AC4 met (before R1: OD-16, 17, 18, 21; the task controls; the tags; nothing decided; no budget named). Known gap: tag results are outstanding; billing and the task controls are deferred by the owner.

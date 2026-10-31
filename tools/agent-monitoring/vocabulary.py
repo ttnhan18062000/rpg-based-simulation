@@ -17,11 +17,13 @@ CANONICAL_TIERS = {"hotfix", "standard", "epic", "n/a"}
 
 # TCK-20261006-PATH-REASON-AND-PHASE-COVERAGE-RECORD: why a ticket took the path it did (run field `path_reason`)
 # and why a recorded phase was skipped (event field `skip_reason`). `unstated` is the writers' default and means
-# "nobody said", never "no reason existed"; `other` on a run requires a `path_note`.
+# "nobody said", never "no reason existed"; `other` and `owner_directed` on a run require a `path_note`
+# (TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN: new writes only; older rows stay valid and readable).
 PATH_REASONS = (
     "pipeline_default", "pipeline_unavailable", "native_port_blocked", "small_change",
     "owner_directed", "batch_hand_close", "investigation_only", "other", "unstated",
 )
+PATH_REASONS_NEEDING_NOTE = ("other", "owner_directed")
 SKIP_REASONS = (
     "tier_plan", "condition_false", "not_applicable", "no_hand_tool", "deferred", "other", "unstated",
 )

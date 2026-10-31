@@ -19,7 +19,8 @@ import path_record  # noqa: E402
 from record_events import validate_record as validate_event  # noqa: E402
 from record_hand_orchestrated_closure import build_records  # noqa: E402
 from record_run import validate_record as validate_run  # noqa: E402
-from vocabulary import PATH_REASONS, SKIP_REASONS  # noqa: E402
+from validate import check_path_record  # noqa: E402
+from vocabulary import PATH_REASONS, PATH_REASONS_NEEDING_NOTE, SKIP_REASONS  # noqa: E402
 
 _REPO = Path(__file__).parent.parent.parent
 _CLOSURE = _MONITORING_DIR / "record_hand_orchestrated_closure.py"
@@ -94,9 +95,35 @@ def test_real_plan_never_counts_conditional_phases():
 
 
 @pytest.mark.parametrize("reason", PATH_REASONS)
-def test_every_path_reason_validates_except_other_without_note(reason):
-    run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note="why" if reason == "other" else None)
+def test_every_path_reason_validates_except_a_noted_one_without_its_note(reason):
+    run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note="why" if reason in PATH_REASONS_NEEDING_NOTE else None)
     assert validate_run(run) == []
+
+
+def test_only_other_and_owner_directed_need_a_note():
+    assert set(PATH_REASONS_NEEDING_NOTE) == {"other", "owner_directed"}
+
+
+@pytest.mark.parametrize("reason", sorted(PATH_REASONS_NEEDING_NOTE))
+@pytest.mark.parametrize("note", [None, ""])
+def test_run_validator_refuses_a_noted_reason_without_a_note(reason, note):
+    run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note="why")
+    run = {**run, "path_note": note}
+    assert any("requires a non-empty path_note" in e for e in validate_run(run))
+    run.pop("path_note")
+    assert any("requires a non-empty path_note" in e for e in validate_run(run))
+
+
+@pytest.mark.parametrize("reason", sorted(set(PATH_REASONS) - set(PATH_REASONS_NEEDING_NOTE)))
+def test_run_validator_does_not_ask_the_other_reasons_for_a_note(reason):
+    run, _ = _build("hotfix", _HOTFIX_EVENTS, path_reason=reason, path_note=None)
+    assert validate_run(run) == []
+
+
+def test_an_old_owner_directed_row_without_a_note_is_still_read_by_the_shard_validator():
+    """Old rows are never re-validated: the shard checker only checks that `path_reason` is a known value."""
+    old = {"run_id": "R-OLD", "path_reason": "owner_directed"}  # no path_note, as every row before this change
+    assert check_path_record([old, {**old, "path_reason": "other"}], []) == []
 
 
 def test_validators_reject_unknown_values():
@@ -123,18 +150,22 @@ class TestCli:
         return list((tmp_path / AGENT_MONITORING / "data" / week).glob("*.runs.jsonl"))
 
     def test_path_reason_is_written_and_no_hint(self, tmp_path):
-        result = self._run(tmp_path, "--path-reason", "owner_directed")
+        result = self._run(tmp_path, "--path-reason", "owner_directed", "--path-note", "owner decision, #715")
         assert result.returncode == 0, result.stderr
         assert "HINT" not in result.stderr
         row = json.loads(self._runs(tmp_path)[0].read_text().strip())
         assert row["path_reason"] == "owner_directed" and "Investigate" in row["phases_omitted"]
+        assert row["path_note"] == "owner decision, #715"
 
     def test_missing_flag_is_unstated_with_one_hint_and_same_exit_code(self, tmp_path):
         result = self._run(tmp_path)
         assert result.returncode == 0 and result.stderr.count("HINT") == 1
         assert json.loads(self._runs(tmp_path)[0].read_text().strip())["path_reason"] == "unstated"
 
-    @pytest.mark.parametrize("args", [["--path-reason", "nope"], ["--path-reason", "other"]])
+    @pytest.mark.parametrize("args", [
+        ["--path-reason", "nope"], ["--path-reason", "other"], ["--path-reason", "owner_directed"],
+        ["--path-reason", "owner_directed", "--path-note", "  "],
+    ])
     def test_bad_value_exits_nonzero_and_writes_nothing(self, tmp_path, args):
         result = self._run(tmp_path, *args)
         assert result.returncode != 0 and self._runs(tmp_path) == []

@@ -7955,6 +7955,23 @@
   tags:
   - determinism
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
+  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
+  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
+    closes require a `path_note`, and the baseline table is frozen.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/agent-monitoring/record_hand_orchestrated_closure.py
+  - docs/agent-monitoring/schema.md
+  - docs/plans/agent_infrastructure/session_layer_working_process.md
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND.md
   ticket_id: TCK-20261031-SDLC-PLAN-DOCUMENTS-LAND
   title: The AI-first SDLC plan, audit, decision summary and handover are committed
@@ -7971,6 +7988,22 @@
   - governance
   - delivery
   - planning
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
+  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
+  title: The ruleset is exported as the rollback point, and the tools that assume
+    the owner's login are listed.
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
+  - agent-working/stored_artifacts/ (result record)
+  artifact_files: []
+  tags:
+  - ai
+  - governance
+  - delivery
 - type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION.md
   ticket_id: TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION
@@ -8035,23 +8068,6 @@
   - governance
   - security
 - type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
-  ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
-  title: The hand/batch path is recorded as the official delivery model, `owner_directed`
-    closes require a `path_note`, and the baseline table is frozen.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-31'
-  related_code_areas:
-  - tools/agent-monitoring/record_hand_orchestrated_closure.py
-  - docs/agent-monitoring/schema.md
-  - docs/plans/agent_infrastructure/session_layer_working_process.md
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
-- type: ticket
   path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL.md
   ticket_id: TCK-20261031-SDLC-MACHINE-USER-AND-OWNER-CREDENTIAL-REMOVAL
   title: Agents authenticate as a machine user on both hosts, and owner credentials
@@ -8076,22 +8092,6 @@
   date: '2026-10-31'
   related_code_areas:
   - .claude/workflows/, tools/agent_orchestration/, tools/agent_replay* (read-only)
-  - agent-working/stored_artifacts/ (result record)
-  artifact_files: []
-  tags:
-  - ai
-  - governance
-  - delivery
-- type: ticket
-  path: agent-working/tickets/todos/ai-first-sdlc-evolution/TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY.md
-  ticket_id: TCK-20261031-SDLC-RULESET-EXPORT-AND-LOGIN-ASSUMPTION-INVENTORY
-  title: The ruleset is exported as the rollback point, and the tools that assume
-    the owner's login are listed.
-  tier: hotfix
-  ticket_type: chore
-  date: '2026-10-31'
-  related_code_areas:
-  - tools/delivery/pr_render.py, tools/delivery/pr_status.py
   - agent-working/stored_artifacts/ (result record)
   artifact_files: []
   tags:
