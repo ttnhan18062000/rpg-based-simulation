@@ -13,6 +13,8 @@ Pass rule (ruling 4): (a) every record before the first difference is identical 
 | P3 | urban_political s42 500t (all pillars), 200t WORLD/others, 1000t, 2000t by prefix | t42, entity 18: COMBAT_RETREAT 84.519 to 123.399 (at or before t200: yes) | PASS (first difference); the status flips and the 2000t rows go to the designer, see below |
 | P4 | selfmodel_execution_probe s42 200t WORLD | t42, entity 18: same values as P3 | PASS |
 
+P1 note (not traced): in P1 the score differences occur at 3 points before the first state difference at t111, and none flips the highest score, yet entity 10's project becomes proj_combat_retreat_110 instead of proj_resolve_blocker_110. So the project choice is not plain maximum score; the arbiter's decision there was not traced.
+
 The first state difference follows the first score difference by one tick in P2, P3, P4 (t42/t43 and t41/t42); in P1 it is t111 (entity 10). No STOP.
 
 ### P1: urban_political s123 500t (ECONOMY row)
