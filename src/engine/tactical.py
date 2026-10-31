@@ -14,7 +14,7 @@ from src.engine.positioning import PositioningService
 from src.core.strategic import ProjectStatus, ObjectiveKind
 from src.core.movement_modes import MovementMode
 from src.core.enums import ActionStyle, ReasonCode, EntityRole, Faction
-from src.core.skills import SKILL_REGISTRY
+from src.core.skills import SKILL_REGISTRY, SkillDefinition
 from src.engine.rpg_depth import WoundService
 from src.cognition.common_knowledge import combat_capability_against
 from src.engine.tactical_destinations import retreat_destination, wander_destination
@@ -124,7 +124,7 @@ def _suspend_project_for_threat(entity: "EntityState", hostiles: List["EntitySta
     return None
 
 
-def pick_highest_power_skill(available_skills):
+def pick_highest_power_skill(available_skills: List[SkillDefinition]) -> SkillDefinition:
     """Choice Bias (COMB-264/265): the highest-power skill; deterministic tie-break: power, then skill id.
 
     ``learned_skills`` is a set, so without the id key an equal-power tie would follow PYTHONHASHSEED.

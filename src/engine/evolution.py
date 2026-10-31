@@ -117,7 +117,6 @@ class EvolutionSystem:
                     
                     id_upd = replace(id_upd, 
                         unspent_ap_delta=id_upd.unspent_ap_delta + total_ap_gain,
-                        # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
                         learned_skills=sorted(set(id_upd.learned_skills + skills_to_learn))
                     )
                 else:

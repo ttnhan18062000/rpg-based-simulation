@@ -70,9 +70,7 @@ class CapacityEnforcementPhase:
                     all_concerns[concern.id] = concern
                 for c_id in strat_upd.concerns_remove:
                     all_concerns.pop(c_id, None)
-                # Id-descending order, so the stable lowest-urgency-first trim drops the higher id on a tie
-                # (not insertion history; determinism).
-                all_concerns = dict(sorted(all_concerns.items(), key=lambda kv: kv[0], reverse=True))
+                all_concerns = dict(sorted(all_concerns.items(), reverse=True))  # id-descending: the stable trim drops the higher id on a tie
                 concern_removals = CapacityService.trim_dict(
                     all_concerns,
                     profile.max_concerns,
@@ -156,17 +154,11 @@ class CapacityEnforcementPhase:
                 continue
 
             # Update the strategic update with removals
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_leads_remove = sorted(set(strat_upd.leads_remove) | set(lead_removals))
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_concerns_remove = sorted(set(strat_upd.concerns_remove) | set(concern_removals))
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_projects_remove = sorted(set(strat_upd.projects_remove) | set(project_removals))
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_hypotheses_remove = sorted(set(strat_upd.hypotheses_remove) | set(hypo_removals))
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_zones_remove = sorted(set(strat_upd.candidate_zones_remove) | set(zone_removals))
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_committed_intentions_remove = sorted(set(strat_upd.committed_intentions_remove) | set(ci_removals))
 
             refined_entity_updates[e_id] = replace(

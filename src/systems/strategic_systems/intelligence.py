@@ -555,7 +555,6 @@ class StrategicIntelligenceSystem:
                     b_obj = entity.strategic.blockers.get(b_id)
                     if b_obj: new_additions.append(replace(b_obj, resolved=True))
             
-            # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
             new_removals = sorted(set(strat_up.blockers_remove) | resolved_ids)
             new_projects = list(strat_up.projects_add_or_update)
             if project_upd: new_projects.append(project_upd)
@@ -926,12 +925,7 @@ class StrategicIntelligenceSystem:
             ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
             strat_up = ent_upd.strategic or StrategicUpdate()
 
-            # Stable merge (dict.fromkeys keeps first-seen order; set order follows PYTHONHASHSEED), then
-            # urgency desc / id so any later tie at the concern cap drops by id (determinism).
-            new_concerns = sorted(
-                dict.fromkeys(strat_up.concerns_add_or_update + concerns),
-                key=lambda c: (-c.urgency, c.id),
-            )
+            new_concerns = sorted(dict.fromkeys(strat_up.concerns_add_or_update + concerns), key=lambda c: (-c.urgency, c.id))  # first-seen merge, urgency desc then id (determinism)
             
             # Law 194: Enforce Strategic Bandwidth for concerns
             # Logic ID: 194
@@ -943,7 +937,6 @@ class StrategicIntelligenceSystem:
             new_strat_up = replace(
                 strat_up,
                 concerns_add_or_update=new_concerns,
-                # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
                 concerns_remove=sorted(set(strat_up.concerns_remove + bandwidth_upd.concerns_remove))
             )
             refined_entity_updates[e_id] = replace(ent_upd, strategic=new_strat_up)
@@ -1815,7 +1808,6 @@ class StrategicIntelligenceSystem:
                 # Merge with current state of updates
                 return StrategicUpdate(
                     leads_add_or_update=memory_upd.leads_add_or_update,
-                    # sorted(): a set iterates in PYTHONHASHSEED order (determinism, hash-neutral)
                     leads_remove=sorted(set(memory_upd.leads_remove + bandwidth_upd.leads_remove)),
                     concerns_remove=bandwidth_upd.concerns_remove,
                     overload_source_set=bandwidth_upd.overload_source_set,
