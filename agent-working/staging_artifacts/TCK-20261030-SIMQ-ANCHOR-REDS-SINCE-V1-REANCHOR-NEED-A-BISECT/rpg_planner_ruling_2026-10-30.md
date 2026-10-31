@@ -40,3 +40,28 @@ Outcomes:
 - (i) fails, i.e. the first difference is NOT in #769's changed logic: STOP. That is option (c), to the designer via rpg-planner.
 - (ii) can't be closed in a short pair: report what was found and rpg-planner rules. Do not extend it into a long investigation.
 The flight-path crossing doesn't need tracing unless (ii) leads there."
+
+## Ruling 3 (2026-10-31): the trace chain and the groups.py finding
+
+Relayed via lead-planner-u24 and lead-planner. The text below is word for word as relayed. Filed as TCK-20261031-A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP.
+
+"(1) CHAIN ACCEPTED. (i) is met: the t42 difference is inside #769's changed logic (COMBAT_RETREAT 84.52 vs 123.40 via retreat_pull, +38.88 re-derived, only d914bace7 crosses REGION_STABILIZATION's 100). (ii) is met: the t63 split is the same chain, only earlier (extra 10006_30 from leader 18's t42 project, t84 dissolution, t104 first id split, t123 10006 vs 10007). Attribution stands: the anchor reds are #769's retreat change working through group objectives. The entity 3 line (objective to t143 vs t199, lost drains at t185-189) is downstream of that split and doesn't change attribution; record it in the evidence as an observed lead, not traced. Same for the parent's t62 arbiter not creating a retreat project (136 vs 100). No further tracing needed for this ticket.
+(2) GROUPS.PY:308 IS A SEPARATE TICKET, SETTLED BEFORE THE RE-ANCHOR.
+- The defect: `new_g_id = 10000 + len(state.groups) + len(groups_add_or_update)` derives an id from a count. That count includes in-place updates of existing groups (the dissolution markers at l.110 and l.170, the update at l.227), and it can collide with a live id, overwriting a live group record. That is a durable-state integrity defect: a live group silently disappears.
+- It sits on the path that produces the anchors' group objectives. Re-anchoring on it means a second 162-run re-anchor after the fix. So the sweep keeps running as measurement only, and the re-anchor waits for the fix to merge. If the owner prefers to re-anchor now and accept a second move later, that is the owner's call, not rpg-planner's.
+- The ticket is ubuntu's, from its id block:
+  - Title along the lines of A-NEW-GROUP-ID-OVERWRITES-A-LIVE-GROUP.
+  - Tier standard: it moves outcomes in every world where groups form after an update or dissolution.
+  - Class Bug Fix divergence, with a parity entry under social_narrative.
+- Investigation must establish:
+  (a) what shrinks or overwrites state.groups so that a count collides with a live id (removal path vs dict overwrite on apply);
+  (b) what the overwritten members' identity.group_id points to afterwards;
+  (c) whether any other site mints group ids the same way.
+- Fix shape (designer to confirm): ids allocated so they can never repeat, e.g. max over all retained ids (dissolved records are kept per TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED) plus ids pending this tick, plus 1. Any counter must be typed state, not a local.
+- Acceptance:
+  - a test with a dissolve-then-form in the same tick and across ticks: no live group is overwritten, and every member's group_id resolves to a live or dissolved record;
+  - a hard-law style check that a GroupRecord id is never re-issued;
+  - the seed-0 outcome change measured and disclosed.
+- Dispatch needs the ubuntu owner's go. If the fix changes a cited mechanism's implemented_by, rpg-planner will supply the mechanisms.yaml note text then."
+
+lead-planner's note, same message: the known-red entry stays in place until the re-anchor. Order among B, this ticket and the generator ticket comes once the owner has answered.
