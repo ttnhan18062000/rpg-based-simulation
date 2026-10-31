@@ -5920,6 +5920,17 @@
   - security
   - mcp
 - type: doc
+  path: docs/plans/agent_infrastructure/plans_tracking.md
+  title: Plans Tracking — Quick Overview
+  status: active
+  layer: architecture
+  authority: P2
+  audience: developer
+  tags:
+  - planning
+  - tracking
+  - documentation
+- type: doc
   path: docs/plans/agent_infrastructure/session_layer_working_process.md
   title: Session-Layer Working Process — Roles, Launch, Routing, Batches, Worktrees
   status: active
@@ -6966,17 +6977,6 @@
   - determinism
   - performance
 - type: doc
-  path: docs/plans/plans_tracking.md
-  title: Plans Tracking — Quick Overview
-  status: active
-  layer: architecture
-  authority: P2
-  audience: developer
-  tags:
-  - planning
-  - tracking
-  - documentation
-- type: doc
   path: docs/plans/render-and-art/07_manual_art_experiment_execution_plan.md
   title: Detailed Plan 07 — Manual Pixel-Art Experiment Execution
   status: active
@@ -7978,6 +7978,21 @@
   artifact_files: []
   tags:
   - determinism
+- type: ticket
+  path: agent-working/tickets/done/TCK-20261031-PLANS-TRACKING-AUDITED-REFRESH.md
+  ticket_id: TCK-20261031-PLANS-TRACKING-AUDITED-REFRESH
+  title: Move plans_tracking.md to docs/plans/agent_infrastructure/ and refresh it
+    with an audited count of the plans on main
+  tier: hotfix
+  ticket_type: chore
+  date: '2026-10-31'
+  related_code_areas:
+  - tools/gate_checks/planning_doc_staleness_check.py
+  artifact_files: []
+  tags:
+  - planning
+  - tracking
+  - documentation
 - type: ticket
   path: agent-working/tickets/done/TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN.md
   ticket_id: TCK-20261031-SDLC-HAND-PATH-OFFICIAL-AND-BASELINES-FROZEN
