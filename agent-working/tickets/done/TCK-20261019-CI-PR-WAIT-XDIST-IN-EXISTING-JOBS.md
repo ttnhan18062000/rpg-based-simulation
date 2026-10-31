@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
-phase: open
+phase: done
 date: 2026-10-19
 tags: [testing, workflows, performance]
 ---
@@ -15,7 +15,7 @@ tags: [testing, workflows, performance]
 The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine) run their tests in parallel with pytest-xdist inside the job, after an audit shows the tests are safe to parallelise. No jobs are added.
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -50,13 +50,13 @@ Splitting jobs is not an option: Tests already starts 21 jobs against the free p
 - The slow-regression lane, the SimQ drift job, and other workflows.
 
 ## Acceptance Criteria
-- [ ] AC1: investigation.md lists the shared-state audit per job, with each finding and how it was handled (fixed, grouped or serial).
-- [ ] AC2: the collected-test count per job is identical before and after, from `--collect-only -q` counts quoted in the Test Summary. No test is skipped, xfailed or deselected by this change.
-- [ ] AC3: each of the three jobs passes 3 consecutive CI runs on the PR. Use re-runs to show there is no order-dependent flake, and quote the run ids.
-- [ ] AC4: the median wall time of the three jobs over those runs is reported against the baseline (8.4 / 6.7 / 6.3 min). Target: the slowest of them at or below 5 min. A shortfall is reported, not hidden.
-- [ ] AC5: the job count in test.yml does not grow.
-- [ ] AC6: agent-working-planner's fyi was sent before the Tools f–z change, with its reply or "no reply" recorded.
-- [ ] AC7: **lead-planner-u24 reviews the PR by comment**, in addition to testing-planner, before the user merges. Record the comment link.
+- [x] AC1: investigation.md lists the shared-state audit per job, with each finding and how it was handled (fixed, grouped or serial).
+- [x] AC2: the collected-test count per job is identical before and after, from `--collect-only -q` counts quoted in the Test Summary. No test is skipped, xfailed or deselected by this change.
+- [x] AC3: each of the three jobs passes 3 consecutive CI runs on the PR. Use re-runs to show there is no order-dependent flake, and quote the run ids.
+- [x] AC4: the median wall time of the three jobs over those runs is reported against the baseline (8.4 / 6.7 / 6.3 min). Target: the slowest of them at or below 5 min. A shortfall is reported, not hidden.
+- [x] AC5: the job count in test.yml does not grow.
+- [x] AC6: agent-working-planner's fyi was sent before the Tools f–z change, with its reply or "no reply" recorded.
+- [x] AC7: **lead-planner-u24 reviews the PR by comment**, in addition to testing-planner, before the user merges. Record the comment link.
 
 ## Related Tickets
 - TCK-20261019-CI-RUNTIME-EPIC (parent)
@@ -97,7 +97,13 @@ Audit and decisions: agent-working/staging_artifacts/TCK-20261019-CI-PR-WAIT-XDI
 **API per step, serial (main runs, s) vs xdist (this PR, three runs):** api 90-140 vs 33-49; cli 41-42 vs 14-24; logging 1 vs 2; engine 2 vs 1-3; observability 10-11 vs 7-11; visual_assets 266-274 vs 68-133 parallel plus 41-64 serial. logging and engine differ by 1-2 s, which is noise, so they stay parallel (testing-planner ruling).
 
 ## Files Changed
-(implementer)
+.github/workflows/test.yml, pyproject.toml, uv.lock, tests/static/test_ci_xdist_in_critical_path_jobs.py, tests/tools/test_ci_split_tools_jobs.py (PR #659, merged 864f7b281).
 
 ## Completion Summary
-(implementer)
+Closed 2026-10-31 by testing-planner under owner go #715 6543261623, re-verified against main. xdist landed in the three existing jobs with #659, and the job count did not grow. Its boxes were never ticked at merge; they are ticked now from the evidence above.
+- AC3: 3 of 3 green on head d9194b77f, run 39204651987.
+- AC4: reported as required. **The 5 min target was NOT MET**: Integration's median is 5.98 min, against the slowest-job target of 5. The ticket asked for a shortfall to be reported, so the AC is met but the target isn't. The named cause, one 122.8 s test, was routed to rpg-planner.
+- AC6: agent-working-planner replied "known none" (investigation.md).
+- AC7: lead-planner-u24 reviews issuecomment-6259931654 at 61e814114 and issuecomment-6260633131 at c8e325167.
+The serial steps this left in place were removed by #750.
+

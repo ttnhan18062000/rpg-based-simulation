@@ -10430,6 +10430,27 @@
   artifact_files: []
   tags: []
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
+  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
+  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
+    run their tests in parallel with pytest-xdist inside the job, after an audit shows
+    the tests are safe to parallelise. No jobs are added.
+  tier: standard
+  ticket_type: feature
+  date: '2026-10-19'
+  related_code_areas:
+  - integration
+  - tests/conftest.py (resource budget, run-dir creation)
+  - tools/ci_junit_summary.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/plan.md
+  - agent-working/stored_artifacts/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS/test_plan.md
+  tags:
+  - testing
+  - workflows
+  - performance
+- type: ticket
   path: agent-working/tickets/done/TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL.md
   ticket_id: TCK-20261019-CI-SIMQ-LONG-RUN-OBSERVATION-TEST-SERIAL
   title: test_observe_world_cleans_up_its_own_run_dir runs in the serial step of Tools
@@ -10827,24 +10848,6 @@
   tags:
   - architecture
   - testing
-- type: ticket
-  path: agent-working/tickets/inprogress/TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS.md
-  ticket_id: TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS
-  title: The three critical-path test.yml jobs (Integration, Tools f–z, API/CLI/engine)
-    run their tests in parallel with pytest-xdist inside the job, after an audit shows
-    the tests are safe to parallelise. No jobs are added.
-  tier: standard
-  ticket_type: feature
-  date: '2026-10-19'
-  related_code_areas:
-  - integration
-  - tests/conftest.py (resource budget, run-dir creation)
-  - tools/ci_junit_summary.py
-  artifact_files: []
-  tags:
-  - testing
-  - workflows
-  - performance
 - type: ticket
   path: agent-working/tickets/todos/TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645.md
   ticket_id: TCK-20261019-CATALOG-ARENA-SMOKE-TICK-3-BUDGET-OVERRUN-AFTER-645
