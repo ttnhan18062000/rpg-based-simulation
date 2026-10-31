@@ -297,3 +297,20 @@ def test_a_rejected_squad_add_does_not_replace_the_holder_through_the_election_p
     new = ApplyPath.apply_generation(state, phased)
     assert new.groups[10004] == holder
     assert new.rejection_registry[GROUP_ADD_ID_TAKEN] == 1
+
+
+def test_one_tick_pins_both_sides_of_the_same_tick_winner_exception():
+    """Winner {1,2} and a rejected duplicate {2,3,4} on one id, in one tick: (a) member 2, listed by both, ends with the winner's id; (b) members
+    listed only by the rejected add keep their prior group_id, whether that was None (3) or an older group (4)."""
+    old = GroupRecord(id=10001, leader_id=4, member_ids={4, 9}, anchor=(0, 0))
+    entities = {1: _member(1, None, 1.0), 2: _member(2, None, 2.0), 3: _member(3, None, 3.0), 4: _member(4, 10001, 4.0), 9: _member(9, 10001, 9.0)}
+    state = AuthoritativeState(tick=5, seed=1, entities=entities, groups={old.id: old})
+    win = GroupRecord(id=10000, leader_id=1, member_ids={1, 2}, anchor=(0, 0))
+    dup = GroupRecord(id=10000, leader_id=3, member_ids={2, 3, 4}, anchor=(0, 0))
+    new = ApplyPath.apply_generation(state, StateUpdate(groups_add=[win, dup], entity_updates={
+        m: EntityUpdate(entity_id=m, group_id_set=10000) for m in (1, 2, 3, 4)}))
+    assert new.groups[10000].member_ids == {1, 2}
+    assert new.entities[2].identity.group_id == 10000  # (a) listed by both: the winner's id
+    assert new.entities[3].identity.group_id is None  # (b) only in the rejected add, prior None
+    assert new.entities[4].identity.group_id == 10001  # (b) only in the rejected add, prior old group
+    assert new.rejection_registry[GROUP_ADD_ID_TAKEN] == 1
