@@ -264,13 +264,21 @@ def _push_destinations(args: list[str]) -> tuple[list[str], bool, bool]:
     return explicit, implicit, all_refs
 
 
-_PLAIN_WRAPPERS = frozenset({"nohup", "time", "exec", "setsid", "command", "builtin", "nice", "timeout"})
+_PLAIN_WRAPPERS = frozenset({"nohup", "time", "exec", "setsid", "command", "builtin", "nice", "timeout", "sudo", "stdbuf", "watch"})
+# the options of each wrapper that take their value as the next token
+_WRAPPER_OPTS_WITH_ARG = {
+    "nice": frozenset({"-n"}),
+    "timeout": frozenset({"-k", "-s"}),
+    "sudo": frozenset({"-u", "-g", "-h", "-p", "-C", "-D", "-R", "-T", "-U", "-r", "-t"}),
+    "stdbuf": frozenset({"-i", "-o", "-e"}),
+    "watch": frozenset({"-n", "--interval"}),
+}
 _ENV_OPTS_WITH_ARG = frozenset({"-u", "--unset", "-C", "--chdir"})
 
 
 def _unwrap(tokens: list[str]) -> list[str]:
     """The command a wrapper runs: `env [-i] [-u X] [VAR=v] CMD ...`, `command CMD`, `nohup`, `time`, `exec`, `setsid`,
-    `nice [-n N]` and `timeout [opts] DURATION`. A wrapper that only looks something up (`command -v`) runs nothing."""
+    `nice [-n N]`, `timeout [opts] DURATION`, `sudo [opts]`, `stdbuf [opts]` and `watch [opts]`. A wrapper that only looks something up (`command -v`) runs nothing."""
     for _ in range(8):  # nested wrappers; bounded
         if not tokens:
             return tokens
@@ -291,7 +299,7 @@ def _unwrap(tokens: list[str]) -> list[str]:
                 return []
             i = 1
             while i < len(tokens) and tokens[i].startswith("-"):
-                i += 2 if (verb == "nice" and tokens[i] == "-n") or (verb == "timeout" and tokens[i] in ("-k", "-s")) else 1
+                i += 2 if tokens[i] in _WRAPPER_OPTS_WITH_ARG.get(verb, ()) else 1
             if verb == "timeout" and i < len(tokens) and re.match(r"^[\d.]+[smhd]?$", tokens[i]):
                 i += 1  # the duration
             tokens = tokens[i:]
@@ -442,6 +450,34 @@ def _gh_api_calls(command: str, default_branches: tuple[str, ...]) -> tuple[set[
     return actions, uncertain, details
 
 
+def _gh_words(args: list[str]) -> list[str]:
+    """The non-flag words of a `gh` command, skipping the value of `-R`/`--repo` (`gh pr -R o/r merge 5`)."""
+    words: list[str] = []
+    skip = False
+    for tok in args:
+        if skip:
+            skip = False
+        elif tok in ("-R", "--repo"):
+            skip = True
+        elif not tok.startswith("-"):
+            words.append(tok)
+    return words
+
+
+def _strip_grouping(segment: str) -> str:
+    """A command inside `( ... )` or `{ ...; }`, without the grouping: `(git push origin main)` is `git push origin main`."""
+    seg = segment.strip()
+    while seg.startswith("("):
+        seg = seg[1:].lstrip()
+    if seg.startswith("{") and (len(seg) == 1 or seg[1].isspace()):
+        seg = seg[1:].lstrip()
+    if seg.count(")") > seg.count("("):
+        seg = seg.rstrip().rstrip(")").rstrip()
+    if seg == "}" or seg.endswith(" }"):
+        seg = seg[:-1].rstrip()
+    return seg
+
+
 def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFAULT_BRANCHES) -> tuple[set[str], bool, bool]:
     """(actions, push_implicit, uncertain_repo) for one segment."""
     tokens = _unwrap(tokens)
@@ -462,7 +498,7 @@ def _segment_actions(tokens: list[str], default_branches: tuple[str, ...] = DEFA
             return actions, implicit, redirected
         return set(), False, False
     if verb == "gh":
-        rest = [t for t in tokens[1:] if not t.startswith("-")]
+        rest = _gh_words(tokens[1:])
         delete_branch = any(t in ("-d", "--delete-branch") or t.startswith("--delete-branch=") for t in tokens[1:])
         if rest[:2] == ["pr", "create"]:
             return {OPEN_PR}, False, False
@@ -564,7 +600,8 @@ def classify_command(command: str, default_branches: tuple[str, ...] = DEFAULT_B
         details.append("shell indirection around an authority-class word")
 
     for segment in _SEGMENT_SPLIT.split(command):
-        if not segment.strip():
+        segment = _strip_grouping(segment)
+        if not segment:
             continue
         tokens = _tokens(segment)
         if tokens is None:

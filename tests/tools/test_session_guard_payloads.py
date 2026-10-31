@@ -203,3 +203,60 @@ def test_the_old_cases_still_classify_as_before():
     assert set(_classify("gh pr merge 5 --squash").actions) == {"merge"}
     assert set(_classify("gh api -X DELETE repos/o/r/git/refs/heads/x").actions) == {"delete_remote_branch"}
     assert set(_classify("git push origin my-branch").actions) == {"push"}
+
+
+# --- more wrappers, grouping, and `gh` repo flags (planner review) ---------------------------------------------
+
+@pytest.mark.parametrize("command", [
+    "sudo git push origin main",
+    "sudo -u bob git push origin main",
+    "sudo -E git push origin main",
+    "stdbuf -oL git push origin main",
+    "stdbuf -o L git push origin main",
+    "watch git push origin main",
+    "watch -n 5 git push origin main",
+])
+def test_sudo_stdbuf_and_watch_wrap_a_push_like_the_other_wrappers(command, tmp_path):
+    assert {"push", "push_default_branch"} <= set(_classify(command).actions)
+    assert _guard_says(command, tmp_path) == "ask"
+
+
+@pytest.mark.parametrize("command", [
+    "(git push origin main)",
+    "( git push origin main )",
+    "(cd x && git push origin main)",
+    "{ git push origin main; }",
+    "{ cd x; git push origin main; }",
+    "echo start && (git push origin main)",
+    "((git push origin main))",
+])
+def test_a_push_inside_a_subshell_or_a_brace_group_is_still_a_push(command, tmp_path):
+    assert {"push", "push_default_branch"} <= set(_classify(command).actions)
+    assert _guard_says(command, tmp_path) == "ask"
+
+
+@pytest.mark.parametrize("command", [
+    "(cd x && ls)", "(ls -la)", "{ echo hi; }", "(git status)", "echo ${HOME}", "(git log --oneline | head)",
+    "sudo ls", "sudo -u bob ls /tmp", "stdbuf -oL ls", "watch -n 2 ls", "watch -n 2 git status",
+])
+def test_an_ordinary_subshell_group_or_wrapper_stays_allowed(command, tmp_path):
+    assert not _classify(command).is_authority
+    assert _guard_says(command, tmp_path) is None
+
+
+@pytest.mark.parametrize("command", [
+    "gh pr -R o/r merge 5",
+    "gh pr --repo o/r merge 5",
+    "gh --repo o/r pr merge 5",
+    "gh pr merge -R o/r 5",
+    "gh pr merge 5 --repo o/r",
+])
+def test_the_value_of_a_gh_repo_flag_is_skipped_so_a_merge_is_still_seen(command, tmp_path):
+    assert "merge" in _classify(command).actions
+    assert _guard_says(command, tmp_path) == "ask"
+
+
+@pytest.mark.parametrize("command", ["gh pr -R o/r view 5", "gh pr --repo o/r list", "gh --repo o/r pr view 5", "gh pr view 5 -R o/r"])
+def test_a_gh_repo_flag_on_a_read_stays_allowed(command, tmp_path):
+    assert not _classify(command).is_authority
+    assert _guard_says(command, tmp_path) is None
