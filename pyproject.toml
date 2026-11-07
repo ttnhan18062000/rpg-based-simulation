@@ -54,7 +54,7 @@ dev = [
     "coverage>=7.0.0",
     # Exact, equal to the version uv.lock resolves (TCK-20261012-MYPY-DEV-PIN): a new mypy release can add errors
     # and move the mypy baseline without a code change. Bump here and in uv.lock together.
-    "mypy==2.4.0",
+    "mypy==2.4.1",
     "jsonschema>=4.0.0",
     # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
     # the default install reach it for tests/tools/test_search_mcp.py.
@@ -65,7 +65,7 @@ dev = [
     "mypy-baseline==0.7.4",
     # Git hook runner for the opt-in `make install-prek-hooks` (TCK-20261003-PREK-GIT-HOOKS-OPT-IN); a single
     # binary wheel. In `dev` so every CI job and the installer tests have it.
-    "prek==0.5.5",
+    "prek==0.5.7",
     # Exact, equal to the version uv.lock resolves. Runs the Integration, API/CLI/engine and Tools f-z jobs in parallel inside the job (TCK-20261019-CI-PR-WAIT-XDIST-IN-EXISTING-JOBS);
     # `--dist loadgroup` honours xdist_group.
     "pytest-xdist==3.8.0",
@@ -76,14 +76,14 @@ dev = [
 # `dev` so CI jobs that do not run the code-health tests skip them (`uv sync --no-group lint`);
 # `default-groups` below keeps a plain `uv sync` unchanged.
 lint = [
-    "ruff==0.17.0",
-    "complexipy==8.0.1",
+    "ruff==0.17.3",
+    "complexipy==8.3.0",
     # TCK-20261004-AST-GREP-RULE-PACK-ADVISORY: project rules in codebase/rules/ (binary: `ast-grep`, never `sg`).
-    "ast-grep-cli==0.50.0",
+    "ast-grep-cli==0.51.0",
     # TCK-20261004-IMPORT-LINTER-ADOPTION: contracts in codebase/structure/importlinter.toml (blocking in the required Code health job since #671; binary: `lint-imports --config <file>`).
     "import-linter==2.15",
     # TCK-20261021-PYREFLY-ADVISORY-REPORT: advisory second type-checker opinion, report-only, never a gate (mypy is the gate).
-    "pyrefly==1.3.2",
+    "pyrefly==1.4.0",
 ]
 profiling = [
     "memray>=1.0.0",
@@ -95,7 +95,7 @@ profiling = [
 # Load-test runner (TCK-20261018-LOCUST-API-LOAD-TEST): opt-in with `uv sync --group loadtest`, not a runtime dependency and not in a
 # default group, so no CI job installs it. Pinned exactly (2.46.7, 2026-10-04): a new release can change the measured numbers.
 loadtest = [
-    "locust==2.46.7",
+    "locust==2.47.0",
 ]
 
 [project.scripts]
