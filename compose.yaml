@@ -132,7 +132,7 @@ services:
   prometheus:
     profiles: ["observability"]
     # Third-party images are pinned by digest (the multi-arch index current on 2026-10-14; no version change); Dependabot bumps them.
-    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    image: prom/prometheus:v3.15.1@sha256:fa3302279710be2f21a8301ec17a8b4f2301fd829bd113839b3b6b02b6f191a2
     mem_limit: 512m
     ports:
       - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
@@ -158,7 +158,7 @@ services:
     # pinned by tag and multi-arch index digest; Dependabot bumps it. auth-default-access deny-all: nobody reads or writes a topic without a login or
     # token; the user and token are created with ntfy's own CLI (see the top of this file). Bound to 127.0.0.1 only. Metrics are on a dedicated
     # in-network port (9091), outside the auth, scraped by Prometheus as job "ntfy". The auth and cache databases live in the ntfy_data volume.
-    image: binwiederhier/ntfy:v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
+    image: binwiederhier/ntfy:v2.34.0@sha256:901e14503d3f605f445be0e68f2ac71f0aa73391897ce6ceb599f8c48d8b3792
     command: serve
     mem_limit: 96m # measured 2026-10-20 (58-minute proof run): anon 26 MiB, anon + active_file 58 MiB (message-cache file pages), docker stats 61 MiB; raised from 64m (platform-planner)
     init: true # needed by the healthcheck (no zombie processes)
@@ -187,7 +187,7 @@ services:
     # memory, clients and stream lengths. oliver006/redis_exporter v1.93.0 (2026-10-01, over two weeks old), pinned by tag and index digest; Dependabot bumps it.
     # The README names Valkey 7-9 "and Redis" but not Redis 8: compatibility with this file's redis:8.10.2 is proven by the live run. The image is a scratch
     # image with no shell, so there is no healthcheck; Prometheus' `up{job="redis"}` is the probe. No host port.
-    image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
+    image: oliver006/redis_exporter:v1.96.0@sha256:3d57b9eb142a62ffc600063606a41cd471cd53d81bed10be5b56b3a8918f2c26
     mem_limit: 32m # measured 12 MiB peak (anon 10), 2026-10-19 re-measure
     command:
       - '--redis.addr=redis://redis:6379'
@@ -214,7 +214,7 @@ services:
 
   grafana:
     profiles: ["observability"]
-    image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
+    image: grafana/grafana:13.3.0@sha256:488984b716c0862639f91a698adbe2862677a5a07bad42da5f03f3030883b205
     # Grafana 13 needs more than the 10.x limit of 256m: it hit 256m and restarted once, then peaked at 480 MiB during first start (317 MiB settled).
     mem_limit: 1024m # 654 MiB peak (85 % of the old 768m) in slot (b), 2026-10-19; raised to 1024m (lead, 2026-10-20). Re-measure: anon 23 % of 1024m (9 minutes); long-run 654 MiB = 64 %; fresh-volume first start 673 MiB docker stats (66 %), anon 250 MiB.
     ports:
@@ -248,7 +248,7 @@ services:
 
   loki:
     profiles: ["observability"]
-    image: grafana/loki:3.7.8@sha256:1107dd5274e0ada47e42472b7a7e71f3b2a2fe878878108f3e2f9e51528f0193
+    image: grafana/loki:3.7.9@sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28
     mem_limit: 512m
     ports:
       - "127.0.0.1:${LOKI_PORT:-3100}:3100"
@@ -261,7 +261,7 @@ services:
     profiles: ["observability"]
     # Grafana Alloy v1.20.1 (released 2026-09-28; newest release at least 14 days old on 2026-10-28), pinned by multi-arch index digest.
     # Replaces Promtail, which reached end of life on 2026-03-02 (TCK-20261021-PROMTAIL-TO-ALLOY-LOG-SHIPPING).
-    image: grafana/alloy:v1.20.1@sha256:2aa2099af76c0098d4af7a4d6e48f86cb66dc1a000222ad927a1c67c6542d13f
+    image: grafana/alloy:v1.21.3@sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4
     # 256m: the 2026-10-28 run (68 min) held anon 71 MiB and anon + active_file 187 MiB, which left no headroom under the first guess of 192m; docs/runbooks/records/2026-10-28-alloy-log-shipping.md section 5.
     mem_limit: 256m
     healthcheck:
@@ -299,7 +299,7 @@ services:
     #   container environment alloy can already read.
     #   Rejected: mounting /var/lib/docker/containers read-only in alloy (it would read every container's logs on the host, other stacks included, and loses
     #   the project filter); the Loki Docker logging driver (a host plugin install, a logging block on every service, and it bypasses alloy's pipeline).
-    image: tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
     mem_limit: 64m
     environment:
       - CONTAINERS=1
@@ -312,7 +312,7 @@ services:
   tempo:
     profiles: ["observability"]
     # Latest stable at least two weeks old on 2026-10-18 (3.0.3, 2026-08-13; 3.0.4 is two days old); multi-arch index digest from a registry query.
-    image: grafana/tempo:3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5
+    image: grafana/tempo:3.1.1@sha256:64e2fbd56d9c2b3412a4b430a58ea59e91a670b1e75f920a0c702213ad145044
     # mem_limit is a start value; set it from the measured peak.
     mem_limit: 512m
     command: -config.file=/etc/tempo/tempo.yaml
