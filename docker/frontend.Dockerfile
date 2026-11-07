@@ -1,5 +1,5 @@
 # Build stage. Base images are pinned by digest (multi-arch index current on 2026-10-14); Dependabot bumps them.
-FROM node:24.21.0-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS builder
+FROM node:24.22.2-alpine3.24@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY frontend/ .
 RUN npm run build
 
 # Production stage
-FROM nginxinc/nginx-unprivileged:1.31.6-alpine3.24@sha256:884e0b7f42f303641b0f4e78755aea647521dca0b89ca3be7992ad78b5c07434
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine3.24@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 
 # Copy built assets to Nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
