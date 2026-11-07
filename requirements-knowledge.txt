@@ -9,12 +9,12 @@
 # resolves torch from PyPI), so `uv sync --extra knowledge` is not the way to build this venv.
 # `make` picks its interpreter via KNOWLEDGE_PYTHON, else the main checkout's .venv-knowledge (see PYTHON_KNOWLEDGE).
 torch==2.13.0+cpu
-sentence-transformers==6.1.0
+sentence-transformers==6.2.0
 sqlite-vec==0.1.9
 rank-bm25==0.2.2
 # mcp: exact pin per follow-up 5 of docs/plans/agent_infrastructure/llm_security_mapping.md (1.30.0 is the patched, smoke-tested
 # version; 2.x is a major with API-change risk for tools/search_mcp.py and is not taken here).
-mcp==1.30.0
+mcp==2.3.0
 
 # graphify CLI tool (tools/code_test_index.py's data source, `graphify update .`) -- pinned
 # to 0.9.70, the patched version (0.8.39 produced the current graphify-out/graph.json; 0.9 reads it but prints a
