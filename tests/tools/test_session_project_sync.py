@@ -505,15 +505,15 @@ def test_epic_rule_c_is_standalone_and_sequence_ids_come_from_order_or_anywhere(
     assert ps.sequence_ids("# S\n\n## Dependency Notes\n- TCK-20261101-A then TCK-20261102-B\n") == {"TCK-20261101-A", "TCK-20261102-B"}
 
 
-def test_a_p1_hash_is_not_a_hand_edit_it_is_updated_once_and_carries_v2():
+def test_a_p1_hash_is_not_a_hand_edit_it_is_updated_once_and_carries_v3():
     c = copy("TCK-20261112-M", "inprogress")
     derived, _ = derive("TCK-20261112-M", main=[c], branches=[branch([c])])
     v1_fields = {k: v for k, v in derived.items() if k in ps.HASH_FIELDS_V1}
     live = {**v1_fields, "Sync hash": ps.sync_hash(v1_fields, "v1"), "_item_id": "I", "_draft_id": "D"}
     assert ps.hand_edits(live, derived) == [] and not ps.sync_hash(v1_fields, "v1").startswith("v2:")
     plan = _plan({"TCK-20261112-M": [c]}, [branch([c])], [live])
-    assert plan.hand_edits == [] and plan.updates and plan.updates[0][0]["Sync hash"].startswith("v2:")
-    # a v2 value is checked against the v2 fields only
+    assert plan.hand_edits == [] and plan.updates and plan.updates[0][0]["Sync hash"].startswith("v3:")
+    # a v3 value is checked against the v3 fields only
     v2 = {**derived, "Sync hash": derived["Sync hash"], "_item_id": "I"}
     assert ps.hand_edits(v2, derived) == []
     assert ps.hand_edits({**v2, "Layer": "tampered"}, derived)

@@ -57,9 +57,11 @@ PR_LIMIT = 300  # the value of ticket_queue.PR_LIMIT: gh's own default is 30
 FOLDERS = ("todos", "inprogress", "done")
 PROGRESS_FOLDERS = ("inprogress", "done")  # only these count as progress; todos/ on a branch or PR is filing
 HASH_FIELDS_V1 = ("Title", "Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier")
-HASH_FIELDS = HASH_FIELDS_V1 + ("Layer", "Priority", "Epic", "Tags")  # the current version (v2)
-HASH_VERSIONS = {"v1": HASH_FIELDS_V1, "v2": HASH_FIELDS}  # a stored hash is "v2:<sha>"; an unprefixed value is v1
-CURRENT_HASH_VERSION = "v2"
+HASH_FIELDS_V2 = HASH_FIELDS_V1 + ("Layer", "Priority", "Epic", "Tags")
+HASH_FIELDS = HASH_FIELDS_V2 + ("Host facts",)  # the current version (v3)
+HASH_VERSIONS = {"v1": HASH_FIELDS_V1, "v2": HASH_FIELDS_V2, "v3": HASH_FIELDS}  # a stored hash is "v3:<sha>"; an unprefixed value is v1
+CURRENT_HASH_VERSION = "v3"
+HOST_STATES = ("filing", "progress", "stale", "blocked")
 PRIORITIES = ("P0", "P1", "P2", "P3")
 STATUSES = ("To do", "In progress", "Stale", "In review", "Blocked", "Done")
 FILING_SUFFIX = "[filing]"
@@ -377,9 +379,88 @@ def merge_host_entries(current: str, mine: list[str], tag: str) -> str:
     return ", ".join(sorted(set(kept) | set(mine)))
 
 
-def derive_status(tid: str, main: list[TicketCopy], branches: list[BranchFact], prs: list[PrFact] | None,
-                  other_host_branches: list[str], stale_before: float | None = None) -> tuple[str, list[str], list[str]]:
-    """(status, PR urls, findings). First match wins; see the module docstring."""
+@dataclass(frozen=True)
+class Segment:
+    """One host's facts about a ticket (the `Host facts` field): its state, the seat names it recorded and its domains."""
+    state: str
+    seats: tuple[str, ...] = ()
+    domains: tuple[str, ...] = ()
+    legacy: bool = False  # derived on read from a Branch entry with no segment; never written
+
+
+def parse_host_facts(text: str, findings: list[str] | None = None) -> dict[str, Segment]:
+    """`host: state=progress seat=a,b domain=rpg; host2: ...`. A malformed segment is skipped with a finding, never raised."""
+    out: dict[str, Segment] = {}
+    for raw in (text or "").split(";"):
+        raw = raw.strip()
+        if not raw:
+            continue
+        host, sep, rest = raw.partition(":")
+        kv = dict(p.split("=", 1) for p in rest.split() if "=" in p)
+        if not sep or not host.strip() or kv.get("state") not in HOST_STATES:
+            if findings is not None:
+                findings.append(f"Host facts: ignored a malformed segment '{raw}'")
+            continue
+        out[host.strip()] = Segment(kv["state"], tuple(x for x in kv.get("seat", "").split(",") if x),
+                                    tuple(x for x in kv.get("domain", "").split(",") if x))
+    return out
+
+
+def format_host_facts(segments: dict[str, Segment]) -> str:
+    parts = []
+    for host in sorted(segments):
+        seg = segments[host]
+        if seg.legacy:
+            continue
+        parts.append(f"{host}: state={seg.state}" + (f" seat={','.join(sorted(seg.seats))}" if seg.seats else "")
+                     + (f" domain={','.join(sorted(seg.domains))}" if seg.domains else ""))
+    return "; ".join(parts)
+
+
+def legacy_segments(branch: str, facts: dict[str, Segment], host: str) -> dict[str, Segment]:
+    """A host that has Branch entries but no segment (written by P1c code): progress if any entry is not [filing]. Never for this host."""
+    working: dict[str, bool] = {}
+    for entry in _split(branch):
+        tag = entry.split(":", 1)[0]
+        if ":" not in entry or tag == host or tag in facts:
+            continue
+        working[tag] = working.get(tag, False) or not entry.endswith(FILING_SUFFIX)
+    return {tag: Segment("progress" if prog else "filing", legacy=True) for tag, prog in working.items()}
+
+
+def other_segments(current: dict | None, host: str, findings: list[str]) -> dict[str, Segment]:
+    facts = parse_host_facts((current or {}).get("Host facts", ""), findings)
+    others = {h: s for h, s in facts.items() if h != host}
+    return {**others, **legacy_segments((current or {}).get("Branch", ""), facts, host)}
+
+
+def _recorded(seat: str) -> list[str]:
+    """The seat names a launcher recorded; the render-time placeholders are never stored."""
+    return [] if not seat or seat == "unknown" or seat.endswith("(seat not recorded)") else [seat]
+
+
+def own_segment(tid: str, mine: list[BranchFact], stale_before: float | None) -> Segment | None:
+    """This host's facts from its own branch copies; None when it has no copy of the ticket."""
+    copies = [c for b in mine for c in b.copies if c.id == tid]
+    if not copies:
+        return None
+    working = [b for b in mine if any(c.id == tid and c.folder in PROGRESS_FOLDERS for c in b.copies)]
+    if any(c.blocked for c in copies):
+        state = "blocked"
+    elif not working:
+        state = "filing"
+    elif stale_before is not None and all(0 < b.last_activity < stale_before for b in working):
+        state = "stale"
+    else:
+        state = "progress"
+    seats = sorted({s for b in working for s in _recorded(b.seat)})
+    return Segment(state, tuple(seats), tuple(sorted({b.domain for b in mine if b.domain})))
+
+
+def derive_status(tid: str, main: list[TicketCopy], prs: list[PrFact] | None, segments: dict[str, Segment],
+                  keep_status: str | None = None) -> tuple[str, list[str], list[str]]:
+    """(status, PR urls, findings). First match wins; see the module docstring. Blocked, In progress and Stale come from the
+    union of every host's segment, so two hosts derive the same value."""
     findings = []
     folders = {c.folder for c in main}
     if len(folders) > 1:
@@ -389,18 +470,16 @@ def derive_status(tid: str, main: list[TicketCopy], branches: list[BranchFact], 
     review = [pr for pr in prs or [] if any(ticket_id_of(p) == tid and folder_of(p) in PROGRESS_FOLDERS for p in pr.paths)]
     if review:
         return "In review", [pr.url for pr in review], findings
-    branch_copies = [c for b in branches for c in b.copies if c.id == tid]
-    if any(c.blocked for c in branch_copies) or (not branch_copies and any(c.blocked for c in main)):
+    if keep_status:  # only legacy hosts hold it and this host has no copy: their state cannot be read, so the item's Status stays
+        return keep_status, [], findings
+    states = [s.state for s in segments.values()]
+    if "blocked" in states or (not segments and any(c.blocked for c in main)):
         return "Blocked", [], findings
-    progressing = any(c.folder in PROGRESS_FOLDERS for c in branch_copies) or any(not e.endswith(FILING_SUFFIX) for e in other_host_branches)
-    if progressing:
-        # Stale replaces In progress only. Filing branches and a fresh other-host entry keep it In progress.
-        working = [b for b in branches if any(c.id == tid and c.folder in PROGRESS_FOLDERS for c in b.copies)]
-        if (stale_before is not None and working and all(0 < b.last_activity < stale_before for b in working)
-                and not any(not e.endswith(FILING_SUFFIX) for e in other_host_branches)):
-            return "Stale", [], findings
-        return "In progress", [], findings
-    if "inprogress" in folders and not branch_copies and not other_host_branches:
+    working = [st_ for st_ in states if st_ != "filing"]
+    if working:
+        # Stale replaces In progress only when every host that is working the ticket says stale. Filing keeps neither.
+        return ("Stale" if all(x == "stale" for x in working) else "In progress"), [], findings
+    if "inprogress" in folders and not segments:
         findings.append(f"{tid}: in inprogress/ on origin/main with no branch seen (orphaned in-progress ticket)")
     return "To do", [], findings
 
@@ -470,21 +549,49 @@ def make_epic_resolver(main_index: dict[str, list[tuple[str, str]]], load_main: 
     return resolve
 
 
+def content_source(host: str, segments: dict[str, Segment], own_best: TicketCopy | None,
+                   origin_best: TicketCopy | None) -> tuple[TicketCopy | None, bool, str]:
+    """(copy to read the content fields from, keep the current value, rule name). Final rule M4 of TCK-20261114-PROJECT-SYNC-SECOND-HOST:
+    every host reads the same segments, so every host picks the same source."""
+    holders = sorted(segments)
+    if not holders:
+        return origin_best, False, "origin's copy"
+    if len(holders) == 1:
+        return (own_best, False, "the one holder's copy") if holders[0] == host else (None, True, "the current value")
+    if origin_best is not None:
+        return origin_best, False, "origin's copy"
+    if holders[0] == host:
+        return own_best, False, f"{host}'s copy (lowest host tag)"
+    return None, True, "the current value (another host has the lowest host tag)"
+
+
 def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], prs: list[PrFact] | None, current: dict | None,
-                host: str, source: str, stale_before: float | None = None, extras: Extras | None = None) -> tuple[dict, list[str]]:
+                host: str, source: str, stale_before: float | None = None, extras: Extras | None = None,
+                notes: list[str] | None = None) -> tuple[dict, list[str]]:
     mine = [b for b in branches if any(c.id == tid for c in b.copies)]
-    other = [e for e in _split((current or {}).get("Branch", "")) if not e.startswith(f"{host}:")]
-    status, pr_urls, findings = derive_status(tid, main, mine, prs, other, stale_before)
+    findings: list[str] = []
+    segments = other_segments(current, host, findings)
+    own = own_segment(tid, mine, stale_before)
+    if own is not None:
+        segments[host] = own
+    only_legacy = own is None and bool(segments) and all(s.legacy for s in segments.values())
+    status, pr_urls, status_findings = derive_status(tid, main, prs, segments, (current or {}).get("Status") if only_legacy else None)
+    findings += status_findings
     branch_copies = [c for b in mine for c in b.copies if c.id == tid]
-    # Seat names who is working on the ticket: only a branch holding it in inprogress/ or done/, never one that merely filed it
-    working = [b for b in mine if any(c.id == tid and c.folder in PROGRESS_FOLDERS for c in b.copies)]
-    best = (branch_copies or sorted(main, key=lambda c: FOLDERS.index(c.folder), reverse=True))[0] if (branch_copies or main) else None
     entries = [f"{host}:{b.branch}" + ("" if any(c.id == tid and c.folder in PROGRESS_FOLDERS for c in b.copies) else f" {FILING_SUFFIX}")
                for b in mine]
-    title = best.title if best else ""
+    origin_best = sorted(main, key=lambda c: FOLDERS.index(c.folder), reverse=True)[0] if main else None
+    own_best = branch_copies[0] if branch_copies else None
+    best, keep, rule = content_source(host, segments, own_best, origin_best)
+    if keep and current is None:
+        best, keep = origin_best, False
+    if notes is not None and len(segments) >= 2:
+        notes.append(f"{tid}: held by {', '.join(sorted(segments))}; content fields from {rule}")
     extras = extras or Extras()
+    cur = current or {}
+    title = best.title if best else ""
     layer, priority, tags, epic = "", "", "", "standalone"
-    if best:
+    if best and not keep:
         layer = best.layer
         if layer and extras.layers is not None and layer not in extras.layers:
             findings.append(f"{tid}: layer '{layer}' is not in registries/layer_registry.jsonl: Layer left empty")
@@ -501,20 +608,32 @@ def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], pr
             findings.append(f"{tid}: tags not in registries/tag_registry.jsonl, put last: {', '.join(unknown)}")
         tags = " ".join(known + unknown) if order is not None else " ".join(best.tags)
         if extras.epic_of:
-            epic, notes = extras.epic_of(tid, best.path, best.tier)
-            findings += notes
+            epic, epic_notes = extras.epic_of(tid, best.path, best.tier)
+            findings += epic_notes
+    legacy = any(s.legacy for s in segments.values())
+    seats = {x for s in segments.values() if s.state != "filing" and not s.legacy
+             for x in (s.seats or (f"{s.domains[0]} (seat not recorded)" if s.domains else "unknown",))}
+    domains = {d for s in segments.values() if not s.legacy for d in s.domains}
+    if legacy:  # a host that has not written a segment yet: its seats and domains are unknown, so the current entries stay
+        seats |= set(_split(cur.get("Seat", "")))
+        domains |= set(_split(cur.get("Domain", "")))
+    body_src = best or origin_best or own_best
     fields = {
-        "Title": f"{tid}: {title}".rstrip(": ") if title else tid,
+        "Title": cur.get("Title", "") if keep else (f"{tid}: {title}".rstrip(": ") if title else tid),
         "Ticket ID": tid,
         "Status": status,
-        "Domain": ", ".join(sorted({b.domain for b in mine if b.domain})) or (current or {}).get("Domain", ""),
-        "Seat": ", ".join(sorted({b.seat for b in working})) or ("" if status == "To do" else (current or {}).get("Seat", "")),
-        "Host": merge_host_entries((current or {}).get("Host", ""), [host] if mine else [], host),
-        "Branch": merge_host_entries((current or {}).get("Branch", ""), entries, f"{host}:"),
+        "Domain": ", ".join(sorted(domains)) or cur.get("Domain", ""),
+        "Seat": ", ".join(sorted(seats)) or ("" if status == "To do" else cur.get("Seat", "")),
+        "Host": merge_host_entries(cur.get("Host", ""), [host] if mine else [], host),
+        "Branch": merge_host_entries(cur.get("Branch", ""), entries, f"{host}:"),
         "PR": ", ".join(pr_urls),
-        "Tier": best.tier if best else "",
-        "Layer": layer, "Priority": priority, "Epic": epic, "Tags": tags,
-        "Body": BODY.format(path=best.path if best else "agent-working/tickets/"),
+        "Tier": cur.get("Tier", "") if keep else (best.tier if best else ""),
+        "Layer": cur.get("Layer", "") if keep else layer,
+        "Priority": cur.get("Priority", "") if keep else priority,
+        "Epic": cur.get("Epic", "") if keep else epic,
+        "Tags": cur.get("Tags", "") if keep else tags,
+        "Host facts": format_host_facts(segments),
+        "Body": BODY.format(path=body_src.path if body_src else "agent-working/tickets/"),
         "Source": source,
     }
     fields["Sync hash"] = sync_hash(fields)
@@ -566,7 +685,7 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
         if tid not in known:
             continue
         main = [load_main(path) for _, path in main_index.get(tid, [])]
-        derived, findings = derive_item(tid, main, branches, prs, by_id.get(tid), host, source, stale_before, extras)
+        derived, findings = derive_item(tid, main, branches, prs, by_id.get(tid), host, source, stale_before, extras, plan.notes)
         plan.findings += findings
         done_path = next((c.path for c in main if c.folder == "done"), None)
         finished = done_at(done_path) if done_path else None
@@ -585,7 +704,7 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
             plan.creates.append(derived)
             continue
         plan.hand_edits += hand_edits(current, derived)
-        changed = [f for f in HASH_FIELDS if current.get(f, "") != derived[f]]
+        changed = [f for f in HASH_VERSIONS[CURRENT_HASH_VERSION] if current.get(f, "") != derived[f]]
         if not changed and current.get("Sync hash", "") != derived["Sync hash"]:
             changed = ["Sync hash"]  # same values, older hash version: rewrite the hash only
         if changed:
@@ -597,6 +716,11 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
             plan.archives.append((item.get("Title", "(untitled item)"), "no Ticket ID"))
             plan.archive_item_ids.append(item.get("_item_id", ""))
         elif tid not in known and by_id.get(tid) is item:
+            facts = parse_host_facts(item.get("Host facts", ""))
+            others = sorted(h for h in {**facts, **legacy_segments(item.get("Branch", ""), facts, host)} if h != host)
+            if others:  # another host still holds the ticket: this host cannot see its branches, so it must not archive the item
+                plan.findings.append(f"{tid}: not archived, no ticket file seen here but it carries facts of {', '.join(others)}")
+                continue
             plan.archives.append((tid, "no ticket file for this ID"))
             plan.archive_item_ids.append(item.get("_item_id", ""))
     return plan

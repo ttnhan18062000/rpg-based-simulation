@@ -192,7 +192,7 @@ class ProjectClient:
 
 # ---------------------------------------------------------------- --init
 
-TEXT_FIELDS = ("Ticket ID", "Domain", "Seat", "Host", "Branch", "PR", "Source", "Sync hash", "Epic", "Tags")
+TEXT_FIELDS = ("Ticket ID", "Domain", "Seat", "Host", "Branch", "PR", "Source", "Sync hash", "Epic", "Tags", "Host facts")
 TIER_OPTIONS = [("hotfix", "ORANGE"), ("standard", "BLUE"), ("epic", "PURPLE")]
 PRIORITY_OPTIONS = [("P0", "RED"), ("P1", "ORANGE"), ("P2", "YELLOW"), ("P3", "GRAY")]
 STATUS_COLORS = {"To do": "GRAY", "In progress": "BLUE", "Stale": "ORANGE", "In review": "PURPLE", "Blocked": "RED", "Done": "GREEN"}
@@ -278,7 +278,7 @@ def init_fields(client, statuses: tuple[str, ...], replace_status_options: bool 
 
 # ---------------------------------------------------------------- --apply
 
-VALUE_ORDER = ("Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier", "Layer", "Priority", "Epic", "Tags")  # Source, then Sync hash, are always last
+VALUE_ORDER = ("Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier", "Layer", "Priority", "Epic", "Tags", "Host facts")  # Source, then Sync hash, are always last
 SELECT_FIELDS = ("Status", "Tier", "Layer", "Priority")
 
 

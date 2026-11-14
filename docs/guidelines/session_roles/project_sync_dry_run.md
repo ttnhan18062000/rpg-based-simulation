@@ -63,4 +63,24 @@ Needs `project.number` in `registries/session_project.yaml` (the org Project `rp
   item still read `a`. Status on a Project that has items is append-only too (an option not in `STATUSES` is kept and reported, not dropped).
   `--replace-status-options` sends exactly `STATUSES` in order with existing ids, so only items on an option left out lose their Status (the next `--apply` restores them),
   and a rename is a remove plus an add, so only that option's items blank.
-- **Sync hash** is versioned: `v2:<sha>` over the nine P1b fields plus these four; an unprefixed value is the P1b (v1) hash. A v1 item is not a hand edit; it is updated once and carries `v2:` afterwards.
+- **Sync hash** is versioned: `v2:<sha>` over the nine P1b fields plus these four; an unprefixed value is the P1b (v1) hash. A v1 item is not a hand edit; it is updated once and carries `v2:` afterwards. P2 adds `v3:` (the v2 fields plus `Host facts`); a v1 or v2 item is not a hand edit and is rewritten once.
+
+## Two hosts (P2, `TCK-20261114-PROJECT-SYNC-SECOND-HOST`)
+
+Ubuntu and u24 both write Project 1. Each host rewrites only its own facts and derives every shared field from the union of all hosts' facts, so both derive the same value
+and a run on one host never undoes the other's. This corrects design section 5, which said Status rules 1, 2, 3 and 5 depend only on origin: that holds for Done and In review only.
+
+- **`Host facts`** (text, created by `--init`, in the v3 hash) holds one segment per host, joined by `; `: `u24desktop: state=progress seat=a,b domain=rpg; ubuntu: state=blocked seat=c domain=rpg`.
+  `state` is `filing | progress | stale | blocked` from that host's own branch copies; `seat` is the seat names the launcher recorded (a placeholder such as `rpg (seat not recorded)` is made when the
+  Seat is shown and never stored; a filing segment gives no seat); `domain` comes from every branch the host has. A host with no copy of the ticket has no segment. A malformed segment is skipped with a finding.
+- **Holder:** a host with a segment on the item, in any state. A host that wrote its segment with P1c code (a `Branch` entry and no segment) counts as a holder through a **legacy segment**, derived on read, never written,
+  never for the host running the sync. While one exists, Seat and Domain keep their current entries and add this host's (they do not shrink until that host writes its own segment).
+- **Status** from the union: Blocked if any segment is blocked (origin's BLOCKED copy counts only when no host holds the ticket); Stale only when every non-filing segment is stale; In progress when any is progress or stale; else To do.
+  `stale` is set only by the host that wrote it, from its own branches' age.
+- **Seat and Domain** are the sorted union of the segments, and shrink when a host drops its segment.
+- **Title, Tier, Layer, Priority, Tags, Epic, Body:** no holder: origin's copy. One holder that is this host: its own copy. One holder that is another host: keep the current value (origin's copy if there is no item yet).
+  Two or more holders: origin's copy if origin has one, on every host; with no origin copy only the holder with the lowest host tag (string sort) writes its own copy and the others keep the current value. The plan prints a note naming the rule.
+- **Archive guard:** "no ticket file for this ID" never archives an item that carries another host's segment (or a legacy entry); it prints a finding naming the host.
+- **Known gaps:** a host that stops running leaves its segment saying `progress`; the stale-host flag that would catch it is P3. Until u24 runs P2 code, u24's Blocked and Stale cannot be seen from ubuntu. So when this host has no copy of a ticket and every other holder is a legacy segment, Status stays the item's current value
+  (Done and In review from origin still win); it clears when u24 writes its own segment. **Limit: with only legacy u24 segments, Status freezes until u24 runs P2 code**; the hold on u24 `--apply` lifts only after u24's first P2 `--apply`, which should follow soon after P2 lands on main. If this host has its own segment, the normal union applies. The current Status is never copied into a legacy segment's state. P1c code reads `v3:` as an unknown version, so a P1c-code dry run reports a hand edit on every v3 item; do not run `--apply` from a checkout on P1c code.
+  Hiding `Host facts` in the Project views is an owner step in the view settings (the API cannot do it); the sync does not depend on it.

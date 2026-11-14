@@ -285,3 +285,13 @@ def test_project_sync_never_runs_graphql_itself_and_the_client_has_no_delete_mut
     assert '"--input"' not in (root / "project_sync.py").read_text(encoding="utf-8")  # the graphql subprocess call lives only in the client
     client_src = (root / "project_client.py").read_text(encoding="utf-8").lower()
     assert "deleteprojectv2" not in client_src and "def delete" not in client_src
+
+
+def test_host_facts_is_a_text_field_init_creates_by_name_and_apply_writes_before_source():
+    assert "Host facts" in pc.TEXT_FIELDS and pc.VALUE_ORDER[-1] == "Host facts"
+    fake = Fake(project(status_options=STATUSES, skip=("Host facts",)))
+    lines, code = pc.init_fields(fake, STATUSES, layers=LAYERS)
+    assert code == 0 and ("create_text", "Host facts") in fake.calls and "created: Host facts" in lines
+    again = Fake(project(status_options=STATUSES))
+    pc.init_fields(again, STATUSES, layers=LAYERS)
+    assert again.calls == []

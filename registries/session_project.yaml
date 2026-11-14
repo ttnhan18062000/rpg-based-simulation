@@ -11,3 +11,4 @@ stale_host_hours: 24   # a host whose last run is older than this is flagged in 
 stale_branch_days: 14  # a ticket whose working branches are all older than this (newest commit or index change) shows Stale, not In progress
 host_names:            # hostname -> the short host tag used in Branch/Host entries; an unlisted hostname is used as is
   u24desktop-Virtual-Machine: u24desktop
+  ubuntu: ubuntu

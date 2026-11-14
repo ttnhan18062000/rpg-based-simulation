@@ -15,15 +15,19 @@ Epic `TCK-20261112-EPIC-GITHUB-PROJECT-TICKET-VIEW`, filed by agent-working-plan
    session_project.yaml). The first `--init` is the fine-grained token's write proof; if it is refused, stop, because the classic
    `project` fallback is the owner's decision.
 
-4. TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS (P1c, standard): Layer, Epic, Priority and Tags fields, rpg lane. The owner's go is
-   #715 6874493351. Builds on P1b.
+4. **DONE** TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS (P1c, standard; merged in #910, fc62c8557): Layer, Epic, Priority and
+   Tags fields, rpg lane. The owner's go was #715 6874493351.
+5. TCK-20261114-PROJECT-SYNC-SECOND-HOST (P2, standard): ubuntu writes Project 1 as a second host, rpg lane, run by ubuntu's
+   agent-working-implementer. It settles the two-writer question with host-scoped ownership (a `Host facts` field; Status, Seat
+   and Domain come from the union of all hosts, and nothing is archived while another host has facts for the item). The owner's
+   go is #715 6875225978 item 2. The ubuntu token is in place (lead-planner-u24, 2026-11-14). No u24 `--apply` from ubuntu's
+   first `--init` until P2 merges.
 
 P3 prerequisite, not cut: TCK-20261114-PROJECT-CLIENT-WRITE-PACING (write pacing and retry-after). It is filed in this folder and is not
 implemented until P3 is dispatched.
 
 ## Not cut yet
 
-- **P2:** ubuntu runs the same tool. Needs the token on ubuntu.
 - **P3:** all lanes and a per-host timer. Needs the owner's timer decision.
 - **P4:** the claim-rule change. Needs the owner's decision after P3.
 
