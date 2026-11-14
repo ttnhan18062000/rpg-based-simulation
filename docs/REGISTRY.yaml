@@ -8143,6 +8143,26 @@
   - planning
   - delivery
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261114-PROJECT-SYNC-SECOND-HOST.md
+  ticket_id: TCK-20261114-PROJECT-SYNC-SECOND-HOST
+  title: '`project_sync.py` P2: host ubuntu writes Project 1 too, and neither host''s
+    run can rewrite or archive the other host''s facts (rpg lane)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-11-14'
+  related_code_areas:
+  - tools/sessions/project_sync.py
+  - tools/sessions/project_client.py
+  - registries/session_project.yaml
+  - tests/tools/test_session_project_sync.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-SECOND-HOST/investigation.md
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-SECOND-HOST/plan.md
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-SECOND-HOST/test_plan.md
+  tags:
+  - planning
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS.md
   ticket_id: TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS
   title: The architecture and platform role cards cite decisions that the distributed-workers

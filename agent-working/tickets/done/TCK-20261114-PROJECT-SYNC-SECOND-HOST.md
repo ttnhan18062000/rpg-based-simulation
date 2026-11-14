@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ticket
 authority: P1
 audience: agent
 ticket_id: TCK-20261114-PROJECT-SYNC-SECOND-HOST
-phase: open
+phase: done
 date: 2026-11-14
 tags: [planning, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [planning, delivery]
 `project_sync.py` P2: host ubuntu writes Project 1 too, and neither host's run can rewrite or archive the other host's facts (rpg lane)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -149,9 +149,24 @@ as a dry run only.
 - If the owner prefers the zero-code single-writer option, see the simpler-fix check above.
 
 ## Implementation Notes
+- Plan, investigation, test plan: `agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-SECOND-HOST/`. Reviewed by agent-working-planner-u24 and agent-working-designer-u24 (approved with M1-M11 and M7c; then M12 after the step 3 dry run), relayed by agent-working-planner and the leads.
+- Built as `Segment` / `parse_host_facts` / `format_host_facts` / `legacy_segments` / `own_segment` in `tools/sessions/project_sync.py`; `derive_status` takes the union of segments; `content_source` implements rule M4; the archive guard and hash v3 follow the plan. `project_client.TEXT_FIELDS` and `VALUE_ORDER` gain `Host facts`; `registries/session_project.yaml` gains `ubuntu: ubuntu`.
+- M12 (planner-u24, after the first live dry run): with no own copy and only legacy holders, Status stays the item's current value, so ubuntu does not overwrite u24's Stale/Blocked. Recorded limit: with only legacy u24 segments, Status freezes until u24 runs P2 code; the hold on u24 `--apply` lifts only after u24's first P2 `--apply`, soon after merge.
+- Corrected a wrong statement of mine mid-run: the first four Status updates were Stale to In progress (not To do), found by reading the live items.
+- Live order, all from the P2 branch code: dry run (new code), `--init` (created `Host facts`), second `--init` (nothing written), dry runs, transport pushes of c5869073e and a7af7e622 (owner #715 6876629201, 6876754593), `--apply` on a7af7e622 (planner-u24 OK): 2 creates, 23 hash-only updates, 0 archives, 74 steps, rc 0. u24's read-only run (M8): PASS. Final ubuntu dry run: `nothing to do`.
+- No token value appears in any output or file; the token file was never read by me.
 
 ## Test Summary
+- `tests/tools/test_session_project_sync_second_host.py`: 18 tests (encoding round trip and malformed segment, placeholders at render time, Blocked, Stale, Seat/Domain union and shrink, own-segment replace, rule M4 all five cases and lowest tag, plan note, archive guard, legacy segments, M12 legacy-only status, hash v3, Host-facts-alone update, convergence one-holder A,B,A, two-holders with and without origin A,B,A,B, M7c). `tests/tools/test_project_client.py`: +1 (Host facts created by init, second init writes nothing). One P1c test moved to v3.
+- Scoped runs: 119 pass (project_sync, second_host, project_client); paths-guard, ci_workflow_test_coverage, no_duplicate_content_blocks pass.
+- Live: see Implementation Notes (final dry run `nothing to do`; u24 M8 PASS).
 
 ## Files Changed
+- `tools/sessions/project_sync.py`, `tools/sessions/project_client.py`, `registries/session_project.yaml`, `docs/guidelines/session_roles/project_sync_dry_run.md`, `tests/tools/test_session_project_sync.py`, `tests/tools/test_session_project_sync_second_host.py` (new), `tests/tools/test_project_client.py`, `agent-working/tickets/` (this ticket and the epic folder's SEQUENCE.md), `agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-SECOND-HOST/`.
 
 ## Completion Summary
+Host ubuntu now writes Project 1 as a second host. A `Host facts` field holds one segment per host; each host rewrites only its own, Status, Seat and Domain come from the union of hosts, content fields follow rule M4, and nothing is archived while another host holds the ticket. Live: `Host facts` created, the first `--apply` wrote 2 creates and 23 hash-only updates, u24's read-only run passed, and the final ubuntu dry run shows nothing to do.
+
+Known gap: with only legacy u24 segments, Status freezes until u24 runs P2 code; u24's first P2 `--apply` must follow soon after merge and the hold on u24 `--apply` lifts only then.
+Known gap: a host that stops running leaves its segment saying progress; the stale-host flag that would catch it is P3.
+Known gap: hiding `Host facts` in the Project views is an owner step in the view settings; the sync does not depend on it.

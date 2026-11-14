@@ -5,7 +5,7 @@ authority: P2
 audience: agent
 artifact_type: test_plan
 ticket_id: TCK-20261114-PROJECT-SYNC-SECOND-HOST
-phase: open
+phase: done
 date: 2026-11-14
 tags: [planning, delivery]
 ---
