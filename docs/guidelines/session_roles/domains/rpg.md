@@ -14,6 +14,13 @@ and are not restated here. Only `## Card` is injected.
 ## Card
 Domain: rpg (simulation, Bible, parity ledger). `rpg-planner` owns the semantic-control-plane epic and `mechanisms.yaml` content; ask it before changing RPG logic, RPG test expectations or Bible/parity semantics. Only it messages rpg implementers; send briefs and parked branches to it.
 
+
+## Cites
+
+Decisions this card names, as `short_name -> path[#section]` (vocabulary: `registries/session_decisions.yaml`). Not injected. `none` when the card names no recorded decision.
+
+- none
+
 ## Provenance
 
 Owner rule 2026-10-05, narrows the designer template's "finding/fyi/ack to anyone" for the rpg domain; dispatch is already enforced by `accepts_dispatch_from`.

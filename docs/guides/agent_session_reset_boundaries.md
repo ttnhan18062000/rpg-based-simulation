@@ -64,6 +64,13 @@ Role: <role id> · Domain/worktree: <domain> / <worktree>
 Branch / PR: <branch> · #<n> or none
 Updated: <date>
 
+## After a card-changing merge
+
+A role card changes in a running seat only at relaunch or `/clear`. After a merge that changes a card source, an
+amended decision, or `registries/session_decisions.yaml`, lead runs `python3 -m tools.sessions.card_citation_check`,
+and relaunches or clears the seats it names. The PR body already lists the cards (`docs/guides/delivery_process.md`,
+"Decisions named on role cards"); the seat ids are in the check's output.
+
 ## Open
 - Branch: <name> · PR: #<n> or none
 - Pending user decisions: <...> or none

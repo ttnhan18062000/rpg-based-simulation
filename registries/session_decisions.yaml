@@ -1,0 +1,22 @@
+# Vocabulary of the recorded decisions that session role cards name (TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX).
+# short_name -> path[#section]; `aliases` are the other spellings a card uses.
+# Each card source lists the names it uses under `## Cites` (outside `## Card`, so it is not injected).
+# Read by tools/sessions/card_citation_check.py and tests/tools/test_session_card_citations.py.
+decisions:
+  system_overview:
+    path: docs/architecture/system_overview.md#what-is-deliberately-not-distributed
+  distributed_workers_adr:
+    path: docs/architecture/distributed_workers_adr.md
+  devops_adr:
+    path: docs/architecture/devops_baseline_adr.md
+    aliases: ["the devops ADR"]
+  devops_amendment:
+    path: docs/architecture/devops_plan_amendment_proposal.md#what-stays-from-the-adr
+    aliases: ["devops ADR and amendment"]
+  next_generation_engine_adr:
+    path: docs/architecture/next_generation_engine_adr.md
+  kernel_concurrency_design_philosophy:
+    path: docs/architecture/kernel_concurrency_design_philosophy.md
+  perf_decisions:
+    path: docs/architecture/performance_optimization_decisions.md
+    aliases: ["PERF-D1/D2"]

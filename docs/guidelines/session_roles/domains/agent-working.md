@@ -13,3 +13,9 @@ and are not restated here. Only `## Card` is injected.
 
 ## Card
 Domain: agent-working (process incl. tickets, tooling, monitoring, delivery). Designer reviews.
+
+## Cites
+
+Decisions this card names, as `short_name -> path[#section]` (vocabulary: `registries/session_decisions.yaml`). Not injected. `none` when the card names no recorded decision.
+
+- none
