@@ -56,6 +56,7 @@ Applies to all files under `docs/` that are not in an archive subdirectory.
 | `verified_by` | no | TCK-ID or `"#<PR>"` | the ticket or PR that checked every behaviour claim in the doc |
 | `verified_at` | no | 7-40 lowercase hex | the commit SHA of the code that was read |
 | `reviewed_by` | no | TCK-ID or `"#<PR>"` | triaged, no staleness found; weaker than `verified_by`, never shown as verified |
+| `amends` | no | list of `path#heading-slug` | the decisions this doc amends, each a repo-relative path and the slug of the amended heading (`system_overview.md#what-is-deliberately-not-distributed`). Read by `tools/sessions/card_citation_check.py` (report-only) to flag role cards that cite an amended decision but not this doc. The validator does not check it |
 
 **Conditional rule:** `last_verified` is required when `status` is `authoritative`.
 

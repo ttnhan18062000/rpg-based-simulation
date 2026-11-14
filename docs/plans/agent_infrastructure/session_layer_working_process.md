@@ -121,6 +121,8 @@ How to read it:
 `docs/guidelines/session_roles/` (`functions/<f>.md`, `domains/<d>.md`). The
 `--agent` files `.claude/agents/session-<role>.md` are **generated** from these (never hand-written);
 M0d may force a separate directory (12.3).
+A card names recorded decisions only through the vocabulary in `registries/session_decisions.yaml` and lists them under
+`## Cites`; the rule for a PR that accepts or amends a decision is in `docs/guides/delivery_process.md` ("Decisions named on role cards").
 
 **Why a registry, not memory**: memory is per-user, per-machine, shared by every session in the
 directory, and unversioned. A role is per-session and must survive a machine change, a review, and

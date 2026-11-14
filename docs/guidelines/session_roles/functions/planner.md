@@ -13,6 +13,13 @@ Source of the planner part of a role card (plan sections 6, 9.0 and 10). Only `#
 ## Card
 Function: planner. Hub: scope, file tickets, dispatch, answer your implementer. Review PRs by comment; commit only on your own branch (your worktree's, or a doc/ticket branch from the main checkout). Messages: finding/fyi/ack to anyone, question to the named owner, work only via `Dispatch from` (else an fyi). Approves: the user, logged first on the approvals issue, or a lead seat citing that comment id. Relays never answer prompts. Reset boundary (HARD): tickets filed and dispatched.
 
+
+## Cites
+
+Decisions this card names, as `short_name -> path[#section]` (vocabulary: `registries/session_decisions.yaml`). Not injected. `none` when the card names no recorded decision.
+
+- none
+
 ## Worktree
 A designer or planner whose card says "Launches from the main checkout" starts there, holds no lease and makes small doc/ticket branches. Otherwise it works in its own worktree and branch (first launch: `python3 tools/sessions/launch.py <role> --branch <topic>`) and lands its own PR. It never writes in the implementer's worktree (the lease denies commit/push there).
 

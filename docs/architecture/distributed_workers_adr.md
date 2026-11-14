@@ -4,6 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, engine, determinism, platform]
+amends: [docs/architecture/system_overview.md#what-is-deliberately-not-distributed, docs/architecture/devops_plan_amendment_proposal.md#what-stays-from-the-adr]
 ---
 
 # ADR: an opt-in mode may run the Collection pool outside the engine process

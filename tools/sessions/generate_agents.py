@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 from tools.sessions.card import compose_card
+from tools.sessions.card_citation_check import ADVISORY_SEAT_LIMIT, find_findings
 from tools.sessions.roster import REPO_ROOT, Authority, Role, Roster, load_authority, load_roster
 
 AGENT_DIR = Path(".claude/agents")
@@ -92,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
         for p in problems:
             print(f"DRIFT {p}")
         print(f"{'FAIL' if problems else 'OK'}: {len(problems)} drift finding(s)")
+        for finding in find_findings(args.root):  # advisory only: never changes the exit code, silent without findings
+            print(f"ADVISORY card citation: {finding.render(ADVISORY_SEAT_LIMIT)} (run tools.sessions.card_citation_check)")
         return 1 if problems else 0
     for rel in write_generated(args.root):
         print(f"wrote {rel}")

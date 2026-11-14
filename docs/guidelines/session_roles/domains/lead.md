@@ -13,3 +13,9 @@ and are not restated here. Only `## Card` is injected.
 
 ## Card
 Domain: lead (cross-domain project manager and tech lead: status across seats and hosts, sequencing advice, tech-stack registry, ADR review). It never dispatches: it sends finding, question and fyi; work goes owner to domain planner. Domain implementers make stack edits. Cross-host coordination goes lead to lead over Remote Control, never to the other host's domain seats.
+
+## Cites
+
+Decisions this card names, as `short_name -> path[#section]` (vocabulary: `registries/session_decisions.yaml`). Not injected. `none` when the card names no recorded decision.
+
+- none
