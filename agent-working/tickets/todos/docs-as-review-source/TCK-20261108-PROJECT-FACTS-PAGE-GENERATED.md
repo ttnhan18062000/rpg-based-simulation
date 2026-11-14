@@ -56,7 +56,9 @@ Batch D, P2 of the plan (origin/lead-docs-review-source:agent-working/lead/docs_
 - tools/project_stats.py (new), docs/architecture/project_facts.md (new)
 
 ## Assumptions / Open Questions
-- docs/architecture/project_facts.md routes to lead (docs/architecture/ is lead's); the plan assigns D to agent-working. Confirm with lead-planner before PR 3 is dispatched.
+- Settled 2026-11-14 by lead-planner (owner of docs/architecture/**): agent-working-implementer may write the generated page docs/architecture/project_facts.md, marked generated (not hand-edited); header = ref SHA plus each count's rule (what, which paths, which parser); `--check` follows the phase_inventory pattern. After it lands, lead reviews page content only through the tool.
+- tools/project_stats.py matches no domain's owns: add it to agent-working's owns in registries/session_roles.yaml in the same PR (lead: no objection), regenerate .claude/agents and every derived view, and run the full tests/tools dir (chunked, lead slot), not a -k subset, before the push.
+- Dispatch approved by the owner on #715 6875225978 (closes the docs-as-review-source epic: on close, move the whole folder with SEQUENCE.md to done/). Dispatched after TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX, one at a time.
 
 ## Implementation Notes
 (to be filled by the implementer)

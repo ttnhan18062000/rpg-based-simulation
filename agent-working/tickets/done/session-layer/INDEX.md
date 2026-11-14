@@ -1,6 +1,6 @@
 # Session Layer — Epic Index
 
-**Status: epics A, B and C closed 2026-10-05 (in `agent-working/tickets/done/`); epic D open, time-gated (the M7 four-week window starts at the first real `manual_actions.jsonl` record; re-baselined 2026-10-06, see `TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS`).** Scoped 2026-10-02. This folder holds **four epic-tier tickets only**. Child
+**Closed 2026-11-14: epic D closed by disposition (owner #715 6875225978); see its Completion Summary. Earlier status:** epics A, B and C closed 2026-10-05 (in `agent-working/tickets/done/`); epic D open, time-gated (the M7 four-week window starts at the first real `manual_actions.jsonl` record; re-baselined 2026-10-06, see `TCK-20261006-LIVE-SESSIONS-RUN-STALE-OR-NO-PROJECT-HOOKS`).** Scoped 2026-10-02. This folder holds **four epic-tier tickets only**. Child
 tickets are created later by the agent-working planner, not here. This file is deliberately **not** named
 `SEQUENCE.md`, because `implement-epic` reads that name as a child-ticket order.
 

@@ -52,6 +52,7 @@ Not cut yet, with what each is waiting for:
 
 ## Related Tickets
 - none
+- Received 2026-11-14 from TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW (closed, owner #715 6875225978): the session-layer M7 first-month evidence review (harden / keep / retire per advisory rule) and the deferred-item decisions (message inbox, auto-wake, hard message blocking, authority digest pin); and from TCK-20261009-EPIC-SESSION-LEAD-PLANNER: E5's evaluation (does the lead seat lower the manual-action metric). This plan's M7 / OD-9 item is where they land.
 
 ## Related Docs
 - docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md
