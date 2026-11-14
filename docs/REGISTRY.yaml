@@ -8163,6 +8163,25 @@
   - planning
   - delivery
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX.md
+  ticket_id: TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX
+  title: Link each decision doc to the role cards that cite it, so an amended decision
+    flags its cards
+  tier: standard
+  ticket_type: feature
+  date: '2026-11-14'
+  related_code_areas:
+  - tools/sessions/generate_agents.py, tools/sessions/card.py, registries/session_roles.yaml,
+    tests/tools/
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX/investigation.md
+  - agent-working/stored_artifacts/TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX/plan.md
+  - agent-working/stored_artifacts/TCK-20261114-ROLE-CARD-DECISION-CITATION-INDEX/test_plan.md
+  tags:
+  - ai
+  - governance
+  - process-improvement
+- type: ticket
   path: agent-working/tickets/done/TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS.md
   ticket_id: TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS
   title: The architecture and platform role cards cite decisions that the distributed-workers
