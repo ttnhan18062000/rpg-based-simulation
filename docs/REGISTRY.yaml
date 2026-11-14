@@ -8125,6 +8125,24 @@
   - planning
   - delivery
 - type: ticket
+  path: agent-working/tickets/done/TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS.md
+  ticket_id: TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS
+  title: '`project_sync.py` P1c: Layer, Epic, Priority and Tags fields, so that one
+    domain''s board can be split further (rpg lane, u24)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-11-14'
+  related_code_areas:
+  - tools/sessions/project_sync.py, tools/sessions/project_client.py, tests/tools/test_session_project_sync.py,
+  - tests/tools/test_project_client.py
+  artifact_files:
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS/investigation.md
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS/plan.md
+  - agent-working/stored_artifacts/TCK-20261114-PROJECT-SYNC-LAYER-EPIC-PRIORITY-TAGS/test_plan.md
+  tags:
+  - planning
+  - delivery
+- type: ticket
   path: agent-working/tickets/done/TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS.md
   ticket_id: TCK-20261114-ROLE-CARDS-CITE-AMENDED-DECISIONS
   title: The architecture and platform role cards cite decisions that the distributed-workers
@@ -8175,6 +8193,20 @@
   artifact_files: []
   tags:
   - world
+- type: ticket
+  path: agent-working/tickets/todos/github-project-ticket-view/TCK-20261114-PROJECT-CLIENT-WRITE-PACING.md
+  ticket_id: TCK-20261114-PROJECT-CLIENT-WRITE-PACING
+  title: '`project_client.py` paces its writes and honours GitHub''s rate-limit answers,
+    so the P3 all-lanes first load can run (P3 prerequisite)'
+  tier: standard
+  ticket_type: feature
+  date: '2026-11-14'
+  related_code_areas:
+  - tools/sessions/project_client.py, tests/tools/test_project_client.py, registries/session_project.yaml
+  artifact_files: []
+  tags:
+  - planning
+  - delivery
 - type: ticket
   path: agent-working/tickets/done/TCK-20261113-FIVE-SOCIAL-ACTION-KINDS-MAY-HAVE-NO-ISSUER-IN-PLAY.md
   ticket_id: TCK-20261113-FIVE-SOCIAL-ACTION-KINDS-MAY-HAVE-NO-ISSUER-IN-PLAY
@@ -18133,6 +18165,25 @@
   - documentation
   - certification
 - type: ticket
+  path: agent-working/tickets/done/session-lead/TCK-20261009-EPIC-SESSION-LEAD-PLANNER.md
+  ticket_id: TCK-20261009-EPIC-SESSION-LEAD-PLANNER
+  title: 'Epic E — Session lead-planner: one cross-domain seat (project manager +
+    technical lead) that tracks every session on every host, owns the cross-domain
+    dependency and priority board, governs the tech stack, and advises the planners'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-09'
+  related_code_areas:
+  - tools/sessions/
+  - registries/session_roles.yaml
+  - pyproject.toml
+  - docs/architecture/
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+  - governance
+- type: ticket
   path: agent-working/tickets/done/visual-asset-icon-release-candidate/TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE.md
   ticket_id: TCK-20261009-VISUAL-ASSETS-ICON-RELEASE-CANDIDATE
   title: Build the 36 adopted icons and assemble the first release candidate that
@@ -18183,25 +18234,6 @@
   - regression
   - simulation-quality
   - planning
-- type: ticket
-  path: agent-working/tickets/todos/session-lead/TCK-20261009-EPIC-SESSION-LEAD-PLANNER.md
-  ticket_id: TCK-20261009-EPIC-SESSION-LEAD-PLANNER
-  title: 'Epic E — Session lead-planner: one cross-domain seat (project manager +
-    technical lead) that tracks every session on every host, owns the cross-domain
-    dependency and priority board, governs the tech stack, and advises the planners'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-09'
-  related_code_areas:
-  - tools/sessions/
-  - registries/session_roles.yaml
-  - pyproject.toml
-  - docs/architecture/
-  artifact_files: []
-  tags:
-  - ai
-  - process-improvement
-  - governance
 - type: ticket
   path: agent-working/tickets/done/TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP.md
   ticket_id: TCK-20261007-A-WALKER-BESIDE-A-PERCEIVED-HOSTILE-KEEPS-STEPPING-AND-EATS-AN-OPPORTUNITY-ATTACK-PER-STEP
@@ -24566,6 +24598,21 @@
   - planning
   - tracking
 - type: ticket
+  path: agent-working/tickets/done/session-layer/TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW.md
+  ticket_id: TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW
+  title: 'Epic D — Session-layer measurement and evidence review: does the owner repeat
+    fewer instructions, and which advisory rules earn hardening'
+  tier: epic
+  ticket_type: feature
+  date: '2026-10-02'
+  related_code_areas:
+  - tools/agent-monitoring/
+  artifact_files: []
+  tags:
+  - ai
+  - process-improvement
+  - agent-monitoring
+- type: ticket
   path: agent-working/tickets/done/visual-asset-foundation/TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION.md
   ticket_id: TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION
   title: 'Visual asset foundation: in-project drawing tools and asset store under
@@ -24605,21 +24652,6 @@
   - architecture
   - documentation
   - simulation-quality
-- type: ticket
-  path: agent-working/tickets/todos/session-layer/TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW.md
-  ticket_id: TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW
-  title: 'Epic D — Session-layer measurement and evidence review: does the owner repeat
-    fewer instructions, and which advisory rules earn hardening'
-  tier: epic
-  ticket_type: feature
-  date: '2026-10-02'
-  related_code_areas:
-  - tools/agent-monitoring/
-  artifact_files: []
-  tags:
-  - ai
-  - process-improvement
-  - agent-monitoring
 - type: ticket
   path: agent-working/tickets/done/TCK-20260930-IMPLEMENT-TICKET-PARSE-AND-NONDETERMINISM-FIX.md
   ticket_id: TCK-20260930-IMPLEMENT-TICKET-PARSE-AND-NONDETERMINISM-FIX
@@ -70529,7 +70561,7 @@
   tags:
   - fixtests
 - type: ticket
-  path: agent-working/tickets/done/test-architecture/INDEX.md
+  path: agent-working/tickets/done/session-layer/INDEX.md
   ticket_id: INDEX
   title: ''
   tier: ''
@@ -70539,7 +70571,7 @@
   artifact_files: []
   tags: []
 - type: ticket
-  path: agent-working/tickets/todos/session-layer/INDEX.md
+  path: agent-working/tickets/done/test-architecture/INDEX.md
   ticket_id: INDEX
   title: ''
   tier: ''

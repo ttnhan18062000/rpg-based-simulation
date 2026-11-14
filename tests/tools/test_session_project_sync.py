@@ -431,3 +431,95 @@ def test_apply_is_refused_with_nothing_written_when_the_open_prs_are_not_fully_k
     monkeypatch.setattr(pc, "apply_plan", lambda *a, **k: pytest.fail("wrote"))
     assert ps.main(["--root", str(tmp_path), "--apply"]) == 1
     assert "nothing written" in capsys.readouterr().err
+
+
+# ---- P1c: Layer, Priority, Epic, Tags
+TICKET_TEXT = """---
+status: active
+layer: combat
+tags: [zeta, combat, unknownthing]
+---
+
+# X
+
+## Title
+A title
+
+## Tier
+standard
+
+## Priority
+P1
+"""
+
+
+def test_parse_copy_reads_layer_priority_and_tags():
+    c = ps.parse_copy(f"{T}/inprogress/TCK-20261114-A.md", TICKET_TEXT)
+    assert (c.layer, c.priority, c.tags) == ("combat", "P1", ("zeta", "combat", "unknownthing"))
+
+
+def test_layer_priority_and_tags_are_validated_ordered_and_empty_or_unknown_values_give_a_finding():
+    c = ps.TicketCopy("TCK-20261114-A", "inprogress", f"{T}/inprogress/TCK-20261114-A.md", "t", "hotfix", layer="nolayer", priority="P9",
+                      tags=("zeta", "combat", "unknownthing"))
+    extras = ps.Extras(frozenset({"combat"}), ("combat", "zeta"), None)
+    item, findings = ps.derive_item("TCK-20261114-A", [c], [], None, None, HOST, "s", None, extras)
+    assert item["Layer"] == "" and item["Priority"] == "" and item["Tags"] == "combat zeta unknownthing"  # registry order, unknown last
+    assert any("layer 'nolayer'" in f for f in findings) and any("priority 'P9'" in f for f in findings) and any("unknownthing" in f for f in findings)
+    ok = ps.TicketCopy("TCK-20261114-A", "inprogress", c.path, "t", "hotfix", layer="combat", priority="P2")
+    item, findings = ps.derive_item("TCK-20261114-A", [ok], [], None, None, HOST, "s", None, extras)
+    assert (item["Layer"], item["Priority"]) == ("combat", "P2") and not [f for f in findings if "layer" in f or "priority" in f]
+
+
+def _epic_world():
+    def tk(tid, state, folder, tier="hotfix"):
+        path = f"{T}/{state}/{folder}/{tid}.md" if folder else f"{T}/{state}/{tid}.md"
+        return ps.TicketCopy(tid, state, path, "t", tier)
+    copies = [tk("TCK-20261101-SOMETHING-EPIC", "todos", "grp", "epic"), tk("TCK-20261101-CHILD", "todos", "grp"),
+              tk("TCK-20261102-NOEPIC-CHILD", "done", "bare"), tk("TCK-20261103-FLAT", "done", None), tk("TCK-20261104-TWICE", "done", None)]
+    index = {c.id: [(c.folder, c.path)] for c in copies}
+    loaded = {c.path: c for c in copies}
+    seqs = {"todos/grp": {"TCK-20261103-FLAT", "TCK-20261104-TWICE"}, "done/other": {"TCK-20261104-TWICE"}}
+    return copies, ps.make_epic_resolver(index, lambda p: loaded[p], seqs)
+
+
+def test_epic_rule_a_uses_the_folders_tier_epic_ticket_or_the_folder_name_and_an_epic_is_its_own_epic():
+    copies, resolve = _epic_world()
+    by = {c.id: c for c in copies}
+    assert resolve("TCK-20261101-CHILD", by["TCK-20261101-CHILD"].path, "hotfix") == ("TCK-20261101-SOMETHING-EPIC", [])  # name need not contain -EPIC-
+    assert resolve("TCK-20261101-SOMETHING-EPIC", by["TCK-20261101-SOMETHING-EPIC"].path, "epic") == ("TCK-20261101-SOMETHING-EPIC", [])
+    assert resolve("TCK-20261102-NOEPIC-CHILD", by["TCK-20261102-NOEPIC-CHILD"].path, "hotfix") == ("bare", [])  # done/<folder>/, no epic -> folder name
+
+
+def test_epic_rule_b_sequence_md_links_a_flat_ticket_and_an_ambiguous_one_is_standalone_with_a_note():
+    copies, resolve = _epic_world()
+    by = {c.id: c for c in copies}
+    assert resolve("TCK-20261103-FLAT", by["TCK-20261103-FLAT"].path, "hotfix") == ("TCK-20261101-SOMETHING-EPIC", [])
+    value, notes = resolve("TCK-20261104-TWICE", by["TCK-20261104-TWICE"].path, "hotfix")
+    assert value == "standalone" and "todos/grp" in notes[0] and "done/other" in notes[0]
+
+
+def test_epic_rule_c_is_standalone_and_sequence_ids_come_from_order_or_anywhere():
+    _, resolve = _epic_world()
+    assert resolve("TCK-20261199-NONE", f"{T}/inprogress/TCK-20261199-NONE.md", "hotfix") == ("standalone", [])
+    assert ps.sequence_ids("# S\n\n## Order\n1. TCK-20261101-A\n\n## Notes\nTCK-20261102-B\n") == {"TCK-20261101-A"}
+    assert ps.sequence_ids("# S\n\n## Dependency Notes\n- TCK-20261101-A then TCK-20261102-B\n") == {"TCK-20261101-A", "TCK-20261102-B"}
+
+
+def test_a_p1_hash_is_not_a_hand_edit_it_is_updated_once_and_carries_v2():
+    c = copy("TCK-20261112-M", "inprogress")
+    derived, _ = derive("TCK-20261112-M", main=[c], branches=[branch([c])])
+    v1_fields = {k: v for k, v in derived.items() if k in ps.HASH_FIELDS_V1}
+    live = {**v1_fields, "Sync hash": ps.sync_hash(v1_fields, "v1"), "_item_id": "I", "_draft_id": "D"}
+    assert ps.hand_edits(live, derived) == [] and not ps.sync_hash(v1_fields, "v1").startswith("v2:")
+    plan = _plan({"TCK-20261112-M": [c]}, [branch([c])], [live])
+    assert plan.hand_edits == [] and plan.updates and plan.updates[0][0]["Sync hash"].startswith("v2:")
+    # a v2 value is checked against the v2 fields only
+    v2 = {**derived, "Sync hash": derived["Sync hash"], "_item_id": "I"}
+    assert ps.hand_edits(v2, derived) == []
+    assert ps.hand_edits({**v2, "Layer": "tampered"}, derived)
+
+
+def test_a_priority_with_trailing_explanation_takes_its_leading_p_value():
+    c = ps.TicketCopy("TCK-20261114-A", "inprogress", f"{T}/inprogress/TCK-20261114-A.md", "t", "hotfix", priority="P2 (RAISED FROM P3 BY SOMEONE)")
+    item, _ = ps.derive_item("TCK-20261114-A", [c], [], None, None, HOST, "s", None, ps.Extras())
+    assert item["Priority"] == "P2"

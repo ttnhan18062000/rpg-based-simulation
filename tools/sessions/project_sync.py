@@ -56,7 +56,11 @@ DEFAULTS = {
 PR_LIMIT = 300  # the value of ticket_queue.PR_LIMIT: gh's own default is 30
 FOLDERS = ("todos", "inprogress", "done")
 PROGRESS_FOLDERS = ("inprogress", "done")  # only these count as progress; todos/ on a branch or PR is filing
-HASH_FIELDS = ("Title", "Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier")
+HASH_FIELDS_V1 = ("Title", "Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier")
+HASH_FIELDS = HASH_FIELDS_V1 + ("Layer", "Priority", "Epic", "Tags")  # the current version (v2)
+HASH_VERSIONS = {"v1": HASH_FIELDS_V1, "v2": HASH_FIELDS}  # a stored hash is "v2:<sha>"; an unprefixed value is v1
+CURRENT_HASH_VERSION = "v2"
+PRIORITIES = ("P0", "P1", "P2", "P3")
 STATUSES = ("To do", "In progress", "Stale", "In review", "Blocked", "Done")
 FILING_SUFFIX = "[filing]"
 BODY = "Generated from {path} by tools/sessions/project_sync.py — edits are overwritten."
@@ -133,6 +137,9 @@ class TicketCopy:
     tier: str = ""
     blocked: bool = False
     date: str = ""
+    layer: str = ""
+    priority: str = ""
+    tags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -186,9 +193,13 @@ def parse_copy(path: str, text: str) -> TicketCopy:
         return m.group(1).strip() if m else ""
 
     fm = re.search(r"^date:\s*(\S+)", text, re.M)
+    layer = re.search(r"^layer:\s*(\S+)", text, re.M)
+    tags = re.search(r"^tags:\s*\[([^\]]*)\]", text, re.M)
     return TicketCopy(
         id=ticket_id_of(path) or "", folder=folder_of(path) or "", path=path, title=section("Title"), tier=section("Tier").lower(),
         blocked=section("Status").upper() == "BLOCKED", date=fm.group(1) if fm else "",
+        layer=layer.group(1) if layer else "", priority=section("Priority").upper(),
+        tags=tuple(x.strip().strip("'\"") for x in tags.group(1).split(",") if x.strip()) if tags else (),
     )
 
 
@@ -344,9 +355,16 @@ def read_open_prs(root: Path, notes: list[str], run: Runner = run_command) -> li
 # ---------------------------------------------------------------- derivation (pure)
 
 
-def sync_hash(fields: dict) -> str:
-    blob = json.dumps([[k, fields.get(k, "")] for k in HASH_FIELDS], ensure_ascii=False)
-    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+def sync_hash(fields: dict, version: str = CURRENT_HASH_VERSION) -> str:
+    """sha256 over the fields of that version. v1 is the bare digest (P1b stored it); later versions are `<version>:<digest>`."""
+    blob = json.dumps([[k, fields.get(k, "")] for k in HASH_VERSIONS[version]], ensure_ascii=False)
+    digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    return digest if version == "v1" else f"{version}:{digest}"
+
+
+def hash_version(stored: str) -> str:
+    prefix = stored.split(":", 1)[0] if ":" in stored else "v1"
+    return prefix if prefix in HASH_VERSIONS else CURRENT_HASH_VERSION
 
 
 def _split(value: str) -> list[str]:
@@ -387,8 +405,73 @@ def derive_status(tid: str, main: list[TicketCopy], branches: list[BranchFact], 
     return "To do", [], findings
 
 
+@dataclass
+class Extras:
+    """Registries and the Epic resolver for Layer / Priority / Epic / Tags. None / empty means "do not validate"."""
+
+    layers: frozenset[str] | None = None
+    tag_order: tuple[str, ...] | None = None
+    epic_of: Callable[[str, str, str], tuple[str, list[str]]] | None = None  # (ticket id, best copy path, tier) -> (value, notes)
+
+
+_ID_RE = re.compile(r"TCK-[A-Z0-9][A-Z0-9-]*[A-Z0-9]")
+
+
+def folder_key(path: str) -> str | None:
+    """`todos/<folder>` or `done/<folder>` for a ticket inside an epic folder, else None (a flat ticket)."""
+    parts = Path(path).as_posix().split("/")
+    base = TICKETS.as_posix().split("/")
+    if parts[: len(base)] != base or len(parts) != len(base) + 3 or parts[len(base)] not in ("todos", "done"):
+        return None
+    return f"{parts[len(base)]}/{parts[len(base) + 1]}"
+
+
+def sequence_ids(text: str) -> set[str]:
+    """Ticket ids of a SEQUENCE.md: those in `## Order` when that section exists, else those anywhere in the file."""
+    m = re.search(r"^## Order\b.*?(?=^## |\Z)", text, re.M | re.S)
+    return set(_ID_RE.findall(m.group(0) if m else text))
+
+
+def make_epic_resolver(main_index: dict[str, list[tuple[str, str]]], load_main: Callable[[str], TicketCopy],
+                       sequences: dict[str, set[str]]) -> Callable[[str, str, str], tuple[str, list[str]]]:
+    """Epic, first match wins: (a) the ticket sits in a todos/ or done/ epic folder; (b) exactly one folder's SEQUENCE.md names it; (c) standalone.
+    A folder's epic is its ticket whose `## Tier` is epic (none -> the folder name; several -> the folder name plus a note)."""
+    members: dict[str, list[str]] = {}
+    for entries in main_index.values():
+        for _, path in entries:
+            key = folder_key(path)
+            if key:
+                members.setdefault(key, []).append(path)
+    cache: dict[str, tuple[str, list[str]]] = {}
+
+    def folder_epic(key: str) -> tuple[str, list[str]]:
+        if key not in cache:
+            epics = sorted({ticket_id_of(p) or "" for p in members.get(key, []) if load_main(p).tier == "epic"} - {""})
+            name = key.split("/", 1)[1]
+            if len(epics) == 1:
+                cache[key] = (epics[0], [])
+            else:
+                cache[key] = (name, [f"folder {key} has {len(epics)} epic tickets: Epic is the folder name"] if len(epics) > 1 else [])
+        return cache[key]
+
+    def resolve(tid: str, path: str, tier: str) -> tuple[str, list[str]]:
+        key = folder_key(path)
+        if key:
+            if tier == "epic" and key not in members:
+                return tid, []
+            return folder_epic(key)
+        hits = sorted(k for k, ids in sequences.items() if tid in ids)
+        if len(hits) == 1:
+            return folder_epic(hits[0])
+        if len(hits) > 1:
+            return "standalone", [f"{tid} is named in {len(hits)} SEQUENCE.md files ({', '.join(hits)}): Epic is standalone"]
+        return "standalone", []
+
+    return resolve
+
+
 def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], prs: list[PrFact] | None, current: dict | None,
-                host: str, source: str, stale_before: float | None = None) -> tuple[dict, list[str]]:
+                host: str, source: str, stale_before: float | None = None, extras: Extras | None = None) -> tuple[dict, list[str]]:
     mine = [b for b in branches if any(c.id == tid for c in b.copies)]
     other = [e for e in _split((current or {}).get("Branch", "")) if not e.startswith(f"{host}:")]
     status, pr_urls, findings = derive_status(tid, main, mine, prs, other, stale_before)
@@ -399,6 +482,27 @@ def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], pr
     entries = [f"{host}:{b.branch}" + ("" if any(c.id == tid and c.folder in PROGRESS_FOLDERS for c in b.copies) else f" {FILING_SUFFIX}")
                for b in mine]
     title = best.title if best else ""
+    extras = extras or Extras()
+    layer, priority, tags, epic = "", "", "", "standalone"
+    if best:
+        layer = best.layer
+        if layer and extras.layers is not None and layer not in extras.layers:
+            findings.append(f"{tid}: layer '{layer}' is not in registries/layer_registry.jsonl: Layer left empty")
+            layer = ""
+        lead = re.match(r"(P[0-3])(?![0-9A-Za-z])", best.priority)  # "P2 (raised from P3 ...)" is P2: the leading token is the value
+        priority = lead.group(1) if lead else best.priority
+        if priority and priority not in PRIORITIES:
+            findings.append(f"{tid}: priority '{priority}' is not one of {', '.join(PRIORITIES)}: Priority left empty")
+            priority = ""
+        order = extras.tag_order
+        known = [x for x in (order or ()) if x in best.tags]
+        unknown = [x for x in best.tags if order is not None and x not in order]
+        if unknown:
+            findings.append(f"{tid}: tags not in registries/tag_registry.jsonl, put last: {', '.join(unknown)}")
+        tags = " ".join(known + unknown) if order is not None else " ".join(best.tags)
+        if extras.epic_of:
+            epic, notes = extras.epic_of(tid, best.path, best.tier)
+            findings += notes
     fields = {
         "Title": f"{tid}: {title}".rstrip(": ") if title else tid,
         "Ticket ID": tid,
@@ -409,6 +513,7 @@ def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], pr
         "Branch": merge_host_entries((current or {}).get("Branch", ""), entries, f"{host}:"),
         "PR": ", ".join(pr_urls),
         "Tier": best.tier if best else "",
+        "Layer": layer, "Priority": priority, "Epic": epic, "Tags": tags,
         "Body": BODY.format(path=best.path if best else "agent-working/tickets/"),
         "Source": source,
     }
@@ -418,9 +523,13 @@ def derive_item(tid: str, main: list[TicketCopy], branches: list[BranchFact], pr
 
 def hand_edits(item: dict, derived: dict) -> list[str]:
     """The item's fields no longer hash to the Sync hash the sync stored: someone edited it. One line per differing field."""
-    if not item.get("Sync hash") or sync_hash(item) == item["Sync hash"]:
+    stored = item.get("Sync hash")
+    if not stored:
         return []
-    return [f"hand edit: {derived['Ticket ID']} {f} '{item.get(f, '')}' -> '{derived[f]}'" for f in HASH_FIELDS if item.get(f, "") != derived[f]]
+    version = hash_version(stored)
+    if sync_hash(item, version) == stored:  # checked against that version's fields only
+        return []
+    return [f"hand edit: {derived['Ticket ID']} {f} '{item.get(f, '')}' -> '{derived[f]}'" for f in HASH_VERSIONS[version] if item.get(f, "") != derived[f]]
 
 
 def in_pilot_lane(fact: BranchFact, lanes: list[str]) -> bool:
@@ -429,7 +538,7 @@ def in_pilot_lane(fact: BranchFact, lanes: list[str]) -> bool:
 
 def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable[[str], TicketCopy], branches: list[BranchFact],
                prs: list[PrFact] | None, items: list[dict], host: str, source: str, config: dict,
-               done_at: Callable[[str], datetime | None], now: datetime) -> Plan:
+               done_at: Callable[[str], datetime | None], now: datetime, extras: Extras | None = None) -> Plan:
     plan = Plan()
     by_id: dict[str, dict] = {}
     for item in items:
@@ -457,7 +566,7 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
         if tid not in known:
             continue
         main = [load_main(path) for _, path in main_index.get(tid, [])]
-        derived, findings = derive_item(tid, main, branches, prs, by_id.get(tid), host, source, stale_before)
+        derived, findings = derive_item(tid, main, branches, prs, by_id.get(tid), host, source, stale_before, extras)
         plan.findings += findings
         done_path = next((c.path for c in main if c.folder == "done"), None)
         finished = done_at(done_path) if done_path else None
@@ -477,6 +586,8 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
             continue
         plan.hand_edits += hand_edits(current, derived)
         changed = [f for f in HASH_FIELDS if current.get(f, "") != derived[f]]
+        if not changed and current.get("Sync hash", "") != derived["Sync hash"]:
+            changed = ["Sync hash"]  # same values, older hash version: rewrite the hash only
         if changed:
             carried = {**derived, "_item_id": current.get("_item_id", ""), "_draft_id": current.get("_draft_id", "")}
             plan.updates.append((carried, changed))
@@ -492,6 +603,29 @@ def build_plan(main_index: dict[str, list[tuple[str, str]]], load_main: Callable
 
 
 # ---------------------------------------------------------------- output / CLI
+
+
+def read_registry(root: Path, rel: str, key: str, notes: list[str]) -> tuple[str, ...] | None:
+    """The `key` values of a JSONL registry, in file order; None (and a note) when it cannot be read, so nothing is validated against it."""
+    try:
+        rows = [json.loads(line) for line in (root / rel).read_text(encoding="utf-8").splitlines() if line.strip()]
+        return tuple(r[key] for r in rows if key in r)
+    except (OSError, ValueError):
+        notes.append(f"{rel} unreadable: not validated against it")
+        return None
+
+
+def read_sequences(root: Path, run: Runner = run_command, ref: str = "origin/main") -> dict[str, set[str]]:
+    """`todos/<folder>` or `done/<folder>` -> the ticket ids its SEQUENCE.md names (exact basename SEQUENCE.md; git ls-tree and git show only)."""
+    listed = run(["git", "ls-tree", "-r", "--name-only", ref, "--", f"{TICKETS.as_posix()}/todos", f"{TICKETS.as_posix()}/done"], root)
+    out: dict[str, set[str]] = {}
+    for path in listed.stdout.split("\n") if listed.returncode == 0 else []:
+        if Path(path).name != "SEQUENCE.md" or folder_key(path.removesuffix("SEQUENCE.md") + "x.md") is None:
+            continue
+        shown = run(["git", "show", f"{ref}:{path}"], root)
+        if shown.returncode == 0:
+            out[folder_key(path.removesuffix("SEQUENCE.md") + "x.md")] = sequence_ids(shown.stdout)
+    return out
 
 
 def load_config(root: Path, notes: list[str]) -> dict:
@@ -555,7 +689,8 @@ def main(argv: list[str] | None = None) -> int:
         try:
             client = _client(config)
             if args.init:
-                lines, code = init_fields(client, STATUSES, args.replace_status_options)
+                layers = read_registry(args.root, "registries/layer_registry.jsonl", "layer", plan_notes) or ()
+                lines, code = init_fields(client, STATUSES, args.replace_status_options, layers)
                 print("\n".join(lines))
                 return code
         except ClientRefused as exc:
@@ -587,8 +722,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     index = read_main_index(args.root)
     source = f"{sha[:9]} @ {now.strftime('%Y-%m-%dT%H:%MZ')}"
-    plan = build_plan(index, lambda path: read_main_copy(args.root, path), branches, prs, items, args.host, source, config,
-                      lambda path: done_date(args.root, path), now)
+    load_main = lambda path: read_main_copy(args.root, path)  # noqa: E731
+    layers = read_registry(args.root, "registries/layer_registry.jsonl", "layer", plan_notes)
+    extras = Extras(frozenset(layers) if layers is not None else None, read_registry(args.root, "registries/tag_registry.jsonl", "tag", plan_notes),
+                    make_epic_resolver(index, load_main, read_sequences(args.root)))
+    plan = build_plan(index, load_main, branches, prs, items, args.host, source, config,
+                      lambda path: done_date(args.root, path), now, extras)
     plan.notes = plan_notes + plan.notes
     mode = "APPLY (writes to the GitHub Project)" if args.apply else ("DRY RUN, live read (no write)" if client is not None else "DRY RUN (no GitHub or repo write)")
     print(render(plan, args.host, sha, None if stamp is None else (time.time() - stamp) / 3600, detached, len(items),

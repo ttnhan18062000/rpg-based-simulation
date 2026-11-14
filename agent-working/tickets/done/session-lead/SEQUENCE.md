@@ -1,5 +1,7 @@
 # Implementation Sequence — session-lead
 
+**Closed 2026-11-14 by disposition (owner #715 6875225978).** E2, E3, E5 and E6 were never filed; the epic's Completion Summary records each child as landed, moved or dropped. The 2026-10-18 re-sequence proposal below was never confirmed and is superseded.
+
 Epic E children (`TCK-20261009-EPIC-SESSION-LEAD-PLANNER`), filed by agent-working-planner. E1 landed in #476.
 Batch 2 of the agent-working queue (2026-10-11) carries items 1-2, together with
 `session-layer-followups/SEQUENCE.md` items 1-2. E2, E3, E5 and E6 are not filed yet.

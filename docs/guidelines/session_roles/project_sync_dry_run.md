@@ -46,3 +46,21 @@ Needs `project.number` in `registries/session_project.yaml` (the org Project `rp
 - **`--apply` needs known PR facts:** if `gh pr list` fails, or any PR's file list cannot be read, `--apply` exits 1 and writes nothing (a dry run only notes it), because In review and PR would be written wrong.
 - **Never deleted:** the module has no delete mutation. Items without a `Ticket ID`, duplicates of one `Ticket ID`, and items whose ticket
   file is gone are archived, by their own item id.
+
+## Layer, Epic, Priority and Tags (P1c)
+
+`--init` also creates four fields, and `--apply` fills them from the ticket's own files:
+
+- **Layer** (single-select, options = `registries/layer_registry.jsonl`) from frontmatter `layer:`; **Priority** (single-select P0-P3) from `## Priority`
+  (a leading `P2 (...)` takes `P2`); **Tags** (text) from frontmatter `tags:`, joined by spaces in `registries/tag_registry.jsonl` order, unknown tags last. A value not in
+  the registry or not P0-P3 leaves the field empty and prints a finding; it is never guessed.
+- **Epic** (text), first match wins: (a) the ticket sits in an epic folder (`todos/<folder>/` or `done/<folder>/`): the folder's ticket whose `## Tier` is `epic`
+  (an epic's own Epic is its own id); no epic ticket -> the folder name; several -> the folder name plus a finding; (b) exactly one folder's `SEQUENCE.md` (exact
+  basename) names the ticket, in `## Order` if that section exists, else anywhere in the file: that folder's epic; named in more than one folder -> `standalone` plus a
+  finding; (c) otherwise `standalone`. `## Related Tickets` is not read.
+- **Option ids are kept.** `--init` adds a missing option (a newly registered layer) by sending every existing option with its id, so items keep their value. Probe on
+  Project 1 (2026-11-14): a single-select with options a, b, an item set to `a`, options updated to a, b, c passing the existing ids: the ids of a and b stayed and the
+  item still read `a`. Status on a Project that has items is append-only too (an option not in `STATUSES` is kept and reported, not dropped).
+  `--replace-status-options` sends exactly `STATUSES` in order with existing ids, so only items on an option left out lose their Status (the next `--apply` restores them),
+  and a rename is a remove plus an add, so only that option's items blank.
+- **Sync hash** is versioned: `v2:<sha>` over the nine P1b fields plus these four; an unprefixed value is the P1b (v1) hash. A v1 item is not a hand edit; it is updated once and carries `v2:` afterwards.

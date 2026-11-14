@@ -75,6 +75,7 @@ Decisions agreed in the design:
 ## Related Tickets
 - TCK-20261112-PROJECT-SYNC-DRY-RUN (P0)
 - TCK-20260718-AGENTOPS-STATS-BOARD-EPIC (done; the run/monitoring dashboard, kept as is)
+- Received 2026-11-14 from TCK-20261009-EPIC-SESSION-LEAD-PLANNER (closed, owner #715 6875225978): E2's cross-host fleet view is covered by this epic's per-seat ticket view; no separate fleet.py is planned.
 
 ## Related Docs
 - docs/guidelines/session_roles/ (P4 target)

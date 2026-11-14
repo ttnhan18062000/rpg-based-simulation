@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261009-EPIC-SESSION-LEAD-PLANNER
-phase: open
+phase: done
 date: 2026-10-09
 tags: [ai, process-improvement, governance]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, governance]
 Epic E — Session lead-planner: one cross-domain seat (project manager + technical lead) that tracks every session on every host, owns the cross-domain dependency and priority board, governs the tech stack, and advises the planners
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -230,7 +230,28 @@ Defined by child tickets.
 ## Files Changed
 (Child tickets.)
 
+## Disposition
+SUPERSEDED
+
+## Disposition Rationale
+Closed by the owner's decision of 2026-11-14 (#715 6875225978). E1 landed in TCK-20261009-REGISTER-OTHER-HOST-SEATS (#476, fa567bdc5); E4 in TCK-20261011-LEAD-STATUS-MESSAGES-AND-BOARD, TCK-20261011-SESSION-START-FOR-ROLE-ISSUES (#510), TCK-20261013-HOST-LEAD-PLANNER-U24 (#522) and TCK-20261013-PLATFORM-DOMAIN-SEATS (#539). E2, E3, E5 and E6 were never filed; their live parts are covered elsewhere (E2 by TCK-20261112-EPIC-GITHUB-PROJECT-TICKET-VIEW, E5 by M6a's `session_role` stamping) and the rest is dropped below. The earlier close in #639 (b18c28a29) was an error and was reopened; this one is the owner's.
+
 ## Completion Summary
 (Open. Reopened 2026-10-18, see the note below.)
 
 **Reopened 2026-10-18 (owner decision via lead-planner).** This epic was closed in error in #639 (b18c28a29) by agent-working-planner (host ubuntu): the stale-epic triage counted only filed child ticket IDs, while SEQUENCE.md says E2, E3, E5 and E6 are not filed yet, and u24's agent-working-planner had already advised keeping it (#634, 2026-10-18 12:38Z). The hand-closure run record from that close stays in the monitoring data (records are append-only); its pending working_log row is voided. Remaining: E2 (fleet view), E3 (cross-host heartbeat), E5 (measurement hook-in), E6 (tech-stack governance). Proposed order in SEQUENCE.md.
+
+**Closed 2026-11-14 (disposition, owner #715 6875225978).** Per child:
+
+| Child | Disposition | Evidence / where it went |
+|---|---|---|
+| E1 lead seat | LANDED | TCK-20261009-REGISTER-OTHER-HOST-SEATS (#476, fa567bdc5); card docs/guidelines/session_roles/domains/lead.md |
+| E2 fleet view (`fleet.py`) | MOVED (cross-host view); `for:<role>` count DROPPED | -> TCK-20261112-EPIC-GITHUB-PROJECT-TICKET-VIEW (project_sync.py gives a cross-host per-seat ticket view); tools/sessions/status.py covers one host. |
+| E3 cross-host heartbeat | DROPPED | Never filed. Stand-in: agent-working/lead/hosts/u24desktop.md (#522) plus lead-to-lead Remote Control; the AI-first SDLC plan calls it optional. |
+| E4 protocol, board and additions | LANDED | #510, #522, #539 (tickets above) |
+| E5 measurement hook-in | LANDED via M6a; evaluation MOVED | lead runs carry `session_role` = lead-planner (TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT). Whether the lead lowers the manual-action metric moves with M7 to TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION. |
+| E6 tech-stack governance | PARTLY LANDED; registry, drift check and guideline DROPPED | Landed: ownership (#476); seed review agent-working/lead/stack_seed_review.md (#516, refreshed #906); seed fixes in their domains (TCK-20261012-MYPY-DEV-PIN #671, TCK-20261013-PIN-THE-REDIS-IMAGE-IN-COMPOSE, TCK-20261011-KNOWLEDGE-TORCH-CPU-INDEX-IN-LOCK). Dropped: registries/tech_stack.yaml, its drift check and the "adding a stack component" guideline; Dependabot (#894) and the seed review cover drift informally. |
+| AC8 plan amendment | LANDED at this close | session_layer_working_process.md section 12.5 now notes cross-machine sessions are no longer deferred. |
+| 2026-10-18 re-sequence proposal (SEQUENCE.md) | SUPERSEDED | Never confirmed by the owner; this close replaces it. |
+
+SEQUENCE.md moves with it to done/session-lead/.

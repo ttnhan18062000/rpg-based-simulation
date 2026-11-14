@@ -55,6 +55,7 @@ Lead's scope note:
 ## Related Tickets
 - TCK-20261112-PROJECT-SYNC-GUARD-SEAT-AND-STALE (P1a, where it was found)
 - TCK-20261112-EPIC-GITHUB-PROJECT-TICKET-VIEW
+- Received 2026-11-14 from TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW (closed, owner #715 6875225978): the M6b roster-check item "worktrees with no role" is this ticket.
 
 ## Related Docs
 - docs/guidelines/session_roles/

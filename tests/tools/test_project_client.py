@@ -11,6 +11,7 @@ from tools.sessions import project_sync as ps
 
 SENTINEL = "ghp_SENTINEL_TOKEN_VALUE_123"
 STATUSES = ps.STATUSES
+LAYERS = ("combat", "world")
 
 
 def field(name, typ, options=()):
@@ -22,6 +23,8 @@ def project(extra=(), status_options=("Todo", "In Progress", "Done"), skip=()):
     for n in pc.TEXT_FIELDS:
         fields[n] = field(n, "TEXT")
     fields["Tier"] = field("Tier", "SINGLE_SELECT", [n for n, _ in pc.TIER_OPTIONS])
+    fields["Priority"] = field("Priority", "SINGLE_SELECT", [n for n, _ in pc.PRIORITY_OPTIONS])
+    fields["Layer"] = field("Layer", "SINGLE_SELECT", LAYERS)
     for n in skip:
         fields.pop(n)
     for f in extra:
@@ -48,7 +51,7 @@ class Fake:
 
     def create_text_field(self, pid, name): self._rec("create_text", name)
     def create_select_field(self, pid, name, options): self._rec("create_select", name)
-    def set_select_options(self, fid, options): self._rec("status_options", [n for n, _ in options])
+    def set_select_options(self, fid, options): self._rec("options", fid, [(n, i) for n, _, i in options])
     def add_draft(self, pid, title, body):
         self._rec("add_draft", title)
         return "ITEM-NEW", "DRAFT-NEW"
@@ -60,44 +63,89 @@ class Fake:
 
 
 # ---- init
+def status_project(options):
+    return project(status_options=options)
+
+
 def test_init_creates_missing_fields_and_leaves_present_ones_alone():
-    fake = Fake(project(skip=("Host", "Tier")))
-    lines, code = pc.init_fields(fake, STATUSES)
-    assert code == 0 and ("create_text", "Host") in fake.calls and ("create_select", "Tier") in fake.calls
+    fake = Fake(project(status_options=STATUSES, skip=("Host", "Tier", "Epic")))
+    lines, code = pc.init_fields(fake, STATUSES, layers=LAYERS)
+    assert code == 0 and ("create_text", "Host") in fake.calls and ("create_text", "Epic") in fake.calls and ("create_select", "Tier") in fake.calls
     assert "left alone: Seat" in lines and "created: Host" in lines
-    assert [c for c in fake.calls if c[0].startswith("create")] == [("create_text", "Host"), ("create_select", "Tier")]
 
 
 def test_a_second_init_creates_and_updates_nothing():
     fake = Fake(project(status_options=STATUSES))
-    lines, code = pc.init_fields(fake, STATUSES)
+    lines, code = pc.init_fields(fake, STATUSES, layers=LAYERS)
     assert code == 0 and fake.calls == [] and not any(l.startswith(("created", "updated")) for l in lines)
 
 
-def test_init_sets_the_status_options_on_an_empty_project():
+def test_init_sets_exactly_the_status_options_on_an_empty_project():
     fake = Fake(project())
-    pc.init_fields(fake, STATUSES)
-    assert fake.calls == [("status_options", list(STATUSES))]
+    pc.init_fields(fake, STATUSES, layers=LAYERS)
+    assert fake.calls == [("options", "F_Status", [(n, "O_Done" if n == "Done" else None) for n in STATUSES])]  # GitHub's default Done keeps its id
 
 
-def test_init_refuses_to_replace_status_options_on_a_project_with_items_unless_flagged():
-    fake = Fake(project(skip=("Host",)), items=[{"_item_id": "I1"}])
-    lines, code = pc.init_fields(fake, STATUSES)
-    assert code == 1 and fake.calls == [] and "1 item" in lines[0]
-    lines, code = pc.init_fields(fake, STATUSES, replace_status_options=True)
-    assert code == 0 and ("status_options", list(STATUSES)) in fake.calls
+def test_init_appends_status_options_on_a_board_with_items_keeping_ids_and_reporting_extras():
+    fake = Fake(project(status_options=("To do", "Legacy", "Done")), items=[{"_item_id": "I1"}])
+    lines, code = pc.init_fields(fake, STATUSES, layers=LAYERS)
+    assert code == 0 and "kept, not in STATUSES: Legacy" in lines
+    (call,) = fake.calls
+    assert call[2][:3] == [("To do", "O_To do"), ("Legacy", "O_Legacy"), ("Done", "O_Done")]  # existing ids, order kept
+    assert [n for n, i in call[2][3:]] == ["In progress", "Stale", "In review", "Blocked"] and all(i is None for _, i in call[2][3:])
+
+
+def test_the_replace_flag_drops_only_the_option_left_out_and_keeps_the_other_ids():
+    fake = Fake(project(status_options=("To do", "Legacy", "Done")), items=[{"_item_id": "I1"}])
+    pc.init_fields(fake, STATUSES, replace_status_options=True, layers=LAYERS)
+    (call,) = fake.calls
+    got = dict(call[2])
+    assert [n for n, _ in call[2]] == list(STATUSES) and "Legacy" not in got
+    assert got["To do"] == "O_To do" and got["Done"] == "O_Done" and got["Stale"] is None
+
+
+def test_the_replace_flag_with_statuses_reordered_keeps_every_id():
+    fake = Fake(project(status_options=tuple(reversed(STATUSES))), items=[{"_item_id": "I1"}])
+    pc.init_fields(fake, STATUSES, replace_status_options=True, layers=LAYERS)
+    (call,) = fake.calls
+    assert [n for n, _ in call[2]] == list(STATUSES) and all(i == f"O_{n}" for n, i in call[2])
+
+
+def test_merge_options_keeps_ids_and_order_and_appends_without_dropping():
+    f = field("X", "SINGLE_SELECT", ("a", "b"))
+    merged = pc.merge_options(f, [("b", "RED"), ("c", "GREEN")])
+    assert merged == [("a", "GRAY", "O_a"), ("b", "GRAY", "O_b"), ("c", "GREEN", None)]
+
+
+def test_set_select_options_sends_the_id_only_for_kept_options(tmp_path):
+    seen = []
+    c, _ = client_with(tmp_path, lambda a, e, s: (seen.append(json.loads(s)), SimpleNamespace(returncode=0, stdout=json.dumps({"data": {"updateProjectV2Field": {}}}), stderr=""))[1])
+    c.set_select_options("F1", [("a", "GRAY", "O_a"), ("c", "GREEN", None)])
+    assert seen[0]["variables"]["input"]["singleSelectOptions"] == [
+        {"id": "O_a", "name": "a", "color": "GRAY", "description": ""}, {"name": "c", "color": "GREEN", "description": ""}]
+
+
+def test_init_adds_a_newly_registered_layer_option_and_a_rerun_is_a_no_op():
+    fake = Fake(project(status_options=STATUSES))
+    lines, _ = pc.init_fields(fake, STATUSES, layers=LAYERS + ("platform",))
+    (call,) = fake.calls
+    assert call[1] == "F_Layer" and call[2] == [("combat", "O_combat"), ("world", "O_world"), ("platform", None)]
+    assert "updated: Layer options + platform" in lines
+    fake2 = Fake(project(status_options=STATUSES))
+    pc.init_fields(fake2, STATUSES, layers=LAYERS)
+    assert fake2.calls == []
 
 
 def test_init_refuses_a_same_named_field_of_the_wrong_type_and_writes_nothing():
     fake = Fake(project(extra=[field("Seat", "NUMBER")], skip=("Host",)))
-    lines, code = pc.init_fields(fake, STATUSES)
+    lines, code = pc.init_fields(fake, STATUSES, layers=LAYERS)
     assert code == 1 and fake.calls == [] and "Seat" in lines[0]
 
 
 # ---- apply
 def derived(tid="TCK-1", **kw):
     d = {"Title": f"{tid}: t", "Ticket ID": tid, "Status": "In progress", "Domain": "rpg", "Seat": "s", "Host": "h", "Branch": "h:b",
-         "PR": "", "Tier": "hotfix", "Body": "b", "Source": "src", "Sync hash": "H"}
+         "PR": "", "Tier": "hotfix", "Layer": "combat", "Priority": "P1", "Epic": "standalone", "Tags": "a b", "Body": "b", "Source": "src", "Sync hash": "H"}
     d.update(kw)
     return d
 
@@ -115,7 +163,7 @@ def test_apply_turns_creates_updates_and_archives_into_the_expected_mutations_wi
     assert error is None and not not_done
     first = [c for c in fake.calls]
     assert first[0] == ("add_draft", "TCK-1: t")
-    create_sets = first[1:10]  # nine value sets: PR is empty, so skipped
+    create_sets = first[1:14]  # thirteen value sets: PR is empty, so skipped
     assert [c[2] for c in create_sets][0] == "F_Ticket ID" and create_sets[-1][2] == "F_Sync hash"  # Ticket ID first, Sync hash last; PR "" skipped
     assert not any(c[2] == "F_PR" for c in create_sets) and all(c[1] == "ITEM-NEW" for c in create_sets)
     upd = [c for c in first if c[0] in ("update_draft", "clear") or c[1:2] == ("I2",)]

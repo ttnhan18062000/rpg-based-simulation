@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-EPIC-SESSION-LAYER-MEASUREMENT-AND-REVIEW
-phase: open
+phase: done
 date: 2026-10-02
 tags: [ai, process-improvement, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, process-improvement, agent-monitoring]
 Epic D — Session-layer measurement and evidence review: does the owner repeat fewer instructions, and which advisory rules earn hardening
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -126,5 +126,24 @@ Defined by child tickets.
 ## Files Changed
 (Child tickets.)
 
+## Disposition
+SUPERSEDED
+
+## Disposition Rationale
+Closed by the owner's decision of 2026-11-14 to close empty in-flight epics (#715 6875225978): what landed is recorded, the rest is moved to a live epic or dropped. M6a landed in TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT (#348, 58aa22f67) and TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP (#612). M7 is already scheduled in the AI-first SDLC plan (docs/plans/agent_infrastructure/AI_FIRST_SDLC_ARCHITECTURE_EVOLUTION_PLAN.md, "M7 (>= 11-04): OD-9 coordination target"), so it moves to TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION. M6b analytics were already deferred by the binding plan (session_layer_working_process.md section 12.5, "expanded retro analytics (M6b)").
+
 ## Completion Summary
 (Open.)
+
+**Closed 2026-11-14 (disposition, owner #715 6875225978).** Per item:
+
+| Item | Disposition | Evidence / where it went |
+|---|---|---|
+| M6a `session_role` from the binding record (AC1) | LANDED | TCK-20261004-SESSION-LAYER-M6A-MINIMUM-MEASUREMENT (#348, 58aa22f67); seat-suffix fix TCK-20261015-SESSION-LAYER-MEASURES-SEAT-SUFFIX-RESET-RECORD-NOTE-CAP (#612). Limit: `tools` rows are not stamped. |
+| M6a headline metric, categories, tagging (AC2) | LANDED | tools/agent-monitoring/manual_actions.py (6 categories, UserPromptSubmit sampler + owner `tally`); seeded exclusion test in tests/tools/test_session_layer_measures.py; counts reach the retro. Limit: the per-batch owner tally has never been used. |
+| M6a three batch latencies (AC3) | LANDED with a stated limit | tools/agent-monitoring/batch_latency.py, session_layer_report.py. Limit: finalization is taken as PR merge, so an unmerged PR shows `unknown`, not "not done" as AC3 worded it. No further work. |
+| M6b analytics (misroutes, bounces, idle stall, handoff latency, /clear count, tokens re-read) | DROPPED | Never started; the binding plan defers them (section 12.5). `role_boundary` warnings are counted in the retro already. |
+| M6b roster check (AC4) | PARTLY LANDED; rest moved or dropped | Landed: tools/sessions/status.py flags (one session two seats, orphaned instances, #336); tools/sessions/validate.py (stale citations, missing handovers, unstaffed seats). Moved: worktrees with no role -> TCK-20261112-HAND-ADDED-WORKTREES-ARE-NOT-RECORDED-AGAINST-A-SEAT. Dropped: unknown-session-name report and the combined seeded test. |
+| M7 first-month evidence review (AC5) and the deferred-item decisions (inbox, auto-wake, hard message blocking, authority digest pin) | MOVED | -> TCK-20261031-EPIC-AI-FIRST-SDLC-EVOLUTION (its plan schedules M7 / OD-9). Never started here. |
+
+The INDEX.md in this folder moves with it to done/session-layer/.

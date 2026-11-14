@@ -66,6 +66,7 @@ class ProjectField:
     name: str
     type: str  # GraphQL dataType: TEXT, SINGLE_SELECT, TITLE, ...
     options: tuple[tuple[str, str], ...] = ()  # (option name, option id), in display order
+    colors: tuple[tuple[str, str], ...] = ()  # (option name, color), read so a kept option keeps its colour
 
     def option_id(self, name: str) -> str | None:
         return dict(self.options).get(name)
@@ -78,7 +79,7 @@ class Project:
 
 
 _PROJECT_Q = """query($owner:String!,$number:Int!){organization(login:$owner){projectV2(number:$number){id
-fields(first:50){nodes{__typename ... on ProjectV2FieldCommon{id name dataType} ... on ProjectV2SingleSelectField{options{id name}}}}}}}"""
+fields(first:50){nodes{__typename ... on ProjectV2FieldCommon{id name dataType} ... on ProjectV2SingleSelectField{options{id name color}}}}}}}"""
 
 _ITEMS_Q = """query($owner:String!,$number:Int!,$after:String){organization(login:$owner){projectV2(number:$number){
 items(first:100,after:$after){pageInfo{hasNextPage endCursor} nodes{id isArchived content{__typename ... on DraftIssue{id title}}
@@ -122,7 +123,8 @@ class ProjectClient:
         for node in proj["fields"]["nodes"]:
             if node and node.get("name"):
                 opts = tuple((o["name"], o["id"]) for o in node.get("options") or [])
-                fields[node["name"]] = ProjectField(node["id"], node["name"], node.get("dataType", ""), opts)
+                cols = tuple((o["name"], o.get("color") or "GRAY") for o in node.get("options") or [])
+                fields[node["name"]] = ProjectField(node["id"], node["name"], node.get("dataType", ""), opts, cols)
         return Project(proj["id"], fields)
 
     def list_items(self) -> list[dict]:
@@ -158,8 +160,9 @@ class ProjectClient:
         self._mutate("createProjectV2Field", "CreateProjectV2FieldInput",
                      {"projectId": project_id, "dataType": "SINGLE_SELECT", "name": name, "singleSelectOptions": opts})
 
-    def set_select_options(self, field_id: str, options: list[tuple[str, str]]) -> None:
-        opts = [{"name": n, "color": c, "description": ""} for n, c in options]
+    def set_select_options(self, field_id: str, options: list[tuple[str, str, str | None]]) -> None:
+        """`options` is (name, colour, id or None), in the order wanted. An id keeps that option's identity, so items keep their value."""
+        opts = [({"id": oid} if oid else {}) | {"name": n, "color": c, "description": ""} for n, c, oid in options]
         self._mutate("updateProjectV2Field", "UpdateProjectV2FieldInput", {"fieldId": field_id, "singleSelectOptions": opts})
 
     def add_draft(self, project_id: str, title: str, body: str) -> tuple[str, str]:
@@ -189,59 +192,94 @@ class ProjectClient:
 
 # ---------------------------------------------------------------- --init
 
-TEXT_FIELDS = ("Ticket ID", "Domain", "Seat", "Host", "Branch", "PR", "Source", "Sync hash")
+TEXT_FIELDS = ("Ticket ID", "Domain", "Seat", "Host", "Branch", "PR", "Source", "Sync hash", "Epic", "Tags")
 TIER_OPTIONS = [("hotfix", "ORANGE"), ("standard", "BLUE"), ("epic", "PURPLE")]
+PRIORITY_OPTIONS = [("P0", "RED"), ("P1", "ORANGE"), ("P2", "YELLOW"), ("P3", "GRAY")]
 STATUS_COLORS = {"To do": "GRAY", "In progress": "BLUE", "Stale": "ORANGE", "In review": "PURPLE", "Blocked": "RED", "Done": "GREEN"}
 
 
-def init_fields(client, statuses: tuple[str, ...], replace_status_options: bool = False) -> tuple[list[str], int]:
+def merge_options(field: ProjectField, wanted: list[tuple[str, str]]) -> list[tuple[str, str, str | None]]:
+    """Append-only: every existing option keeps its id, colour and place; each wanted name that is missing is appended. Never drops one."""
+    cols = dict(field.colors)
+    kept = [(n, cols.get(n, "GRAY"), oid) for n, oid in field.options]
+    have = {n for n, _ in field.options}
+    return kept + [(n, c, None) for n, c in wanted if n not in have]
+
+
+def replace_options(field: ProjectField, wanted: list[tuple[str, str]]) -> list[tuple[str, str, str | None]]:
+    """Exactly `wanted`, in its order. A name that already exists carries its id (so its items keep their value); one not wanted is left out."""
+    ids = dict(field.options)
+    return [(n, c, ids.get(n)) for n, c in wanted]
+
+
+def init_fields(client, statuses: tuple[str, ...], replace_status_options: bool = False,
+                layers: tuple[str, ...] = ()) -> tuple[list[str], int]:
     """Create the missing fields by name; never delete or rename. Returns (report lines, exit code). All checks come before any write."""
     project = client.load_project()
     lines: list[str] = []
     problems = []
+    selects = {"Tier": TIER_OPTIONS, "Priority": PRIORITY_OPTIONS}
+    if layers:
+        selects["Layer"] = [(n, "GRAY") for n in layers]
     for name in TEXT_FIELDS:
         f = project.fields.get(name)
         if f is not None and f.type != "TEXT":
             problems.append(f"field '{name}' exists as {f.type}, wanted TEXT")
-    tier = project.fields.get("Tier")
-    if tier is not None and tier.type != "SINGLE_SELECT":
-        problems.append(f"field 'Tier' exists as {tier.type}, wanted SINGLE_SELECT")
+    for name in selects:
+        f = project.fields.get(name)
+        if f is not None and f.type != "SINGLE_SELECT":
+            problems.append(f"field '{name}' exists as {f.type}, wanted SINGLE_SELECT")
     status = project.fields.get("Status")
     if status is None or status.type != "SINGLE_SELECT":
         problems.append("the built-in 'Status' single-select field is " + ("missing" if status is None else f"a {status.type}"))
     if problems:
         return [f"init refused (nothing written): {p}" for p in problems], 1
-    status_differs = [n for n, _ in status.options] != list(statuses)
-    if status_differs and not replace_status_options:
-        n_items = len(client.list_items())
-        if n_items:
-            return [f"init refused (nothing written): Status options are {[n for n, _ in status.options]}, wanted {list(statuses)}; "
-                    f"the Project has {n_items} item(s) and replacing the options would clear their Status. "
-                    "Re-run with --replace-status-options to allow it."], 1
+    wanted_status = [(n, STATUS_COLORS.get(n, "GRAY")) for n in statuses]
+    status_names = [n for n, _ in status.options]
+    status_update, status_note = None, ""
+    if replace_status_options or (status_names != list(statuses) and not client.list_items()):
+        if status_names != list(statuses):
+            status_update = replace_options(status, wanted_status)  # exact STATUSES; only options left out lose their items' value
+    else:
+        merged = merge_options(status, wanted_status)
+        if len(merged) != len(status_names):
+            status_update = merged
+        extra = [n for n in status_names if n not in statuses]
+        if extra:
+            status_note = f"kept, not in STATUSES: {', '.join(extra)}"
     for name in TEXT_FIELDS:
         if name in project.fields:
             lines.append(f"left alone: {name}")
         else:
             client.create_text_field(project.id, name)
             lines.append(f"created: {name}")
-    if tier is None:
-        client.create_select_field(project.id, "Tier", TIER_OPTIONS)
-        lines.append("created: Tier")
-    else:
-        lines.append("left alone: Tier")
-    if status_differs:
-        client.set_select_options(status.id, [(n, STATUS_COLORS.get(n, "GRAY")) for n in statuses])
-        lines.append(f"updated: Status options -> {', '.join(statuses)}")
+    for name, wanted in selects.items():
+        f = project.fields.get(name)
+        if f is None:
+            client.create_select_field(project.id, name, wanted)
+            lines.append(f"created: {name}")
+            continue
+        merged = merge_options(f, wanted)
+        if len(merged) > len(f.options):
+            client.set_select_options(f.id, merged)
+            lines.append(f"updated: {name} options + {', '.join(n for n, _, i in merged if i is None)}")
+        else:
+            lines.append(f"left alone: {name}")
+    if status_update is not None:
+        client.set_select_options(status.id, status_update)
+        lines.append(f"updated: Status options -> {', '.join(n for n, _, _ in status_update)}")
     else:
         lines.append("left alone: Status")
+    if status_note:
+        lines.append(status_note)
     lines.append("left alone: Title (built-in)")
     return lines, 0
 
 
 # ---------------------------------------------------------------- --apply
 
-VALUE_ORDER = ("Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier")  # Source, then Sync hash, are always last
-SELECT_FIELDS = ("Status", "Tier")
+VALUE_ORDER = ("Ticket ID", "Status", "Domain", "Seat", "Host", "Branch", "PR", "Tier", "Layer", "Priority", "Epic", "Tags")  # Source, then Sync hash, are always last
+SELECT_FIELDS = ("Status", "Tier", "Layer", "Priority")
 
 
 def apply_plan(client, project: Project, plan, body_of: Callable[[dict], str] | None = None) -> tuple[list[str], list[str], str | None]:
